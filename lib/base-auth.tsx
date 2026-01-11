@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider, createConfig, http, useConnect, useConnection, useDisconnect } from "wagmi"
 import { base, baseSepolia } from "wagmi/chains"
 import { baseAccount } from "wagmi/connectors"
+import { numberToHex } from "viem"
 
 type BaseAuthSession = {
   address: `0x${string}`
@@ -78,6 +79,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     const nonce = createNonce()
     const domain = typeof window !== "undefined" ? window.location.host : "farcaster-rhino-lake-app.vercel.app"
     const uri = typeof window !== "undefined" ? window.location.origin : "https://farcaster-rhino-lake-app.vercel.app"
+    const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
 
     try {
       const result = await connectAsync({
@@ -89,7 +91,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
             statement: "Sign in to Rhino Lake.",
             domain,
             uri,
-            chainId: `${DEFAULT_CHAIN_ID}`,
+            chainId: chainIdHex,
             version: "1",
           },
         },
