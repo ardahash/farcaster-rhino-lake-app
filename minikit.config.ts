@@ -1,4 +1,7 @@
-const DEFAULT_ROOT_URL = "http://localhost:3000"
+const DEFAULT_ROOT_URL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://farcaster-rhino-lake-app.vercel.app"
 
 const resolveRootUrl = () => {
   const envUrl =

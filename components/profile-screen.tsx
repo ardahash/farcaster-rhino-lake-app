@@ -1,13 +1,20 @@
 "use client"
 
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { useBaseAuth } from "@/lib/base-auth"
 import { useGame } from "@/lib/game-state"
-import { Crown, Trophy, Sparkles, TrendingUp } from "lucide-react"
+import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
 
 export function ProfileScreen() {
+  const { address, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { state } = useGame()
+  const { toast } = useToast()
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
 
   const achievements = [
     { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
@@ -16,12 +23,42 @@ export function ProfileScreen() {
     { id: 4, name: "Legendary Ruler", icon: Trophy, unlocked: state.cityLevel >= 10 },
   ]
 
-  const displayName = "Rhino Lake Ruler"
-  const username = "rhino-lake"
+  const handleConnect = async () => {
+    setIsAuthLoading(true)
+    try {
+      await signIn()
+      toast({
+        title: "Base Account Connected",
+        description: "Your Base account is now linked.",
+      })
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Please try again."
+      toast({
+        title: "Connection failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
+
+  const handleDisconnect = () => {
+    signOut()
+    toast({
+      title: "Disconnected",
+      description: "Your Base account has been disconnected.",
+    })
+  }
+
+  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
+  const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
+  const username = isAuthenticated ? shortAddress : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
   const profileBio = "Builder of empires, master of ZEN"
-  const profileTag = "Base Mini App"
+  const profileTag = isAuthenticated ? `Base ${shortAddress}` : "Base Mini App"
+  const isActionLoading = isAuthLoading || isConnecting
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -40,6 +77,9 @@ export function ProfileScreen() {
               <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
               <p className="text-muted-foreground">@{username}</p>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">{profileBio}</p>
+              {isAuthenticated && (
+                <p className="text-xs text-muted-foreground mt-2">Wallet: {address}</p>
+              )}
             </div>
 
             <Badge variant="outline" className="text-primary border-primary">
@@ -66,6 +106,33 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-primary">{state.stakedZen}</p>
             </div>
           </div>
+        </Card>
+
+        <Card className="game-card p-6 space-y-4 mt-6">
+          <div className="space-y-2 text-center">
+            <h3 className="font-semibold text-lg text-foreground">Base Account</h3>
+            <p className="text-sm text-muted-foreground">
+              Connect your Base account to enable onchain sacrifices and rewards.
+            </p>
+          </div>
+          <Button
+            onClick={isAuthenticated ? handleDisconnect : handleConnect}
+            disabled={isActionLoading}
+            className="w-full h-12 text-lg font-semibold"
+            size="lg"
+          >
+            {isActionLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                {isAuthenticated ? "Disconnecting..." : "Connecting..."}
+              </>
+            ) : isAuthenticated ? (
+              "Disconnect Base Account"
+            ) : (
+              "Connect Base Account"
+            )}
+          </Button>
+          {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
         </Card>
 
         {/* Achievements */}

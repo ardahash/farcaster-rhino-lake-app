@@ -4,14 +4,17 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useBaseAuth } from "@/lib/base-auth"
 import { useGame } from "@/lib/game-state"
 import { Loader2, Sparkles, Castle, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export function HomeScreen() {
+  const { address, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
   const { state, sacrificeZen } = useGame()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
 
   const handleSacrifice = async () => {
     setIsLoading(true)
@@ -32,10 +35,32 @@ export function HomeScreen() {
     }
   }
 
-  const displayName = "Rhino Lake Ruler"
-  const username = "rhino-lake"
+  const handleConnect = async () => {
+    setIsAuthLoading(true)
+    try {
+      await signIn()
+      toast({
+        title: "Base Account Connected",
+        description: "You're ready to sacrifice ZEN onchain.",
+      })
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Please try again."
+      toast({
+        title: "Connection failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
+
+  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
+  const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
+  const username = isAuthenticated ? shortAddress : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
+  const isPrimaryLoading = isLoading || isAuthLoading || isConnecting
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
@@ -88,20 +113,42 @@ export function HomeScreen() {
 
       {/* Primary Sacrifice Button */}
       <div className="w-full max-w-md space-y-3">
-        <Button onClick={handleSacrifice} disabled={isLoading} className="w-full h-14 text-lg font-bold" size="lg">
+        <Button
+          onClick={isAuthenticated ? handleSacrifice : handleConnect}
+          disabled={isPrimaryLoading}
+          className="w-full h-14 text-lg font-bold"
+          size="lg"
+        >
           {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               Sacrificing...
             </>
-          ) : (
+          ) : isAuthLoading || isConnecting ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Connecting...
+            </>
+          ) : isAuthenticated ? (
             <>
               <Coins className="w-5 h-5 mr-2" />
               Sacrifice 0.01 ZEN
             </>
+          ) : (
+            <>
+              <Coins className="w-5 h-5 mr-2" />
+              Connect Base Account
+            </>
           )}
         </Button>
-        <p className="text-center text-sm text-muted-foreground">Sacrifice to gain power and grow your empire</p>
+        <p className="text-center text-sm text-muted-foreground">
+          {isAuthenticated
+            ? "Sacrifice to gain power and grow your empire"
+            : "Connect your Base account to enable onchain sacrifices"}
+        </p>
+        {authError && !isAuthenticated && (
+          <p className="text-center text-xs text-muted-foreground">{authError}</p>
+        )}
       </div>
     </div>
   )
