@@ -1,0 +1,91 @@
+"use client"
+
+import { Card } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { useFarcaster } from "@/lib/farcaster-context"
+import { useGame } from "@/lib/game-state"
+import { Crown, Trophy, Sparkles, TrendingUp } from "lucide-react"
+
+export function ProfileScreen() {
+  const { user } = useFarcaster()
+  const { state } = useGame()
+
+  const achievements = [
+    { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
+    { id: 2, name: "Power Builder", icon: TrendingUp, unlocked: state.zenPower >= 100 },
+    { id: 3, name: "Temple Master", icon: Crown, unlocked: state.cityLevel >= 3 },
+    { id: 4, name: "Legendary Ruler", icon: Trophy, unlocked: state.cityLevel >= 10 },
+  ]
+
+  return (
+    <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
+      <div className="pt-4">
+        <h1 className="text-3xl font-bold text-center text-foreground mb-6">Your Profile</h1>
+
+        {/* Profile Card */}
+        <Card className="game-card p-6 space-y-6">
+          <div className="flex flex-col items-center space-y-4">
+            <Avatar className="w-24 h-24 border-4 border-primary">
+              <AvatarImage src={user?.pfpUrl || "/placeholder.svg"} alt={user?.displayName} />
+              <AvatarFallback className="text-2xl">{user?.displayName?.[0]}</AvatarFallback>
+            </Avatar>
+
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground">{user?.displayName}</h2>
+              <p className="text-muted-foreground">@{user?.username}</p>
+              {user?.bio && <p className="text-sm text-muted-foreground mt-2 max-w-md">{user.bio}</p>}
+            </div>
+
+            <Badge variant="outline" className="text-primary border-primary">
+              FID: {user?.fid}
+            </Badge>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-1">City Level</p>
+              <p className="text-3xl font-bold text-primary">{state.cityLevel}</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-1">ZEN Power</p>
+              <p className="text-3xl font-bold text-foreground">{state.zenPower.toFixed(0)}</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-1">Total Sacrifices</p>
+              <p className="text-3xl font-bold text-foreground">{state.totalSacrifices}</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-1">Staked ZEN</p>
+              <p className="text-3xl font-bold text-primary">{state.stakedZen}</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Achievements */}
+        <Card className="game-card p-6 space-y-4 mt-6">
+          <h3 className="font-semibold text-lg text-foreground">Achievements</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {achievements.map((achievement) => {
+              const Icon = achievement.icon
+              return (
+                <div
+                  key={achievement.id}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    achievement.unlocked ? "bg-primary/10 border-primary/30" : "bg-muted/30 border-border opacity-50"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <Icon className={`w-8 h-8 ${achievement.unlocked ? "text-primary" : "text-muted-foreground"}`} />
+                    <p className="text-sm font-semibold text-foreground">{achievement.name}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}
