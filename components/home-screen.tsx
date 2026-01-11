@@ -1,37 +1,82 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useBaseAuth } from "@/lib/base-auth"
+import { BASE_CHAINS, DEFAULT_CHAIN_ID, TREASURY_ADDRESS, getPaymasterUrl } from "@/lib/base-config"
 import { useGame } from "@/lib/game-state"
 import { Loader2, Sparkles, Castle, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useCallsStatus, useSendCalls, useSwitchChain } from "wagmi"
+import { parseEther } from "viem"
 
 export function HomeScreen() {
-  const { address, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
+  const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
   const { state, sacrificeZen } = useGame()
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [callId, setCallId] = useState<string | null>(null)
+  const handledCallIdRef = useRef<string | null>(null)
+  const { mutateAsync: sendCallsAsync, isPending: isSending } = useSendCalls()
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+
+  const { data: callsStatus } = useCallsStatus({
+    id: callId ?? "",
+    query: {
+      enabled: Boolean(callId),
+      refetchInterval: callId ? 2000 : false,
+    },
+  })
 
   const handleSacrifice = async () => {
-    setIsLoading(true)
     try {
-      await sacrificeZen(0.01)
-      toast({
-        title: "Sacrifice Complete!",
-        description: "+0.1 ZEN Power added to your empire",
+      if (!address || !isAuthenticated) {
+        throw new Error("Connect your Base account to continue.")
+      }
+
+      const supportedChainIds = new Set(BASE_CHAINS.map((chain) => chain.id))
+      const activeChainId = chainId ?? DEFAULT_CHAIN_ID
+      if (!supportedChainIds.has(activeChainId)) {
+        await switchChainAsync({ chainId: DEFAULT_CHAIN_ID })
+        throw new Error("Switching network. Please try again.")
+      }
+
+      if (TREASURY_ADDRESS === "0x0000000000000000000000000000000000000000") {
+        throw new Error("Treasury address is not configured.")
+      }
+
+      const paymasterUrl = getPaymasterUrl(activeChainId)
+      if (!paymasterUrl) {
+        throw new Error("Paymaster is not configured for this network.")
+      }
+
+      const response = await sendCallsAsync({
+        chainId: activeChainId,
+        account: address,
+        calls: [
+          {
+            to: TREASURY_ADDRESS,
+            value: parseEther("0.01"),
+          },
+        ],
+        capabilities: {
+          paymasterService: {
+            url: paymasterUrl,
+            optional: true,
+          },
+        },
+        version: "1",
       })
+
+      setCallId(response.id)
     } catch (error) {
       toast({
         title: "Sacrifice Failed",
-        description: "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -55,12 +100,40 @@ export function HomeScreen() {
     }
   }
 
+  useEffect(() => {
+    if (!callId || !callsStatus) return
+    if (handledCallIdRef.current === callId) return
+
+    if (callsStatus.status === "failure") {
+      handledCallIdRef.current = callId
+      setCallId(null)
+      toast({
+        title: "Transaction Failed",
+        description: "The sacrifice transaction did not complete.",
+        variant: "destructive",
+      })
+    }
+
+    if (callsStatus.status === "success" && callsStatus.receipts?.length) {
+      const txHash = callsStatus.receipts[0]?.transactionHash
+      handledCallIdRef.current = callId
+      setCallId(null)
+      sacrificeZen(0.01)
+
+      const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "View in explorer"
+      toast({
+        title: "Sacrifice Complete!",
+        description: `Tx ${shortHash}`,
+      })
+    }
+  }, [callId, callsStatus, sacrificeZen, toast])
+
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
   const username = isAuthenticated ? shortAddress : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
-  const isPrimaryLoading = isLoading || isAuthLoading || isConnecting
+  const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
@@ -119,7 +192,7 @@ export function HomeScreen() {
           className="w-full h-14 text-lg font-bold"
           size="lg"
         >
-          {isLoading ? (
+          {isSending || callId ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               Sacrificing...

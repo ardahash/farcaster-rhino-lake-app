@@ -10,9 +10,9 @@ import {
 } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider, createConfig, http, useConnect, useConnection, useDisconnect } from "wagmi"
-import { base, baseSepolia } from "wagmi/chains"
 import { baseAccount } from "wagmi/connectors"
 import { numberToHex } from "viem"
+import { BASE_CHAINS, DEFAULT_CHAIN_ID } from "@/lib/base-config"
 
 type BaseAuthSession = {
   address: `0x${string}`
@@ -35,9 +35,6 @@ type BaseAuthContextValue = {
 
 const BaseAuthContext = createContext<BaseAuthContextValue | null>(null)
 
-const BASE_CHAINS = [base, baseSepolia] as const
-const DEFAULT_CHAIN_ID = base.id
-
 const wagmiConfig = createConfig({
   chains: BASE_CHAINS,
   connectors: [
@@ -46,10 +43,13 @@ const wagmiConfig = createConfig({
       appLogoUrl: "/icon.svg",
     }),
   ],
-  transports: {
-    [base.id]: http(),
-    [baseSepolia.id]: http(),
-  },
+  transports: BASE_CHAINS.reduce(
+    (acc, chain) => {
+      acc[chain.id] = http()
+      return acc
+    },
+    {} as Record<(typeof BASE_CHAINS)[number]["id"], ReturnType<typeof http>>,
+  ),
   ssr: true,
 })
 

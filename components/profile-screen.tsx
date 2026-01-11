@@ -7,14 +7,17 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
+import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
 import { useGame } from "@/lib/game-state"
 import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
+import { useSwitchChain } from "wagmi"
 
 export function ProfileScreen() {
-  const { address, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
+  const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { state } = useGame()
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
 
   const achievements = [
     { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
@@ -51,6 +54,28 @@ export function ProfileScreen() {
     })
   }
 
+  const handleSwitchNetwork = async () => {
+    if (!isAuthenticated) {
+      return
+    }
+    const activeChainId = chainId ?? DEFAULT_CHAIN_ID
+    const nextChain = BASE_CHAINS.find((chain) => chain.id !== activeChainId) ?? BASE_CHAINS[0]
+    try {
+      await switchChainAsync({ chainId: nextChain.id })
+      toast({
+        title: "Network Updated",
+        description: `Switched to ${getChainLabel(nextChain.id)}.`,
+      })
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Unable to switch networks."
+      toast({
+        title: "Network Switch Failed",
+        description: message,
+        variant: "destructive",
+      })
+    }
+  }
+
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
   const username = isAuthenticated ? shortAddress : "rhino-lake"
@@ -58,7 +83,8 @@ export function ProfileScreen() {
   const avatarFallback = displayName[0] ?? "?"
   const profileBio = "Builder of empires, master of ZEN"
   const profileTag = isAuthenticated ? `Base ${shortAddress}` : "Base Mini App"
-  const isActionLoading = isAuthLoading || isConnecting
+  const currentNetwork = getChainLabel(chainId)
+  const isActionLoading = isAuthLoading || isConnecting || isSwitching
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -79,6 +105,9 @@ export function ProfileScreen() {
               <p className="text-sm text-muted-foreground mt-2 max-w-md">{profileBio}</p>
               {isAuthenticated && (
                 <p className="text-xs text-muted-foreground mt-2">Wallet: {address}</p>
+              )}
+              {isAuthenticated && (
+                <p className="text-xs text-muted-foreground mt-1">Network: {currentNetwork}</p>
               )}
             </div>
 
@@ -124,12 +153,28 @@ export function ProfileScreen() {
             {isActionLoading ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                {isAuthenticated ? "Disconnecting..." : "Connecting..."}
+                {isAuthenticated ? "Working..." : "Connecting..."}
               </>
             ) : isAuthenticated ? (
               "Disconnect Base Account"
             ) : (
               "Connect Base Account"
+            )}
+          </Button>
+          <Button
+            onClick={handleSwitchNetwork}
+            disabled={!isAuthenticated || isActionLoading}
+            className="w-full h-12 text-lg font-semibold"
+            size="lg"
+            variant="outline"
+          >
+            {isSwitching ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Switching Network...
+              </>
+            ) : (
+              "Switch Base Network"
             )}
           </Button>
           {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}

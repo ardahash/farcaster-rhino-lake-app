@@ -31,10 +31,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameState>(INITIAL_STATE)
 
   const sacrificeZen = async (amount: number) => {
-    // Simulate onchain transaction
-    console.log("[v0] Simulating sacrifice transaction:", amount, "ZEN")
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
     setState((prev) => ({
       ...prev,
       zenPower: prev.zenPower + amount * 10,
@@ -43,9 +39,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }
 
   const stakeZen = async (amount: number) => {
-    console.log("[v0] Simulating stake transaction:", amount, "ZEN")
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
     setState((prev) => ({
       ...prev,
       stakedZen: prev.stakedZen + amount,
