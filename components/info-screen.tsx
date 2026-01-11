@@ -22,7 +22,7 @@ export function InfoScreen() {
           <div className="space-y-3 text-muted-foreground leading-relaxed">
             <p>
               Long ago, in a realm between the digital and divine, a mystical lake appeared at the foot of an ancient
-              mountain. The waters shimmered with an otherworldly energy—ZEN.
+              mountain. The waters shimmered with an otherworldly energy called ZEN.
             </p>
             <p>
               Warriors and builders from across the lands discovered that by sacrificing ZEN to the lake, they could
@@ -82,19 +82,19 @@ export function InfoScreen() {
           </Accordion>
         </Card>
 
-        {/* Base & Farcaster Info */}
+        {/* Base Mini App Info */}
         <Card className="game-card p-6 space-y-3 mt-6">
-          <h3 className="font-semibold text-lg text-foreground">Built for Base × Farcaster</h3>
+          <h3 className="font-semibold text-lg text-foreground">Built for Base Mini Apps</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Rhino Lake is a native Farcaster Mini-App built on Base blockchain. All transactions are simulated for the
-            demo, but designed for real onchain gameplay.
+            Rhino Lake is a Base mini app built on the Base blockchain. Transactions are simulated for the demo, but
+            designed for real onchain gameplay.
           </p>
           <div className="flex gap-2 flex-wrap">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
               Base Network
             </span>
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
-              Farcaster Native
+              In-App Native
             </span>
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
               Mobile First

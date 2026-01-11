@@ -4,13 +4,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useFarcaster } from "@/lib/farcaster-context"
 import { useGame } from "@/lib/game-state"
 import { Loader2, Sparkles, Castle, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export function HomeScreen() {
-  const { user } = useFarcaster()
   const { state, sacrificeZen } = useGame()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
@@ -34,6 +32,11 @@ export function HomeScreen() {
     }
   }
 
+  const displayName = "Rhino Lake Ruler"
+  const username = "rhino-lake"
+  const avatarUrl = "/rhino-avatar-purple.jpg"
+  const avatarFallback = displayName[0] ?? "?"
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
       {/* City State Visualization */}
@@ -41,12 +44,12 @@ export function HomeScreen() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="w-12 h-12 border-2 border-primary">
-              <AvatarImage src={user?.pfpUrl || "/placeholder.svg"} alt={user?.displayName} />
-              <AvatarFallback>{user?.displayName?.[0]}</AvatarFallback>
+              <AvatarImage src={avatarUrl} alt={displayName} />
+              <AvatarFallback>{avatarFallback}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">{user?.displayName}</p>
-              <p className="text-sm text-muted-foreground">@{user?.username}</p>
+              <p className="font-semibold text-foreground">{displayName}</p>
+              <p className="text-sm text-muted-foreground">@{username}</p>
             </div>
           </div>
           <div className="text-right">

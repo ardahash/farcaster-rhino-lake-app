@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { FarcasterProvider } from "@/lib/farcaster-context"
 import { GameProvider } from "@/lib/game-state"
 import { OnboardingModal } from "@/components/onboarding-modal"
 import { HomeScreen } from "@/components/home-screen"
@@ -15,25 +14,23 @@ export default function RhinoLakePage() {
   const [activeTab, setActiveTab] = useState("home")
 
   return (
-    <FarcasterProvider>
-      <GameProvider>
-        <div className="min-h-screen flex flex-col bg-background">
-          <OnboardingModal />
+    <GameProvider>
+      <div className="min-h-screen flex flex-col bg-background">
+        <OnboardingModal />
 
-          {/* Main Content Area */}
-          <main className="flex-1 pb-20 overflow-y-auto">
-            {activeTab === "home" && <HomeScreen />}
-            {activeTab === "temple" && <TempleScreen />}
-            {activeTab === "profile" && <ProfileScreen />}
-            {activeTab === "info" && <InfoScreen />}
-          </main>
+        {/* Main Content Area */}
+        <main className="flex-1 pb-20 overflow-y-auto">
+          {activeTab === "home" && <HomeScreen />}
+          {activeTab === "temple" && <TempleScreen />}
+          {activeTab === "profile" && <ProfileScreen />}
+          {activeTab === "info" && <InfoScreen />}
+        </main>
 
-          {/* Bottom Navigation */}
-          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Bottom Navigation */}
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-          <Toaster />
-        </div>
-      </GameProvider>
-    </FarcasterProvider>
+        <Toaster />
+      </div>
+    </GameProvider>
   )
 }

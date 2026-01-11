@@ -3,12 +3,10 @@
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { useFarcaster } from "@/lib/farcaster-context"
 import { useGame } from "@/lib/game-state"
 import { Crown, Trophy, Sparkles, TrendingUp } from "lucide-react"
 
 export function ProfileScreen() {
-  const { user } = useFarcaster()
   const { state } = useGame()
 
   const achievements = [
@@ -17,6 +15,13 @@ export function ProfileScreen() {
     { id: 3, name: "Temple Master", icon: Crown, unlocked: state.cityLevel >= 3 },
     { id: 4, name: "Legendary Ruler", icon: Trophy, unlocked: state.cityLevel >= 10 },
   ]
+
+  const displayName = "Rhino Lake Ruler"
+  const username = "rhino-lake"
+  const avatarUrl = "/rhino-avatar-purple.jpg"
+  const avatarFallback = displayName[0] ?? "?"
+  const profileBio = "Builder of empires, master of ZEN"
+  const profileTag = "Base Mini App"
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -27,18 +32,18 @@ export function ProfileScreen() {
         <Card className="game-card p-6 space-y-6">
           <div className="flex flex-col items-center space-y-4">
             <Avatar className="w-24 h-24 border-4 border-primary">
-              <AvatarImage src={user?.pfpUrl || "/placeholder.svg"} alt={user?.displayName} />
-              <AvatarFallback className="text-2xl">{user?.displayName?.[0]}</AvatarFallback>
+              <AvatarImage src={avatarUrl} alt={displayName} />
+              <AvatarFallback className="text-2xl">{avatarFallback}</AvatarFallback>
             </Avatar>
 
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-foreground">{user?.displayName}</h2>
-              <p className="text-muted-foreground">@{user?.username}</p>
-              {user?.bio && <p className="text-sm text-muted-foreground mt-2 max-w-md">{user.bio}</p>}
+              <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
+              <p className="text-muted-foreground">@{username}</p>
+              <p className="text-sm text-muted-foreground mt-2 max-w-md">{profileBio}</p>
             </div>
 
             <Badge variant="outline" className="text-primary border-primary">
-              FID: {user?.fid}
+              {profileTag}
             </Badge>
           </div>
 
