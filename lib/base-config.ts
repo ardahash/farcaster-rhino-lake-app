@@ -7,6 +7,11 @@ export const BASE_CHAINS = [base, baseSepolia] as const
 export const DEFAULT_CHAIN = process.env.NEXT_PUBLIC_BASE_CHAIN === "sepolia" ? baseSepolia : base
 export const DEFAULT_CHAIN_ID = DEFAULT_CHAIN.id
 
+const RPC_URLS: Record<number, string | undefined> = {
+  [base.id]: process.env.NEXT_PUBLIC_BASE_RPC_URL,
+  [baseSepolia.id]: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL,
+}
+
 export const CHAIN_LABELS: Record<number, string> = {
   [base.id]: "Base",
   [baseSepolia.id]: "Base Sepolia",
@@ -42,6 +47,8 @@ export const getChainLabel = (chainId?: number | null) => {
   if (!chainId) return "Unknown"
   return CHAIN_LABELS[chainId] ?? `Chain ${chainId}`
 }
+
+export const getRpcUrlForChain = (chainId: number) => RPC_URLS[chainId]
 
 export const getPaymasterUrl = (chainId?: number | null) => {
   if (!chainId) return ""

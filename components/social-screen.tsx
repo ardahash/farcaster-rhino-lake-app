@@ -84,7 +84,11 @@ export function SocialScreen() {
       setTowns(entries)
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Unable to load towns."
-      setError(message)
+      if (message.includes("no backend is currently healthy")) {
+        setError("Base RPC is unavailable. Set NEXT_PUBLIC_BASE_RPC_URL to a stable provider and retry.")
+      } else {
+        setError(message)
+      }
     } finally {
       setIsLoading(false)
     }
