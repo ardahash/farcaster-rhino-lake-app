@@ -10,7 +10,6 @@ import {
 } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider, createConfig, http, useConnect, useConnection, useDisconnect } from "wagmi"
-import { ConnectorAlreadyConnectedError } from "@wagmi/core"
 import { baseAccount } from "wagmi/connectors"
 import { numberToHex } from "viem"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID } from "@/lib/base-config"
@@ -122,7 +121,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
         chainId: result.chainId,
       })
     } catch (caughtError) {
-      if (caughtError instanceof ConnectorAlreadyConnectedError) {
+      if (caughtError instanceof Error && caughtError.name === "ConnectorAlreadyConnectedError") {
         disconnect()
         const result = await connectWithCapabilities()
         const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
