@@ -13,10 +13,15 @@ const RPC_URLS: Record<number, string | undefined> = {
   [baseSepolia.id]: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL,
 }
 
-export const BASE_NAME_RESOLVER_ADDRESS = process.env.NEXT_PUBLIC_BASE_UNIVERSAL_RESOLVER_ADDRESS as Address | undefined
+const DEFAULT_UNIVERSAL_RESOLVER_ADDRESS = "0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe" as const
+const envUniversalResolver = process.env.NEXT_PUBLIC_BASE_UNIVERSAL_RESOLVER_ADDRESS
+export const BASE_NAME_RESOLVER_ADDRESS = (envUniversalResolver
+  ? (envUniversalResolver as Address)
+  : (DEFAULT_UNIVERSAL_RESOLVER_ADDRESS as Address))
 export const BASE_NAME_GATEWAYS = process.env.NEXT_PUBLIC_BASE_NAME_GATEWAYS
   ? process.env.NEXT_PUBLIC_BASE_NAME_GATEWAYS.split(",").map((value) => value.trim()).filter(Boolean)
   : undefined
+export const MAINNET_RPC_URL = process.env.NEXT_PUBLIC_MAINNET_RPC_URL
 
 export const CHAIN_LABELS: Record<number, string> = {
   [base.id]: "Base",

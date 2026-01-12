@@ -4,16 +4,17 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getLevelFromBurned, getTownAssetForLevel } from "@/lib/game-state"
-import { BASE_NAME_GATEWAYS, BASE_NAME_RESOLVER_ADDRESS } from "@/lib/base-config"
+import { BASE_NAME_GATEWAYS, BASE_NAME_RESOLVER_ADDRESS, MAINNET_RPC_URL } from "@/lib/base-config"
 import { BASE_MAINNET_CHAIN_ID, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS, ZEN_BURNED_EVENT } from "@/lib/zen-burn"
 import { Loader2, RefreshCcw, Users } from "lucide-react"
-import { formatUnits, toCoinType } from "viem"
+import { createPublicClient, formatUnits, http, toCoinType } from "viem"
+import { mainnet } from "viem/chains"
 import { usePublicClient, useReadContract } from "wagmi"
 
 const resolveLookbackBlocks = () => {
   const raw = Number.parseInt(process.env.NEXT_PUBLIC_SOCIAL_LOOKBACK_BLOCKS ?? "", 10)
-  if (Number.isFinite(raw) && raw > 0) return raw
-  return 120000
+  if (Number.isFinite(raw) && raw > 0) return Math.min(raw, 1000)
+  return 1000
 }
 
 const LOOKBACK_BLOCKS = resolveLookbackBlocks()
@@ -46,16 +47,24 @@ export function SocialScreen() {
     return Number(zenDecimals ?? 18)
   }, [zenDecimals])
 
+  const ensClient = useMemo(() => {
+    if (!MAINNET_RPC_URL) return null
+    return createPublicClient({
+      chain: mainnet,
+      transport: http(MAINNET_RPC_URL),
+    })
+  }, [])
+
   const resolveTownNames = useCallback(
     async (entries: TownEntry[]) => {
-      if (!publicClient || !BASE_NAME_RESOLVER_ADDRESS) return
+      if (!ensClient || !BASE_NAME_RESOLVER_ADDRESS) return
       const coinType = toCoinType(BASE_MAINNET_CHAIN_ID)
       const nextEntries = [...entries]
       for (let i = 0; i < nextEntries.length; i += 1) {
         const entry = nextEntries[i]
         if (entry.baseName !== undefined) continue
         try {
-          const name = await publicClient.getEnsName({
+          const name = await ensClient.getEnsName({
             address: entry.address,
             coinType,
             universalResolverAddress: BASE_NAME_RESOLVER_ADDRESS,
@@ -69,7 +78,7 @@ export function SocialScreen() {
       }
       setTowns(nextEntries)
     },
-    [publicClient],
+    [ensClient],
   )
 
   const fetchTowns = useCallback(async () => {
@@ -127,7 +136,7 @@ export function SocialScreen() {
       if (message.includes("no backend is currently healthy")) {
         setError("Base RPC is unavailable. Set NEXT_PUBLIC_BASE_RPC_URL to a stable provider and retry.")
       } else if (message.includes("at most 1000 blocks")) {
-        setError("RPC limited log range. Reduce NEXT_PUBLIC_SOCIAL_LOOKBACK_BLOCKS or refresh again.")
+        setError("RPC limited log range. Set NEXT_PUBLIC_SOCIAL_LOOKBACK_BLOCKS to 1000 or lower.")
       } else {
         setError(message)
       }
