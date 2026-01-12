@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
-import { useGame } from "@/lib/game-state"
+import { getNextLevelCost, getTotalBurnedForLevel, useGame } from "@/lib/game-state"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { Loader2, Church, TrendingUp, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -182,8 +182,18 @@ export function TempleScreen() {
     }
   }, [callId, callsStatus, stakeZen, toast])
 
-  const nextLevelThreshold = state.cityLevel * 50
-  const progressToNextLevel = ((state.stakedZen % 50) / 50) * 100
+  const currentLevelThreshold = getTotalBurnedForLevel(state.cityLevel)
+  const nextLevelThreshold = getTotalBurnedForLevel(state.cityLevel + 1)
+  const nextLevelCost = getNextLevelCost(state.cityLevel)
+  const progressToNextLevel = Math.min(
+    100,
+    Math.max(
+      0,
+      nextLevelThreshold === currentLevelThreshold
+        ? 100
+        : ((state.stakedZen - currentLevelThreshold) / (nextLevelThreshold - currentLevelThreshold)) * 100,
+    ),
+  )
   const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
 
   return (
@@ -224,7 +234,8 @@ export function TempleScreen() {
             />
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            {state.stakedZen} / {nextLevelThreshold} ZEN burned in the Temple
+            {state.stakedZen.toFixed(2)} / {nextLevelThreshold.toFixed(2)} ZEN burned · {nextLevelCost.toFixed(2)} ZEN to
+            reach Level {state.cityLevel + 1}
           </p>
         </div>
       </Card>

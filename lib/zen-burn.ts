@@ -33,6 +33,17 @@ export const ZEN_BURN_MANAGER_ABI = [
   },
 ] as const
 
+export const ZEN_BURNED_EVENT = {
+  type: "event",
+  name: "ZenBurned",
+  inputs: [
+    { name: "user", type: "address", indexed: true },
+    { name: "burnAmount", type: "uint256", indexed: false },
+    { name: "feeAmount", type: "uint256", indexed: false },
+    { name: "newTotalBurned", type: "uint256", indexed: false },
+  ],
+} as const
+
 export const ERC20_ABI = [
   {
     type: "function",

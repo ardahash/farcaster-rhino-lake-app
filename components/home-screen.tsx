@@ -6,34 +6,12 @@ import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
-import { useGame } from "@/lib/game-state"
+import { getTownAssetForLevel, useGame } from "@/lib/game-state"
 import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
-
-const TOWN_ASSETS = [
-  "/lvl1Zenpire.png",
-  "/lvl2Zenpire.png",
-  "/lvl3Zenpire.png",
-  "/lvl4Zenpire.png",
-  "/lvl5Zenpire.png",
-  "/lvl6Zenpire.png",
-  "/lvl7Zenpire.png",
-  "/lvl8Zenpire.png",
-  "/lvl9Zenpire.png",
-  "/lvl10Zenpire.png",
-  "/lvl11Zenpire.png",
-]
-
-const getTownAssetForLevel = (level: number) => {
-  const clampedLevel = Math.min(Math.max(level, 1), TOWN_ASSETS.length)
-  return {
-    level: clampedLevel,
-    src: TOWN_ASSETS[clampedLevel - 1] ?? TOWN_ASSETS[0],
-  }
-}
 
 export function HomeScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -229,7 +207,7 @@ export function HomeScreen() {
             <div className="bg-card/90 backdrop-blur-sm px-4 py-2 rounded-full border border-border">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span className="font-mono font-semibold text-foreground">{state.zenPower.toFixed(1)} ZEN Power</span>
+                <span className="font-mono font-semibold text-foreground">{state.zenPower.toFixed(1)} Power</span>
               </div>
             </div>
           </div>

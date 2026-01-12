@@ -123,7 +123,7 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-primary">{state.cityLevel}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">ZEN Power</p>
+              <p className="text-sm text-muted-foreground mb-1">Power</p>
               <p className="text-3xl font-bold text-foreground">{state.zenPower.toFixed(0)}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">

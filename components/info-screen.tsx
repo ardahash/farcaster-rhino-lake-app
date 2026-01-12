@@ -49,8 +49,8 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                The primary way to gain power. Each sacrifice of 0.01 ZEN grants you 0.1 ZEN Power, increasing your
-                empire's strength and unlocking new possibilities.
+                The primary way to gain power. Each sacrifice of 0.01 ZEN grants you 0.1 Power, increasing your empire's
+                strength and unlocking new possibilities.
               </AccordionContent>
             </AccordionItem>
 
@@ -62,8 +62,8 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Burn your ZEN in the Temple to upgrade your city level. Every 50 ZEN burned increases your level by 1,
-                unlocking special abilities and benefits.
+                Burn your ZEN in the Temple to upgrade your city level. The first upgrade costs 1 ZEN, then 2, then 4,
+                doubling each level to unlock special abilities and benefits.
               </AccordionContent>
             </AccordionItem>
 
@@ -86,8 +86,7 @@ export function InfoScreen() {
         <Card className="game-card p-6 space-y-3 mt-6">
           <h3 className="font-semibold text-lg text-foreground">Built for Base Mini Apps</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Rhino Lake is a Base mini app built on the Base blockchain. Transactions are simulated for the demo, but
-            designed for real onchain gameplay.
+            Rhino Lake is a Base mini app built on the Base blockchain with real onchain gameplay.
           </p>
           <div className="flex gap-2 flex-wrap">
             <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
