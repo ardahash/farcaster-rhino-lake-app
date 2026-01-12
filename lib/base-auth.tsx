@@ -10,6 +10,7 @@ import {
 } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider, createConfig, http, useConnect, useConnection, useDisconnect } from "wagmi"
+import { ConnectorAlreadyConnectedError } from "@wagmi/core"
 import { baseAccount } from "wagmi/connectors"
 import { numberToHex } from "viem"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID } from "@/lib/base-config"
@@ -76,13 +77,17 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       throw new Error("Base Account connector unavailable.")
     }
 
+    if (isConnected && session) {
+      return
+    }
+
     const nonce = createNonce()
     const domain = typeof window !== "undefined" ? window.location.host : "farcaster-rhino-lake-app.vercel.app"
     const uri = typeof window !== "undefined" ? window.location.origin : "https://farcaster-rhino-lake-app.vercel.app"
     const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
 
-    try {
-      const result = await connectAsync({
+    const connectWithCapabilities = async () =>
+      connectAsync({
         connector,
         chainId: DEFAULT_CHAIN_ID,
         capabilities: {
@@ -98,6 +103,12 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
         withCapabilities: true,
       })
 
+    try {
+      if (isConnected) {
+        disconnect()
+      }
+
+      const result = await connectWithCapabilities()
       const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
       const siwe = account?.capabilities?.signInWithEthereum
       if (!account?.address || !siwe?.message || !siwe?.signature) {
@@ -111,11 +122,29 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
         chainId: result.chainId,
       })
     } catch (caughtError) {
+      if (caughtError instanceof ConnectorAlreadyConnectedError) {
+        disconnect()
+        const result = await connectWithCapabilities()
+        const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
+        const siwe = account?.capabilities?.signInWithEthereum
+        if (!account?.address || !siwe?.message || !siwe?.signature) {
+          throw new Error("Sign-in response incomplete.")
+        }
+
+        setSession({
+          address: account.address,
+          message: siwe.message,
+          signature: siwe.signature,
+          chainId: result.chainId,
+        })
+        return
+      }
+
       const message = caughtError instanceof Error ? caughtError.message : "Failed to sign in."
       setError(message)
       throw caughtError
     }
-  }, [connectAsync, connectors])
+  }, [connectAsync, connectors, disconnect, isConnected, session])
 
   const signOut = useCallback(() => {
     disconnect()

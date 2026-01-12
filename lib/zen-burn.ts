@@ -1,0 +1,47 @@
+"use client"
+
+import type { Address } from "viem"
+import { base } from "wagmi/chains"
+
+export const BASE_MAINNET_CHAIN_ID = base.id
+
+export const ZEN_BURN_MANAGER_ADDRESS =
+  (process.env.NEXT_PUBLIC_ZEN_BURN_MANAGER_ADDRESS as Address | undefined) ??
+  ("0x89e273c05d6DdB3d54a8bd669FA4E2B2A857B90c" as const)
+
+export const ZEN_BURN_MANAGER_ABI = [
+  {
+    type: "function",
+    name: "burnZen",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "zen",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "zenDecimals",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
+  },
+] as const
+
+export const ERC20_ABI = [
+  {
+    type: "function",
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const

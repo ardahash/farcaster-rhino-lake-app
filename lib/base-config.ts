@@ -12,13 +12,30 @@ export const CHAIN_LABELS: Record<number, string> = {
   [baseSepolia.id]: "Base Sepolia",
 }
 
-export const TREASURY_ADDRESS =
-  (process.env.NEXT_PUBLIC_TREASURY_ADDRESS as `0x${string}` | undefined) ??
-  ("0x0000000000000000000000000000000000000000" as const)
+export const PAYMASTER_PROXY_PATH = "/api/paymaster"
 
-export const PAYMASTER_URLS: Record<number, string> = {
-  [base.id]: process.env.NEXT_PUBLIC_BASE_PAYMASTER_URL ?? "",
-  [baseSepolia.id]: process.env.NEXT_PUBLIC_BASE_SEPOLIA_PAYMASTER_URL ?? "",
+const DEFAULT_APP_ORIGIN =
+  process.env.NEXT_PUBLIC_PAYMASTER_PROXY_URL ??
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  "http://localhost:3000"
+
+const normalizeOrigin = (origin: string) => origin.replace(/\/$/, "")
+
+const resolvePaymasterOrigin = () => {
+  const preferred = normalizeOrigin(DEFAULT_APP_ORIGIN)
+  if (preferred.startsWith("https://")) {
+    return preferred
+  }
+
+  if (typeof window !== "undefined") {
+    const runtimeOrigin = normalizeOrigin(window.location.origin)
+    if (runtimeOrigin.startsWith("https://")) {
+      return runtimeOrigin
+    }
+  }
+
+  return ""
 }
 
 export const getChainLabel = (chainId?: number | null) => {
@@ -28,5 +45,9 @@ export const getChainLabel = (chainId?: number | null) => {
 
 export const getPaymasterUrl = (chainId?: number | null) => {
   if (!chainId) return ""
-  return PAYMASTER_URLS[chainId] ?? ""
+  const origin = resolvePaymasterOrigin()
+  if (!origin) {
+    return ""
+  }
+  return `${origin}${PAYMASTER_PROXY_PATH}?chainId=${chainId}`
 }

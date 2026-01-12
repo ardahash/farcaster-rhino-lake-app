@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useBaseAuth } from "@/lib/base-auth"
-import { BASE_CHAINS, DEFAULT_CHAIN_ID, TREASURY_ADDRESS, getPaymasterUrl } from "@/lib/base-config"
+import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
 import { useGame } from "@/lib/game-state"
 import { Loader2, Sparkles, Castle, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useCallsStatus, useSendCalls, useSwitchChain } from "wagmi"
-import { parseEther } from "viem"
+import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import { encodeFunctionData, parseUnits } from "viem"
+import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 
 export function HomeScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -21,6 +22,18 @@ export function HomeScreen() {
   const handledCallIdRef = useRef<string | null>(null)
   const { mutateAsync: sendCallsAsync, isPending: isSending } = useSendCalls()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+  const { data: zenAddress } = useReadContract({
+    address: ZEN_BURN_MANAGER_ADDRESS,
+    abi: ZEN_BURN_MANAGER_ABI,
+    functionName: "zen",
+    chainId: BASE_MAINNET_CHAIN_ID,
+  })
+  const { data: zenDecimals } = useReadContract({
+    address: ZEN_BURN_MANAGER_ADDRESS,
+    abi: ZEN_BURN_MANAGER_ABI,
+    functionName: "zenDecimals",
+    chainId: BASE_MAINNET_CHAIN_ID,
+  })
 
   const { data: callsStatus } = useCallsStatus({
     id: callId ?? "",
@@ -43,30 +56,53 @@ export function HomeScreen() {
         throw new Error("Switching network. Please try again.")
       }
 
-      if (TREASURY_ADDRESS === "0x0000000000000000000000000000000000000000") {
-        throw new Error("Treasury address is not configured.")
+      if (activeChainId !== BASE_MAINNET_CHAIN_ID) {
+        await switchChainAsync({ chainId: BASE_MAINNET_CHAIN_ID })
+        throw new Error("Switching to Base mainnet. Please try again.")
+      }
+
+      if (!zenAddress) {
+        throw new Error("ZEN token address not available.")
       }
 
       const paymasterUrl = getPaymasterUrl(activeChainId)
       if (!paymasterUrl) {
-        throw new Error("Paymaster is not configured for this network.")
+        throw new Error("Paymaster proxy must be HTTPS. Set NEXT_PUBLIC_PAYMASTER_PROXY_URL.")
       }
+
+      const decimals = typeof zenDecimals === "number" ? zenDecimals : Number(zenDecimals ?? 18)
+      const amount = parseUnits("0.01", decimals)
+      const approveData = encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [ZEN_BURN_MANAGER_ADDRESS, amount],
+      })
+      const burnData = encodeFunctionData({
+        abi: ZEN_BURN_MANAGER_ABI,
+        functionName: "burnZen",
+        args: [amount],
+      })
 
       const response = await sendCallsAsync({
         chainId: activeChainId,
         account: address,
         calls: [
           {
-            to: TREASURY_ADDRESS,
-            value: parseEther("0.01"),
+            to: zenAddress,
+            data: approveData,
+          },
+          {
+            to: ZEN_BURN_MANAGER_ADDRESS,
+            data: burnData,
           },
         ],
         capabilities: {
           paymasterService: {
             url: paymasterUrl,
-            optional: true,
+            optional: false,
           },
         },
+        forceAtomic: true,
         version: "1",
       })
 
@@ -115,7 +151,7 @@ export function HomeScreen() {
     }
 
     if (callsStatus.status === "success" && callsStatus.receipts?.length) {
-      const txHash = callsStatus.receipts[0]?.transactionHash
+      const txHash = callsStatus.receipts[callsStatus.receipts.length - 1]?.transactionHash
       handledCallIdRef.current = callId
       setCallId(null)
       sacrificeZen(0.01)
