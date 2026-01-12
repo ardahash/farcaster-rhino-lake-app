@@ -1,22 +1,74 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { useBaseAuth } from "@/lib/base-auth"
+import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
 import { useGame } from "@/lib/game-state"
+import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { Loader2, Church, TrendingUp, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import { encodeFunctionData, parseUnits } from "viem"
 
 export function TempleScreen() {
+  const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
   const { state, stakeZen } = useGame()
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
-  const [stakeAmount, setStakeAmount] = useState("")
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [burnAmount, setBurnAmount] = useState("")
+  const [callId, setCallId] = useState<string | null>(null)
+  const pendingAmountRef = useRef<number | null>(null)
+  const handledCallIdRef = useRef<string | null>(null)
+  const { mutateAsync: sendCallsAsync, isPending: isSending } = useSendCalls()
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
 
-  const handleStake = async () => {
-    const amount = Number.parseFloat(stakeAmount)
-    if (!amount || amount <= 0) {
+  const { data: zenAddress } = useReadContract({
+    address: ZEN_BURN_MANAGER_ADDRESS,
+    abi: ZEN_BURN_MANAGER_ABI,
+    functionName: "zen",
+    chainId: BASE_MAINNET_CHAIN_ID,
+  })
+  const { data: zenDecimals } = useReadContract({
+    address: ZEN_BURN_MANAGER_ADDRESS,
+    abi: ZEN_BURN_MANAGER_ABI,
+    functionName: "zenDecimals",
+    chainId: BASE_MAINNET_CHAIN_ID,
+  })
+
+  const { data: callsStatus } = useCallsStatus({
+    id: callId ?? "",
+    query: {
+      enabled: Boolean(callId),
+      refetchInterval: callId ? 2000 : false,
+    },
+  })
+
+  const handleConnect = async () => {
+    setIsAuthLoading(true)
+    try {
+      await signIn()
+      toast({
+        title: "Base Account Connected",
+        description: "You're ready to burn ZEN in the Temple.",
+      })
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Please try again."
+      toast({
+        title: "Connection failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
+
+  const handleBurn = async () => {
+    const amountValue = Number.parseFloat(burnAmount)
+    if (!amountValue || amountValue <= 0) {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid ZEN amount",
@@ -25,27 +77,114 @@ export function TempleScreen() {
       return
     }
 
-    setIsLoading(true)
     try {
-      await stakeZen(amount)
-      toast({
-        title: "Staking Complete!",
-        description: `Successfully staked ${amount} ZEN`,
+      if (!address || !isAuthenticated) {
+        throw new Error("Connect your Base account to continue.")
+      }
+
+      const supportedChainIds = new Set(BASE_CHAINS.map((chain) => chain.id))
+      const activeChainId = chainId ?? DEFAULT_CHAIN_ID
+      if (!supportedChainIds.has(activeChainId)) {
+        await switchChainAsync({ chainId: DEFAULT_CHAIN_ID })
+        throw new Error("Switching network. Please try again.")
+      }
+
+      if (activeChainId !== BASE_MAINNET_CHAIN_ID) {
+        await switchChainAsync({ chainId: BASE_MAINNET_CHAIN_ID })
+        throw new Error("Switching to Base mainnet. Please try again.")
+      }
+
+      if (!zenAddress) {
+        throw new Error("ZEN token address not available.")
+      }
+
+      const paymasterUrl = getPaymasterUrl(activeChainId)
+      if (!paymasterUrl) {
+        throw new Error("Paymaster proxy must be HTTPS. Set NEXT_PUBLIC_PAYMASTER_PROXY_URL.")
+      }
+
+      const decimals = typeof zenDecimals === "number" ? zenDecimals : Number(zenDecimals ?? 18)
+      const amount = parseUnits(burnAmount, decimals)
+      const approveData = encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [ZEN_BURN_MANAGER_ADDRESS, amount],
       })
-      setStakeAmount("")
-    } catch (error) {
+      const burnData = encodeFunctionData({
+        abi: ZEN_BURN_MANAGER_ABI,
+        functionName: "burnZen",
+        args: [amount],
+      })
+
+      pendingAmountRef.current = amountValue
+      const response = await sendCallsAsync({
+        chainId: activeChainId,
+        account: address,
+        calls: [
+          {
+            to: zenAddress,
+            data: approveData,
+          },
+          {
+            to: ZEN_BURN_MANAGER_ADDRESS,
+            data: burnData,
+          },
+        ],
+        capabilities: {
+          paymasterService: {
+            url: paymasterUrl,
+            optional: false,
+          },
+        },
+        forceAtomic: true,
+        version: "1",
+      })
+
+      setCallId(response.id)
+    } catch (caughtError) {
       toast({
-        title: "Staking Failed",
-        description: "Please try again",
+        title: "Burn Failed",
+        description: caughtError instanceof Error ? caughtError.message : "Please try again",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
+  useEffect(() => {
+    if (!callId || !callsStatus) return
+    if (handledCallIdRef.current === callId) return
+
+    if (callsStatus.status === "failure") {
+      handledCallIdRef.current = callId
+      setCallId(null)
+      pendingAmountRef.current = null
+      toast({
+        title: "Burn Failed",
+        description: "The burn transaction did not complete.",
+        variant: "destructive",
+      })
+    }
+
+    if (callsStatus.status === "success" && callsStatus.receipts?.length) {
+      const txHash = callsStatus.receipts[callsStatus.receipts.length - 1]?.transactionHash
+      handledCallIdRef.current = callId
+      setCallId(null)
+      const burnedAmount = pendingAmountRef.current ?? 0
+      pendingAmountRef.current = null
+      stakeZen(burnedAmount)
+      setBurnAmount("")
+
+      const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "View in explorer"
+      toast({
+        title: "Burn Complete!",
+        description: `Tx ${shortHash}`,
+      })
+    }
+  }, [callId, callsStatus, stakeZen, toast])
+
   const nextLevelThreshold = state.cityLevel * 50
   const progressToNextLevel = ((state.stakedZen % 50) / 50) * 100
+  const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -56,7 +195,7 @@ export function TempleScreen() {
           </div>
         </div>
         <h1 className="text-3xl font-bold text-primary gold-glow">The Temple</h1>
-        <p className="text-muted-foreground">Stake ZEN to upgrade your city and unlock divine powers</p>
+        <p className="text-muted-foreground">Burn ZEN to upgrade your city and unlock divine powers</p>
       </div>
 
       {/* Current Level Status */}
@@ -85,20 +224,20 @@ export function TempleScreen() {
             />
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            {state.stakedZen} / {nextLevelThreshold} ZEN staked
+            {state.stakedZen} / {nextLevelThreshold} ZEN burned in the Temple
           </p>
         </div>
       </Card>
 
-      {/* Staking Interface */}
+      {/* Burning Interface */}
       <Card className="game-card p-6 space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-foreground">Stake ZEN Amount</label>
+          <label className="text-sm font-semibold text-foreground">Burn ZEN Amount</label>
           <Input
             type="number"
             placeholder="Enter amount..."
-            value={stakeAmount}
-            onChange={(e) => setStakeAmount(e.target.value)}
+            value={burnAmount}
+            onChange={(e) => setBurnAmount(e.target.value)}
             className="h-12 text-lg"
             min="0"
             step="0.01"
@@ -106,23 +245,34 @@ export function TempleScreen() {
         </div>
 
         <Button
-          onClick={handleStake}
-          disabled={isLoading || !stakeAmount}
+          onClick={isAuthenticated ? handleBurn : handleConnect}
+          disabled={isPrimaryLoading || !burnAmount}
           className="w-full h-12 text-lg font-semibold"
           size="lg"
         >
-          {isLoading ? (
+          {isSending || callId ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Staking...
+              Burning...
+            </>
+          ) : isAuthLoading || isConnecting ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Connecting...
+            </>
+          ) : isAuthenticated ? (
+            <>
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Burn ZEN
             </>
           ) : (
             <>
               <TrendingUp className="w-5 h-5 mr-2" />
-              Stake ZEN
+              Connect Base Account
             </>
           )}
         </Button>
+        {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
       </Card>
 
       {/* Level Benefits */}

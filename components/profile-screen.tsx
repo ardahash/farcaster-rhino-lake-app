@@ -131,7 +131,7 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-foreground">{state.totalSacrifices}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Staked ZEN</p>
+              <p className="text-sm text-muted-foreground mb-1">Temple Burned</p>
               <p className="text-3xl font-bold text-primary">{state.stakedZen}</p>
             </div>
           </div>

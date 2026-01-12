@@ -30,8 +30,8 @@ export function InfoScreen() {
               grew.
             </p>
             <p>
-              Those who learned to balance sacrifice with strategic staking in the Temple became legendary rulers, their
-              names echoing through eternity.
+              Those who learned to balance sacrifice with temple burns became legendary rulers, their names echoing
+              through eternity.
             </p>
           </div>
         </Card>
@@ -62,7 +62,7 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Stake your ZEN in the Temple to upgrade your city level. Every 50 ZEN staked increases your level by 1,
+                Burn your ZEN in the Temple to upgrade your city level. Every 50 ZEN burned increases your level by 1,
                 unlocking special abilities and benefits.
               </AccordionContent>
             </AccordionItem>
@@ -75,8 +75,8 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Balance between sacrificing for immediate power and staking for long-term upgrades. Higher city levels
-                unlock powerful bonuses and establish your legacy as a legendary ruler.
+                Balance between sacrificing for immediate power and temple burns for long-term upgrades. Higher city
+                levels unlock powerful bonuses and establish your legacy as a legendary ruler.
               </AccordionContent>
             </AccordionItem>
           </Accordion>

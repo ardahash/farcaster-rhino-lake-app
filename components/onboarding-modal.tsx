@@ -33,8 +33,8 @@ export function OnboardingModal() {
             </p>
 
             <p>
-              As ruler, you must balance sacrifice and staking to maximize your empire's growth. The more you sacrifice,
-              the greater your power becomes.
+              As ruler, you must balance sacrifice and temple burns to maximize your empire's growth. The more you
+              sacrifice, the greater your power becomes.
             </p>
           </div>
         </div>

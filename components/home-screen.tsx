@@ -214,7 +214,7 @@ export function HomeScreen() {
             <p className="text-xl font-bold text-foreground">{state.totalSacrifices}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Staked ZEN</p>
+            <p className="text-xs text-muted-foreground mb-1">Temple Burned</p>
             <p className="text-xl font-bold text-primary">{state.stakedZen}</p>
           </div>
         </div>
