@@ -7,11 +7,33 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
 import { useGame } from "@/lib/game-state"
-import { Loader2, Sparkles, Castle, Coins } from "lucide-react"
+import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
+
+const TOWN_ASSETS = [
+  "/lvl1Zenpire.png",
+  "/lvl2Zenpire.png",
+  "/lvl3Zenpire.png",
+  "/lvl4Zenpire.png",
+  "/lvl5Zenpire.png",
+  "/lvl6Zenpire.png",
+  "/lvl7Zenpire.png",
+  "/lvl8Zenpire.png",
+  "/lvl9Zenpire.png",
+  "/lvl10Zenpire.png",
+  "/lvl11Zenpire.png",
+]
+
+const getTownAssetForLevel = (level: number) => {
+  const clampedLevel = Math.min(Math.max(level, 1), TOWN_ASSETS.length)
+  return {
+    level: clampedLevel,
+    src: TOWN_ASSETS[clampedLevel - 1] ?? TOWN_ASSETS[0],
+  }
+}
 
 export function HomeScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -170,6 +192,7 @@ export function HomeScreen() {
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
   const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
+  const townAsset = getTownAssetForLevel(state.cityLevel)
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
@@ -195,7 +218,12 @@ export function HomeScreen() {
         {/* Pixel Art City Visualization */}
         <div className="relative aspect-square w-full bg-gradient-to-b from-muted/50 to-muted rounded-lg overflow-hidden border-2 border-border">
           <div className="absolute inset-0 flex items-center justify-center">
-            <Castle className="w-32 h-32 text-primary/20 pixel-art" />
+            <img
+              src={townAsset.src}
+              alt={`Zenempire level ${townAsset.level} town`}
+              className="w-full h-full object-contain pixel-art"
+              loading="eager"
+            />
           </div>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
             <div className="bg-card/90 backdrop-blur-sm px-4 py-2 rounded-full border border-border">

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   other: {
     "base:app_id": "6963ea39b8395f034ac224dc",
   },
-  generator: "v0.app",
+  generator: "Rhino Lake",
   icons: {
     icon: [
       {
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
         media: "(prefers-color-scheme: dark)",
       },
       {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/icon.png",
+        type: "image/png",
       },
     ],
     apple: "/apple-icon.png",
