@@ -1,5 +1,6 @@
 "use client"
 
+import type { Address } from "viem"
 import { base, baseSepolia } from "wagmi/chains"
 
 export const BASE_CHAINS = [base, baseSepolia] as const
@@ -11,6 +12,11 @@ const RPC_URLS: Record<number, string | undefined> = {
   [base.id]: process.env.NEXT_PUBLIC_BASE_RPC_URL,
   [baseSepolia.id]: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL,
 }
+
+export const BASE_NAME_RESOLVER_ADDRESS = process.env.NEXT_PUBLIC_BASE_UNIVERSAL_RESOLVER_ADDRESS as Address | undefined
+export const BASE_NAME_GATEWAYS = process.env.NEXT_PUBLIC_BASE_NAME_GATEWAYS
+  ? process.env.NEXT_PUBLIC_BASE_NAME_GATEWAYS.split(",").map((value) => value.trim()).filter(Boolean)
+  : undefined
 
 export const CHAIN_LABELS: Record<number, string> = {
   [base.id]: "Base",

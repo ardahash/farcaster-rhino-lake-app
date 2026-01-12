@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getLevelFromBurned, getTownAssetForLevel } from "@/lib/game-state"
+import { BASE_NAME_GATEWAYS, BASE_NAME_RESOLVER_ADDRESS } from "@/lib/base-config"
 import { BASE_MAINNET_CHAIN_ID, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS, ZEN_BURNED_EVENT } from "@/lib/zen-burn"
 import { Loader2, RefreshCcw, Users } from "lucide-react"
-import { formatUnits } from "viem"
+import { formatUnits, toCoinType } from "viem"
 import { usePublicClient, useReadContract } from "wagmi"
 
 const resolveLookbackBlocks = () => {
@@ -16,6 +17,7 @@ const resolveLookbackBlocks = () => {
 }
 
 const LOOKBACK_BLOCKS = resolveLookbackBlocks()
+const MAX_LOG_BLOCK_RANGE = 1000n
 const MAX_TOWNS = 20
 
 type TownEntry = {
@@ -24,6 +26,7 @@ type TownEntry = {
   burnedDisplay: string
   level: number
   assetSrc: string
+  baseName?: string | null
 }
 
 export function SocialScreen() {
@@ -43,6 +46,32 @@ export function SocialScreen() {
     return Number(zenDecimals ?? 18)
   }, [zenDecimals])
 
+  const resolveTownNames = useCallback(
+    async (entries: TownEntry[]) => {
+      if (!publicClient || !BASE_NAME_RESOLVER_ADDRESS) return
+      const coinType = toCoinType(BASE_MAINNET_CHAIN_ID)
+      const nextEntries = [...entries]
+      for (let i = 0; i < nextEntries.length; i += 1) {
+        const entry = nextEntries[i]
+        if (entry.baseName !== undefined) continue
+        try {
+          const name = await publicClient.getEnsName({
+            address: entry.address,
+            coinType,
+            universalResolverAddress: BASE_NAME_RESOLVER_ADDRESS,
+            gatewayUrls: BASE_NAME_GATEWAYS?.length ? BASE_NAME_GATEWAYS : undefined,
+            strict: false,
+          })
+          nextEntries[i] = { ...entry, baseName: name }
+        } catch {
+          nextEntries[i] = { ...entry, baseName: null }
+        }
+      }
+      setTowns(nextEntries)
+    },
+    [publicClient],
+  )
+
   const fetchTowns = useCallback(async () => {
     if (!publicClient) return
     setIsLoading(true)
@@ -51,12 +80,21 @@ export function SocialScreen() {
       const latestBlock = await publicClient.getBlockNumber()
       const lookback = BigInt(LOOKBACK_BLOCKS)
       const fromBlock = latestBlock > lookback ? latestBlock - lookback : 0n
-      const logs = await publicClient.getLogs({
-        address: ZEN_BURN_MANAGER_ADDRESS,
-        event: ZEN_BURNED_EVENT,
-        fromBlock,
-        toBlock: "latest",
-      })
+      const logs = []
+      for (
+        let startBlock = fromBlock;
+        startBlock <= latestBlock;
+        startBlock += MAX_LOG_BLOCK_RANGE
+      ) {
+        const endBlock = startBlock + MAX_LOG_BLOCK_RANGE - 1n
+        const chunk = await publicClient.getLogs({
+          address: ZEN_BURN_MANAGER_ADDRESS,
+          event: ZEN_BURNED_EVENT,
+          fromBlock: startBlock,
+          toBlock: endBlock > latestBlock ? latestBlock : endBlock,
+        })
+        logs.push(...chunk)
+      }
 
       const totals = new Map<string, bigint>()
       for (const log of logs) {
@@ -76,16 +114,20 @@ export function SocialScreen() {
             burnedDisplay: burnedValue.toFixed(2),
             level,
             assetSrc: townAsset.src,
+            baseName: undefined,
           }
         })
         .sort((a, b) => b.burnedTotal - a.burnedTotal)
         .slice(0, MAX_TOWNS)
 
       setTowns(entries)
+      resolveTownNames(entries)
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Unable to load towns."
       if (message.includes("no backend is currently healthy")) {
         setError("Base RPC is unavailable. Set NEXT_PUBLIC_BASE_RPC_URL to a stable provider and retry.")
+      } else if (message.includes("at most 1000 blocks")) {
+        setError("RPC limited log range. Reduce NEXT_PUBLIC_SOCIAL_LOOKBACK_BLOCKS or refresh again.")
       } else {
         setError(message)
       }
@@ -158,7 +200,9 @@ export function SocialScreen() {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">#{index + 1} · Level {town.level}</p>
-                <p className="text-xs text-muted-foreground">{town.address.slice(0, 6)}...{town.address.slice(-4)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {town.baseName ?? `${town.address.slice(0, 6)}...${town.address.slice(-4)}`}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-primary">{town.burnedDisplay} ZEN</p>

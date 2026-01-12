@@ -1,23 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
-import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
+import { BASE_CHAINS, BASE_NAME_GATEWAYS, BASE_NAME_RESOLVER_ADDRESS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
 import { useGame } from "@/lib/game-state"
+import { BASE_MAINNET_CHAIN_ID } from "@/lib/zen-burn"
 import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
-import { useSwitchChain } from "wagmi"
+import { toCoinType } from "viem"
+import { usePublicClient, useSwitchChain } from "wagmi"
 
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { state } = useGame()
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [baseName, setBaseName] = useState<string | null>(null)
+  const [isNameLoading, setIsNameLoading] = useState(false)
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+  const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
 
   const achievements = [
     { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
@@ -82,9 +87,44 @@ export function ProfileScreen() {
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
   const profileBio = "Builder of empires, master of ZEN"
-  const profileTag = isAuthenticated ? `Base ${shortAddress}` : "Base Mini App"
+  const profileTag = baseName ?? (isAuthenticated ? `Base ${shortAddress}` : "Base Mini App")
   const currentNetwork = getChainLabel(chainId)
   const isActionLoading = isAuthLoading || isConnecting || isSwitching
+
+  useEffect(() => {
+    if (!address || !publicClient || !BASE_NAME_RESOLVER_ADDRESS) {
+      setBaseName(null)
+      return
+    }
+    let cancelled = false
+    const loadBaseName = async () => {
+      setIsNameLoading(true)
+      try {
+        const name = await publicClient.getEnsName({
+          address,
+          coinType: toCoinType(BASE_MAINNET_CHAIN_ID),
+          universalResolverAddress: BASE_NAME_RESOLVER_ADDRESS,
+          gatewayUrls: BASE_NAME_GATEWAYS?.length ? BASE_NAME_GATEWAYS : undefined,
+          strict: false,
+        })
+        if (!cancelled) {
+          setBaseName(name)
+        }
+      } catch {
+        if (!cancelled) {
+          setBaseName(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsNameLoading(false)
+        }
+      }
+    }
+    loadBaseName()
+    return () => {
+      cancelled = true
+    }
+  }, [address, publicClient])
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -105,6 +145,11 @@ export function ProfileScreen() {
               <p className="text-sm text-muted-foreground mt-2 max-w-md">{profileBio}</p>
               {isAuthenticated && (
                 <p className="text-xs text-muted-foreground mt-2">Wallet: {address}</p>
+              )}
+              {isAuthenticated && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Base Name: {isNameLoading ? "Loading..." : baseName ?? "Not set"}
+                </p>
               )}
               {isAuthenticated && (
                 <p className="text-xs text-muted-foreground mt-1">Network: {currentNetwork}</p>
