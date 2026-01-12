@@ -10,6 +10,9 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Rhino Lake - Build Your Empire",
   description: "Sacrifice ZEN to grow your ancient empire on Base.",
+  other: {
+    "base:app_id": "6963ea39b8395f034ac224dc",
+  },
   generator: "v0.app",
   icons: {
     icon: [
