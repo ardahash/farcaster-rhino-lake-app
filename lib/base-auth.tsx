@@ -10,15 +10,15 @@ import {
 } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider, createConfig, http, useConnect, useConnection, useDisconnect } from "wagmi"
-import { baseAccount } from "wagmi/connectors"
+import { baseAccount, injected } from "wagmi/connectors"
 import { numberToHex } from "viem"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID } from "@/lib/base-config"
 
 type BaseAuthSession = {
   address: `0x${string}`
-  message: string
-  signature: `0x${string}`
   chainId: number
+  message?: string
+  signature?: `0x${string}`
 }
 
 type BaseAuthContextValue = {
@@ -42,6 +42,7 @@ const wagmiConfig = createConfig({
       appName: "Rhino Lake",
       appLogoUrl: "/icon.svg",
     }),
+    injected(),
   ],
   transports: BASE_CHAINS.reduce(
     (acc, chain) => {
@@ -71,12 +72,13 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async () => {
     setError(null)
-    const connector = connectors.find((item) => item.id === "baseAccount") ?? connectors[0]
-    if (!connector) {
-      throw new Error("Base Account connector unavailable.")
-    }
-
-    if (isConnected && session) {
+    if (isConnected) {
+      if (!session && address) {
+        setSession({
+          address,
+          chainId: chainId ?? DEFAULT_CHAIN_ID,
+        })
+      }
       return
     }
 
@@ -85,56 +87,131 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     const uri = typeof window !== "undefined" ? window.location.origin : "https://farcaster-rhino-lake-app.vercel.app"
     const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
 
+    const baseConnector = connectors.find((item) => item.id === "baseAccount")
+    const injectedConnector = connectors.find((item) => item.id === "injected")
+
+    const getConnectAddress = (result: Awaited<ReturnType<typeof connectAsync>>) => {
+      const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
+      if (!account) {
+        throw new Error("No account returned from wallet.")
+      }
+
+      if (typeof account === "string") {
+        return { address: account, chainId: result.chainId }
+      }
+
+      const siwe = account.capabilities?.signInWithEthereum
+      return {
+        address: account.address,
+        chainId: result.chainId,
+        message: siwe?.message,
+        signature: siwe?.signature,
+      }
+    }
+
+    const connectWithConnector = async (
+      targetConnector: NonNullable<(typeof connectors)[number]>,
+      withCapabilities = false,
+    ) => {
+      try {
+        return await connectAsync({
+          connector: targetConnector,
+          chainId: DEFAULT_CHAIN_ID,
+          ...(withCapabilities
+            ? {
+                capabilities: {
+                  signInWithEthereum: {
+                    nonce,
+                    statement: "Sign in to Rhino Lake.",
+                    domain,
+                    uri,
+                    chainId: chainIdHex,
+                    version: "1",
+                  },
+                },
+                withCapabilities: true,
+              }
+            : {}),
+        })
+      } catch (caughtError) {
+        if (caughtError instanceof Error && caughtError.name === "ConnectorAlreadyConnectedError") {
+          disconnect()
+          return connectAsync({
+            connector: targetConnector,
+            chainId: DEFAULT_CHAIN_ID,
+            ...(withCapabilities
+              ? {
+                  capabilities: {
+                    signInWithEthereum: {
+                      nonce,
+                      statement: "Sign in to Rhino Lake.",
+                      domain,
+                      uri,
+                      chainId: chainIdHex,
+                      version: "1",
+                    },
+                  },
+                  withCapabilities: true,
+                }
+              : {}),
+          })
+        }
+        throw caughtError
+      }
+    }
+
+    const shouldFallbackToInjected = (caughtError: unknown) => {
+      if (!(caughtError instanceof Error)) return false
+      const message = caughtError.message.toLowerCase()
+      return (
+        message.includes("wallet_connect") ||
+        message.includes("not supported") ||
+        message.includes("connector not ready") ||
+        message.includes("connector not found") ||
+        message.includes("provider not found")
+      )
+    }
+
     const connectWithCapabilities = async () =>
-      connectAsync({
-        connector,
-        chainId: DEFAULT_CHAIN_ID,
-        capabilities: {
-          signInWithEthereum: {
-            nonce,
-            statement: "Sign in to Rhino Lake.",
-            domain,
-            uri,
-            chainId: chainIdHex,
-            version: "1",
-          },
-        },
-        withCapabilities: true,
-      })
+      connectWithConnector(
+        baseConnector ?? connectors[0],
+        true,
+      )
 
     try {
       if (isConnected) {
         disconnect()
       }
 
-      const result = await connectWithCapabilities()
-      const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
-      const siwe = account?.capabilities?.signInWithEthereum
-      if (!account?.address || !siwe?.message || !siwe?.signature) {
-        throw new Error("Sign-in response incomplete.")
+      if (!baseConnector) {
+        if (!injectedConnector) {
+          throw new Error("No supported wallet connector available.")
+        }
+        const result = await connectWithConnector(injectedConnector)
+        const { address: walletAddress, chainId: connectedChainId } = getConnectAddress(result)
+        setSession({
+          address: walletAddress,
+          chainId: connectedChainId,
+        })
+        return
       }
 
+      const result = await connectWithCapabilities()
+      const { address: walletAddress, chainId: connectedChainId, message, signature } = getConnectAddress(result)
+
       setSession({
-        address: account.address,
-        message: siwe.message,
-        signature: siwe.signature,
-        chainId: result.chainId,
+        address: walletAddress,
+        message,
+        signature,
+        chainId: connectedChainId,
       })
     } catch (caughtError) {
-      if (caughtError instanceof Error && caughtError.name === "ConnectorAlreadyConnectedError") {
-        disconnect()
-        const result = await connectWithCapabilities()
-        const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
-        const siwe = account?.capabilities?.signInWithEthereum
-        if (!account?.address || !siwe?.message || !siwe?.signature) {
-          throw new Error("Sign-in response incomplete.")
-        }
-
+      if (shouldFallbackToInjected(caughtError) && injectedConnector) {
+        const result = await connectWithConnector(injectedConnector)
+        const { address: walletAddress, chainId: connectedChainId } = getConnectAddress(result)
         setSession({
-          address: account.address,
-          message: siwe.message,
-          signature: siwe.signature,
-          chainId: result.chainId,
+          address: walletAddress,
+          chainId: connectedChainId,
         })
         return
       }
@@ -143,7 +220,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       setError(message)
       throw caughtError
     }
-  }, [connectAsync, connectors, disconnect, isConnected, session])
+  }, [address, chainId, connectAsync, connectors, disconnect, isConnected, session])
 
   const signOut = useCallback(() => {
     disconnect()
@@ -157,7 +234,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       chainId: chainId ?? null,
       isConnected,
       isConnecting: isConnecting || isPending,
-      isAuthenticated: Boolean(session),
+      isAuthenticated: isConnected,
       session,
       error: error ?? connectError?.message ?? null,
       signIn,
