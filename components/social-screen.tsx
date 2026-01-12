@@ -53,7 +53,7 @@ export function SocialScreen() {
       chain: mainnet,
       transport: http(MAINNET_RPC_URL),
     })
-  }, [])
+  }, [MAINNET_RPC_URL])
 
   const resolveTownNames = useCallback(
     async (entries: TownEntry[]) => {

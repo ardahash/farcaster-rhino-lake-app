@@ -138,7 +138,7 @@ export function ProfileScreen() {
     return () => {
       cancelled = true
     }
-  }, [address, publicClient])
+  }, [address, ensClient])
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
