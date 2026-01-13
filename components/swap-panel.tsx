@@ -7,13 +7,15 @@ import { Input } from "@/components/ui/input"
 import { ToastAction } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
-import { BASE_CHAINS, getPaymasterUrl } from "@/lib/base-config"
+import { getPaymasterUrl } from "@/lib/base-config"
 import {
   AERODROME_CLASSIC_ROUTER_ABI,
   AERODROME_CLASSIC_ROUTER_ADDRESS,
   AERODROME_SLIPSTREAM_ROUTER_ABI,
   AERODROME_SLIPSTREAM_ROUTER_ADDRESS,
   BASE_CHAIN_ID,
+  UNISWAP_V3_ROUTER_ABI,
+  UNISWAP_V3_ROUTER_ADDRESS,
   USDC_ADDRESS,
   WETH_ADDRESS,
   ZEN_TOKEN_ADDRESS,
@@ -25,6 +27,7 @@ import { encodeFunctionData, parseUnits } from "viem"
 import { useCallsStatus, usePublicClient, useReadContract, useSendCalls, useSendTransaction, useSwitchChain } from "wagmi"
 
 const DEFAULT_ETH_AMOUNT = "0.001"
+const DEFAULT_WETH_AMOUNT = "0.001"
 const DEFAULT_USDC_AMOUNT = "1"
 const SLIPPAGE_BPS = 100n
 
@@ -50,9 +53,10 @@ export function SwapPanel({
   const { sendTransactionAsync } = useSendTransaction()
 
   const [ethAmount, setEthAmount] = useState(DEFAULT_ETH_AMOUNT)
+  const [wethAmount, setWethAmount] = useState(DEFAULT_WETH_AMOUNT)
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_USDC_AMOUNT)
   const [pendingSwapId, setPendingSwapId] = useState<string | null>(null)
-  const [activeSwap, setActiveSwap] = useState<"eth" | "usdc" | null>(null)
+  const [activeSwap, setActiveSwap] = useState<"eth" | "weth" | "usdc" | null>(null)
   const handledSwapIdRef = useRef<string | null>(null)
 
   const { data: callsStatus } = useCallsStatus({
@@ -78,12 +82,7 @@ export function SwapPanel({
   const isSwapLoading = isSending || Boolean(pendingSwapId) || isSwitching || isConnecting
 
   const ensureBaseNetwork = async () => {
-    const supportedChainIds = new Set(BASE_CHAINS.map((chain) => chain.id))
     const activeChainId = chainId ?? BASE_CHAIN_ID
-    if (!supportedChainIds.has(activeChainId)) {
-      await switchChainAsync({ chainId: BASE_CHAIN_ID })
-      throw new Error("Switching network. Please try again.")
-    }
     if (activeChainId !== BASE_CHAIN_ID) {
       await switchChainAsync({ chainId: BASE_CHAIN_ID })
       throw new Error("Switching to Base mainnet. Please try again.")
@@ -175,9 +174,32 @@ export function SwapPanel({
       }
 
       return {
-        router: AERODROME_SLIPSTREAM_ROUTER_ADDRESS,
+        router: routeChoice.router ?? AERODROME_SLIPSTREAM_ROUTER_ADDRESS,
         data: encodeFunctionData({
           abi: AERODROME_SLIPSTREAM_ROUTER_ABI,
+          functionName: "exactInputSingle",
+          args: [params],
+        }),
+        value: isEth ? amountIn : 0n,
+      }
+    }
+
+    if (routeChoice.mode === "uniswap") {
+      const params = {
+        tokenIn,
+        tokenOut,
+        fee: routeChoice.fee,
+        recipient: address as `0x${string}`,
+        deadline,
+        amountIn,
+        amountOutMinimum: amountOutMin,
+        sqrtPriceLimitX96: 0n,
+      }
+
+      return {
+        router: routeChoice.router ?? UNISWAP_V3_ROUTER_ADDRESS,
+        data: encodeFunctionData({
+          abi: UNISWAP_V3_ROUTER_ABI,
           functionName: "exactInputSingle",
           args: [params],
         }),
@@ -188,7 +210,7 @@ export function SwapPanel({
     const routes = routeChoice.routes
     if (isEth) {
       return {
-        router: AERODROME_CLASSIC_ROUTER_ADDRESS,
+        router: routeChoice.router ?? AERODROME_CLASSIC_ROUTER_ADDRESS,
         data: encodeFunctionData({
           abi: AERODROME_CLASSIC_ROUTER_ABI,
           functionName: "swapExactETHForTokens",
@@ -199,7 +221,7 @@ export function SwapPanel({
     }
 
     return {
-      router: AERODROME_CLASSIC_ROUTER_ADDRESS,
+      router: routeChoice.router ?? AERODROME_CLASSIC_ROUTER_ADDRESS,
       data: encodeFunctionData({
         abi: AERODROME_CLASSIC_ROUTER_ABI,
         functionName: "swapExactTokensForTokens",
@@ -293,6 +315,95 @@ export function SwapPanel({
         await publicClient.waitForTransactionReceipt({ hash: tx })
       }
       handleSwapSuccess(tx)
+      setActiveSwap(null)
+    } catch (error) {
+      handleSwapError(error)
+      setActiveSwap(null)
+    }
+  }
+
+  const handleSwapWeth = async () => {
+    setActiveSwap("weth")
+    try {
+      if (!isAuthenticated || !address) {
+        await signIn()
+        setActiveSwap(null)
+        return
+      }
+
+      const parsedAmount = Number.parseFloat(wethAmount)
+      if (!parsedAmount || parsedAmount <= 0) {
+        throw new Error("Enter a valid WETH amount.")
+      }
+
+      const activeChainId = await ensureBaseNetwork()
+      const amountIn = parseUnits(wethAmount, 18)
+      const swapCall = await executeSwap({
+        amountIn,
+        tokenIn: WETH_ADDRESS,
+        tokenOut: ZEN_TOKEN_ADDRESS,
+        isEth: false,
+      })
+
+      const approvalData = await sendApprovalIfNeeded(WETH_ADDRESS, swapCall.router, amountIn)
+      const paymasterUrl = getPaymasterUrl(activeChainId)
+      const calls = [
+        ...(approvalData
+          ? [
+              {
+                to: WETH_ADDRESS,
+                data: approvalData,
+              },
+            ]
+          : []),
+        {
+          to: swapCall.router,
+          data: swapCall.data,
+        },
+      ]
+
+      try {
+        const response = await sendCallsAsync({
+          chainId: activeChainId,
+          account: address,
+          calls,
+          capabilities: paymasterUrl
+            ? {
+                paymasterService: { url: paymasterUrl, optional: false },
+              }
+            : undefined,
+          forceAtomic: true,
+          version: "1",
+        })
+        setPendingSwapId(response.id)
+        return
+      } catch (error) {
+        const message = error instanceof Error ? error.message : ""
+        if (!message.includes("wallet_sendCalls") && !message.includes("not supported")) {
+          throw error
+        }
+      }
+
+      if (approvalData) {
+        const approvalTx = await sendTransactionAsync({
+          chainId: activeChainId,
+          to: WETH_ADDRESS,
+          data: approvalData,
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash: approvalTx })
+        }
+      }
+
+      const swapTx = await sendTransactionAsync({
+        chainId: activeChainId,
+        to: swapCall.router,
+        data: swapCall.data,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: swapTx })
+      }
+      handleSwapSuccess(swapTx)
       setActiveSwap(null)
     } catch (error) {
       handleSwapError(error)
@@ -449,6 +560,37 @@ export function SwapPanel({
               <>
                 <ArrowLeftRight className="w-4 h-4 mr-2" />
                 Swap ETH to ZEN
+              </>
+            )}
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground">WETH Amount</label>
+          <Input
+            type="number"
+            min="0"
+            step="0.0001"
+            value={wethAmount}
+            onChange={(event) => setWethAmount(event.target.value)}
+            className="h-11"
+          />
+          <Button
+            onClick={handleSwapWeth}
+            disabled={isSwapDisabled}
+            className="w-full h-12 text-base font-semibold"
+            size="lg"
+            variant={highlightSwap ? "default" : "outline"}
+          >
+            {activeSwap === "weth" ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Swapping WETH...
+              </>
+            ) : (
+              <>
+                <ArrowLeftRight className="w-4 h-4 mr-2" />
+                Swap WETH to ZEN
               </>
             )}
           </Button>
