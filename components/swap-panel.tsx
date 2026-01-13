@@ -21,6 +21,7 @@ import {
   ZEN_TOKEN_ADDRESS,
 } from "@/lib/aerodrome"
 import { selectBestRoute } from "@/lib/router-selector"
+import { useErc20Balance } from "@/lib/use-erc20-balance"
 import { ERC20_ABI } from "@/lib/zen-burn"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
 import { encodeFunctionData, parseUnits } from "viem"
@@ -72,6 +73,20 @@ export function SwapPanel({
     abi: ERC20_ABI,
     functionName: "decimals",
     chainId: BASE_CHAIN_ID,
+  })
+
+  const usdcBalance = useErc20Balance({
+    token: USDC_ADDRESS,
+    address: address as `0x${string}` | null,
+    chainId: BASE_CHAIN_ID,
+    enabled: Boolean(isAuthenticated && address),
+  })
+
+  const wethBalance = useErc20Balance({
+    token: WETH_ADDRESS,
+    address: address as `0x${string}` | null,
+    chainId: BASE_CHAIN_ID,
+    enabled: Boolean(isAuthenticated && address),
   })
 
   const decimals = useMemo(
@@ -338,6 +353,14 @@ export function SwapPanel({
 
       const activeChainId = await ensureBaseNetwork()
       const amountIn = parseUnits(wethAmount, 18)
+      if (wethBalance.isLoading) {
+        throw new Error("WETH balance is still loading. Try again in a moment.")
+      }
+      if (wethBalance.raw < amountIn) {
+        throw new Error(
+          `Insufficient WETH in this Base account. Balance: ${wethBalance.formatted}.`,
+        )
+      }
       const swapCall = await executeSwap({
         amountIn,
         tokenIn: WETH_ADDRESS,
@@ -427,6 +450,14 @@ export function SwapPanel({
 
       const activeChainId = await ensureBaseNetwork()
       const amountIn = parseUnits(usdcAmount, decimals)
+      if (usdcBalance.isLoading) {
+        throw new Error("USDC balance is still loading. Try again in a moment.")
+      }
+      if (usdcBalance.raw < amountIn) {
+        throw new Error(
+          `Insufficient USDC in this Base account. Balance: ${usdcBalance.formatted}.`,
+        )
+      }
       const swapCall = await executeSwap({
         amountIn,
         tokenIn: USDC_ADDRESS,
