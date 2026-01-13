@@ -49,7 +49,7 @@ export function SwapPanel({
   const { toast } = useToast()
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
-  const { mutateAsync: sendCallsAsync, isPending: isSending } = useSendCalls()
+  const { sendCallsAsync, isPending: isSending } = useSendCalls()
   const { sendTransactionAsync } = useSendTransaction()
 
   const [ethAmount, setEthAmount] = useState(DEFAULT_ETH_AMOUNT)

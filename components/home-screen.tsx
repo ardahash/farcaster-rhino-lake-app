@@ -24,7 +24,7 @@ export function HomeScreen() {
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [callId, setCallId] = useState<string | null>(null)
   const handledCallIdRef = useRef<string | null>(null)
-  const { mutateAsync: sendCallsAsync, isPending: isSending } = useSendCalls()
+  const { sendCallsAsync, isPending: isSending } = useSendCalls()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { data: zenAddress } = useReadContract({
     address: ZEN_BURN_MANAGER_ADDRESS,
