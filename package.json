@@ -11,6 +11,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@base-org/account": "^2.5.1",
+    "@coinbase/cdp-sdk": "^1.43.0",
     "@coinbase/onchainkit": "^1.1.2",
     "@farcaster/miniapp-wagmi-connector": "^1.1.0",
     "@radix-ui/react-accordion": "1.2.2",

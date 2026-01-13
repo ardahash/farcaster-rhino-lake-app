@@ -26,43 +26,45 @@ export const useErc20Balance = ({ token, address, chainId, enabled = true }: Erc
   const publicClient = usePublicClient({ chainId })
   const canRead = Boolean(address && enabled && publicClient)
 
-  const decimalsQuery = useQuery({
-    queryKey: ["erc20-decimals", token, chainId],
-    queryFn: async () => {
-      if (!publicClient) {
-        throw new Error("RPC not ready.")
-      }
-      return publicClient.readContract({
-        address: token,
-        abi: ERC20_ABI,
-        functionName: "decimals",
-      })
-    },
-    enabled: Boolean(enabled && publicClient),
-    staleTime: 1000 * 60 * 60,
-    retry: 2,
-  })
-
   const balanceQuery = useQuery({
     queryKey: ["erc20-balance", token, address, chainId],
     queryFn: async () => {
       if (!publicClient || !address) {
         throw new Error("RPC not ready.")
       }
-      return publicClient.readContract({
-        address: token,
-        abi: ERC20_ABI,
-        functionName: "balanceOf",
-        args: [address],
+      const results = await publicClient.multicall({
+        contracts: [
+          {
+            address: token,
+            abi: ERC20_ABI,
+            functionName: "decimals",
+          },
+          {
+            address: token,
+            abi: ERC20_ABI,
+            functionName: "balanceOf",
+            args: [address],
+          },
+        ],
+        allowFailure: true,
       })
+
+      const decimalsResult = results[0]?.status === "success" ? results[0].result : 18
+      const balanceResult = results[1]?.status === "success" ? results[1].result : 0n
+
+      return {
+        decimals: Number(decimalsResult ?? 18),
+        balance: (balanceResult as bigint | undefined) ?? 0n,
+      }
     },
     enabled: canRead,
     refetchInterval: REFRESH_INTERVAL_MS,
+    staleTime: 1000 * 60 * 2,
     retry: 2,
   })
 
-  const decimals = typeof decimalsQuery.data === "number" ? decimalsQuery.data : Number(decimalsQuery.data ?? 18)
-  const raw = (balanceQuery.data as bigint | undefined) ?? 0n
+  const decimals = balanceQuery.data?.decimals ?? 18
+  const raw = balanceQuery.data?.balance ?? 0n
 
   const formatted = useMemo(() => {
     if (!canRead) return "0"
@@ -73,8 +75,8 @@ export const useErc20Balance = ({ token, address, chainId, enabled = true }: Erc
     raw,
     formatted,
     decimals,
-    isLoading: decimalsQuery.isLoading || balanceQuery.isLoading,
-    error: decimalsQuery.error ?? balanceQuery.error ?? null,
+    isLoading: balanceQuery.isLoading,
+    error: balanceQuery.error ?? null,
     refetch: balanceQuery.refetch,
   }
 }
