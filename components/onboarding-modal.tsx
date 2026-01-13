@@ -33,8 +33,8 @@ export function OnboardingModal() {
             </p>
 
             <p>
-              As ruler, you must balance sacrifice and temple burns to maximize your empire's growth. The more you
-              sacrifice, the greater your power becomes.
+              Connect your Base account to onboard instantly, then swap on Base mainnet to acquire ZEN. As ruler, you
+              must balance sacrifice and temple burns to maximize your empire's growth.
             </p>
           </div>
         </div>

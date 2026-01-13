@@ -11,7 +11,7 @@ import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
 import { USDC_ADDRESS, WETH_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import { useCallsStatus, usePublicClient, useReadContract, useSendCalls, useSendTransaction, useSwitchChain } from "wagmi"
 import { useCapabilities } from "wagmi/experimental"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
@@ -22,10 +22,12 @@ export function HomeScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
   const { state, sacrificeZen } = useGame()
   const { toast } = useToast()
+  const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [callId, setCallId] = useState<string | null>(null)
   const handledCallIdRef = useRef<string | null>(null)
   const { sendCallsAsync, isPending: isSending } = useSendCalls()
+  const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { data: availableCapabilities } = useCapabilities({
     account: address ?? undefined,
@@ -107,6 +109,46 @@ export function HomeScreen() {
     [availableCapabilities],
   )
 
+  const handleSacrificeSuccess = useCallback(
+    (hash?: `0x${string}`) => {
+      sacrificeZen(0.01)
+      refetchBalances()
+      const shortHash = hash ? `${hash.slice(0, 6)}...${hash.slice(-4)}` : "View in explorer"
+      toast({
+        title: "Sacrifice Complete!",
+        description: `Tx ${shortHash}`,
+        action: hash ? (
+          <ToastAction altText="Copy transaction hash" onClick={() => navigator.clipboard.writeText(hash)}>
+            Copy
+          </ToastAction>
+        ) : undefined,
+      })
+    },
+    [refetchBalances, sacrificeZen, toast],
+  )
+
+  const handleSacrificeError = useCallback(
+    (error: unknown) => {
+      toast({
+        title: "Sacrifice Failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      })
+    },
+    [toast],
+  )
+
+  const isSendCallsUnsupported = (error: unknown) => {
+    if (!(error instanceof Error)) return false
+    const message = error.message.toLowerCase()
+    return (
+      message.includes("wallet_sendcalls") ||
+      message.includes("not supported") ||
+      message.includes("unsupported") ||
+      message.includes("method not found")
+    )
+  }
+
   const handleSacrifice = async () => {
     try {
       if (!address || !isAuthenticated) {
@@ -149,30 +191,52 @@ export function HomeScreen() {
         args: [amount],
       })
 
-      const response = await sendCallsAsync({
-        chainId: activeChainId,
-        account: address,
-        calls: [
-          {
-            to: zenAddress,
-            data: approveData,
-          },
-          {
-            to: ZEN_BURN_MANAGER_ADDRESS,
-            data: burnData,
-          },
-        ],
-        capabilities: paymasterCapabilities,
-        forceAtomic: true,
-      })
+      try {
+        const response = await sendCallsAsync({
+          chainId: activeChainId,
+          account: address,
+          calls: [
+            {
+              to: zenAddress,
+              data: approveData,
+            },
+            {
+              to: ZEN_BURN_MANAGER_ADDRESS,
+              data: burnData,
+            },
+          ],
+          capabilities: paymasterCapabilities,
+          forceAtomic: true,
+        })
 
-      setCallId(response.id)
-    } catch (error) {
-      toast({
-        title: "Sacrifice Failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
+        setCallId(response.id)
+        return
+      } catch (error) {
+        if (!isSendCallsUnsupported(error)) {
+          throw error
+        }
+      }
+
+      if (!publicClient) {
+        throw new Error("RPC not ready.")
+      }
+
+      const approvalTx = await sendTransactionAsync({
+        chainId: activeChainId,
+        to: zenAddress,
+        data: approveData,
       })
+      await publicClient.waitForTransactionReceipt({ hash: approvalTx })
+
+      const burnTx = await sendTransactionAsync({
+        chainId: activeChainId,
+        to: ZEN_BURN_MANAGER_ADDRESS,
+        data: burnData,
+      })
+      await publicClient.waitForTransactionReceipt({ hash: burnTx })
+      handleSacrificeSuccess(burnTx)
+    } catch (error) {
+      handleSacrificeError(error)
     }
   }
 
@@ -203,39 +267,24 @@ export function HomeScreen() {
     if (callsStatus.status === "failure") {
       handledCallIdRef.current = callId
       setCallId(null)
-      toast({
-        title: "Transaction Failed",
-        description: "The sacrifice transaction did not complete.",
-        variant: "destructive",
-      })
+      handleSacrificeError(new Error("The sacrifice transaction did not complete."))
     }
 
     if (callsStatus.status === "success" && callsStatus.receipts?.length) {
       const txHash = callsStatus.receipts[callsStatus.receipts.length - 1]?.transactionHash
       handledCallIdRef.current = callId
       setCallId(null)
-      sacrificeZen(0.01)
-      refetchBalances()
-
-      const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "View in explorer"
-      toast({
-        title: "Sacrifice Complete!",
-        description: `Tx ${shortHash}`,
-        action: txHash ? (
-          <ToastAction altText="Copy transaction hash" onClick={() => navigator.clipboard.writeText(txHash)}>
-            Copy
-          </ToastAction>
-        ) : undefined,
-      })
+      handleSacrificeSuccess(txHash)
     }
-  }, [callId, callsStatus, sacrificeZen, toast, refetchBalances])
+  }, [callId, callsStatus, handleSacrificeError, handleSacrificeSuccess])
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
   const username = isAuthenticated ? shortAddress : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
-  const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
+  const isPrimaryLoading =
+    isSending || isTxPending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
   const townAsset = getTownAssetForLevel(state.cityLevel)
   const hasZen = zenBalance.raw >= zenThresholdRaw
   const shouldDisableBurn = isAuthenticated && !zenBalance.isLoading && !hasZen

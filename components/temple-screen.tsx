@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,7 +12,14 @@ import { ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { Loader2, Church, TrendingUp, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import {
+  useCallsStatus,
+  usePublicClient,
+  useReadContract,
+  useSendCalls,
+  useSendTransaction,
+  useSwitchChain,
+} from "wagmi"
 import { useCapabilities } from "wagmi/experimental"
 import { encodeFunctionData, parseUnits } from "viem"
 import { ToastAction } from "@/components/ui/toast"
@@ -21,12 +28,14 @@ export function TempleScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
   const { state, stakeZen } = useGame()
   const { toast } = useToast()
+  const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [burnAmount, setBurnAmount] = useState("")
   const [callId, setCallId] = useState<string | null>(null)
   const pendingAmountRef = useRef<number | null>(null)
   const handledCallIdRef = useRef<string | null>(null)
   const { sendCallsAsync, isPending: isSending } = useSendCalls()
+  const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { data: availableCapabilities } = useCapabilities({
     account: address ?? undefined,
@@ -81,6 +90,51 @@ export function TempleScreen() {
       return undefined
     }
   }, [availableCapabilities])
+
+  const handleBurnSuccess = useCallback(
+    (hash?: `0x${string}`) => {
+      const burnedAmount = pendingAmountRef.current ?? 0
+      pendingAmountRef.current = null
+      stakeZen(burnedAmount)
+      zenBalance.refetch()
+      setBurnAmount("")
+
+      const shortHash = hash ? `${hash.slice(0, 6)}...${hash.slice(-4)}` : "View in explorer"
+      toast({
+        title: "Burn Complete!",
+        description: `Tx ${shortHash}`,
+        action: hash ? (
+          <ToastAction altText="Copy transaction hash" onClick={() => navigator.clipboard.writeText(hash)}>
+            Copy
+          </ToastAction>
+        ) : undefined,
+      })
+    },
+    [stakeZen, toast, zenBalance.refetch],
+  )
+
+  const handleBurnError = useCallback(
+    (error: unknown) => {
+      pendingAmountRef.current = null
+      toast({
+        title: "Burn Failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      })
+    },
+    [toast],
+  )
+
+  const isSendCallsUnsupported = (error: unknown) => {
+    if (!(error instanceof Error)) return false
+    const message = error.message.toLowerCase()
+    return (
+      message.includes("wallet_sendcalls") ||
+      message.includes("not supported") ||
+      message.includes("unsupported") ||
+      message.includes("method not found")
+    )
+  }
 
   const handleConnect = async () => {
     setIsAuthLoading(true)
@@ -160,30 +214,52 @@ export function TempleScreen() {
       })
 
       pendingAmountRef.current = amountValue
-      const response = await sendCallsAsync({
-        chainId: activeChainId,
-        account: address,
-        calls: [
-          {
-            to: zenAddress,
-            data: approveData,
-          },
-          {
-            to: ZEN_BURN_MANAGER_ADDRESS,
-            data: burnData,
-          },
-        ],
-        capabilities: paymasterCapabilities,
-        forceAtomic: true,
-      })
+      try {
+        const response = await sendCallsAsync({
+          chainId: activeChainId,
+          account: address,
+          calls: [
+            {
+              to: zenAddress,
+              data: approveData,
+            },
+            {
+              to: ZEN_BURN_MANAGER_ADDRESS,
+              data: burnData,
+            },
+          ],
+          capabilities: paymasterCapabilities,
+          forceAtomic: true,
+        })
 
-      setCallId(response.id)
-    } catch (caughtError) {
-      toast({
-        title: "Burn Failed",
-        description: caughtError instanceof Error ? caughtError.message : "Please try again",
-        variant: "destructive",
+        setCallId(response.id)
+        return
+      } catch (error) {
+        if (!isSendCallsUnsupported(error)) {
+          throw error
+        }
+      }
+
+      if (!publicClient) {
+        throw new Error("RPC not ready.")
+      }
+
+      const approvalTx = await sendTransactionAsync({
+        chainId: activeChainId,
+        to: zenAddress,
+        data: approveData,
       })
+      await publicClient.waitForTransactionReceipt({ hash: approvalTx })
+
+      const burnTx = await sendTransactionAsync({
+        chainId: activeChainId,
+        to: ZEN_BURN_MANAGER_ADDRESS,
+        data: burnData,
+      })
+      await publicClient.waitForTransactionReceipt({ hash: burnTx })
+      handleBurnSuccess(burnTx)
+    } catch (caughtError) {
+      handleBurnError(caughtError)
     }
   }
 
@@ -194,36 +270,16 @@ export function TempleScreen() {
     if (callsStatus.status === "failure") {
       handledCallIdRef.current = callId
       setCallId(null)
-      pendingAmountRef.current = null
-      toast({
-        title: "Burn Failed",
-        description: "The burn transaction did not complete.",
-        variant: "destructive",
-      })
+      handleBurnError(new Error("The burn transaction did not complete."))
     }
 
     if (callsStatus.status === "success" && callsStatus.receipts?.length) {
       const txHash = callsStatus.receipts[callsStatus.receipts.length - 1]?.transactionHash
       handledCallIdRef.current = callId
       setCallId(null)
-      const burnedAmount = pendingAmountRef.current ?? 0
-      pendingAmountRef.current = null
-      stakeZen(burnedAmount)
-      zenBalance.refetch()
-      setBurnAmount("")
-
-      const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "View in explorer"
-      toast({
-        title: "Burn Complete!",
-        description: `Tx ${shortHash}`,
-        action: txHash ? (
-          <ToastAction altText="Copy transaction hash" onClick={() => navigator.clipboard.writeText(txHash)}>
-            Copy
-          </ToastAction>
-        ) : undefined,
-      })
+      handleBurnSuccess(txHash)
     }
-  }, [callId, callsStatus, stakeZen, toast, zenBalance.refetch])
+  }, [callId, callsStatus, handleBurnError, handleBurnSuccess])
 
   const currentLevelThreshold = getTotalBurnedForLevel(state.cityLevel)
   const nextLevelThreshold = getTotalBurnedForLevel(state.cityLevel + 1)
@@ -237,7 +293,8 @@ export function TempleScreen() {
         : ((state.stakedZen - currentLevelThreshold) / (nextLevelThreshold - currentLevelThreshold)) * 100,
     ),
   )
-  const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
+  const isPrimaryLoading =
+    isSending || isTxPending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
   const requestedRaw = burnAmount ? parseUnits(burnAmount, zenBalance.decimals ?? 18) : 0n
   const requiredRaw = requestedRaw > zenThresholdRaw ? requestedRaw : zenThresholdRaw
   const hasZen = zenBalance.raw >= requiredRaw

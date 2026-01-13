@@ -39,13 +39,23 @@ type BaseAuthContextValue = {
 
 const BaseAuthContext = createContext<BaseAuthContextValue | null>(null)
 
+const DEFAULT_APP_ORIGIN =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ??
+  "https://rhinolake.com"
+
+const normalizeOrigin = (origin: string) => origin.replace(/\/$/, "")
+const APP_ORIGIN = normalizeOrigin(DEFAULT_APP_ORIGIN)
+const APP_LOGO_URL = `${APP_ORIGIN}/icon.png`
+
 const wagmiConfig = createConfig({
   chains: BASE_CHAINS,
   connectors: [
     farcasterMiniApp(),
     baseAccount({
       appName: "Rhino Lake",
-      appLogoUrl: "/icon.svg",
+      appLogoUrl: APP_LOGO_URL,
     }),
     injected(),
   ],

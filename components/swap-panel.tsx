@@ -51,7 +51,7 @@ export function SwapPanel({
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { sendCallsAsync, isPending: isSending } = useSendCalls()
-  const { sendTransactionAsync } = useSendTransaction()
+  const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { data: availableCapabilities } = useCapabilities({
     account: address ?? undefined,
   })
@@ -115,7 +115,7 @@ export function SwapPanel({
   const wethBalanceDisplay = formatBalance(wethBalance.formatted, wethBalance.isLoading)
   const usdcBalanceDisplay = formatBalance(usdcBalance.formatted, usdcBalance.isLoading)
 
-  const isSwapLoading = isSending || Boolean(pendingSwapId) || isSwitching || isConnecting
+  const isSwapLoading = isSending || isTxPending || Boolean(pendingSwapId) || isSwitching || isConnecting
 
   const ensureBaseNetwork = async () => {
     const activeChainId = chainId ?? BASE_MAINNET_CHAIN_ID
@@ -351,8 +351,13 @@ export function SwapPanel({
         setPendingSwapId(response.id)
         return
       } catch (error) {
-        const message = error instanceof Error ? error.message : ""
-        if (!message.includes("wallet_sendCalls") && !message.includes("not supported")) {
+        const message = error instanceof Error ? error.message.toLowerCase() : ""
+        if (
+          !message.includes("wallet_sendcalls") &&
+          !message.includes("not supported") &&
+          !message.includes("unsupported") &&
+          !message.includes("method not found")
+        ) {
           throw error
         }
       }
@@ -434,8 +439,13 @@ export function SwapPanel({
         setPendingSwapId(response.id)
         return
       } catch (error) {
-        const message = error instanceof Error ? error.message : ""
-        if (!message.includes("wallet_sendCalls") && !message.includes("not supported")) {
+        const message = error instanceof Error ? error.message.toLowerCase() : ""
+        if (
+          !message.includes("wallet_sendcalls") &&
+          !message.includes("not supported") &&
+          !message.includes("unsupported") &&
+          !message.includes("method not found")
+        ) {
           throw error
         }
       }
@@ -527,8 +537,13 @@ export function SwapPanel({
         setPendingSwapId(response.id)
         return
       } catch (error) {
-        const message = error instanceof Error ? error.message : ""
-        if (!message.includes("wallet_sendCalls") && !message.includes("not supported")) {
+        const message = error instanceof Error ? error.message.toLowerCase() : ""
+        if (
+          !message.includes("wallet_sendcalls") &&
+          !message.includes("not supported") &&
+          !message.includes("unsupported") &&
+          !message.includes("method not found")
+        ) {
           throw error
         }
       }
@@ -589,6 +604,7 @@ export function SwapPanel({
         <div>
           <h3 className="font-semibold text-lg text-foreground">Swap to ZEN</h3>
           <p className="text-xs text-muted-foreground">Powered by Aerodrome</p>
+          <p className="text-xs text-muted-foreground">Base mainnet swaps only</p>
           <p className="text-xs text-muted-foreground">ZEN Balance: {zenBalanceDisplay}</p>
         </div>
         <RefreshCcw className="w-4 h-4 text-muted-foreground" />
