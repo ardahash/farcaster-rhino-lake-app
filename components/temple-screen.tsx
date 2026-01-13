@@ -23,6 +23,7 @@ import {
 import { useCapabilities } from "wagmi/experimental"
 import { encodeFunctionData, parseUnits } from "viem"
 import { ToastAction } from "@/components/ui/toast"
+import { ConnectionDebug } from "@/components/connection-debug"
 
 export function TempleScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -391,6 +392,7 @@ export function TempleScreen() {
           <p className="text-xs text-muted-foreground text-center">You need ZEN to burn. Swap first.</p>
         )}
         {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
+        <ConnectionDebug />
       </Card>
 
       {/* Level Benefits */}

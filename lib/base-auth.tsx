@@ -25,6 +25,17 @@ type BaseAuthSession = {
   signature?: `0x${string}`
 }
 
+type BaseAuthDiagnostics = {
+  isMiniApp: boolean
+  miniKitPlatform: string | null
+  miniKitReady: boolean
+  onchainKitApiKeyPresent: boolean
+  appOrigin: string
+  lastAttemptAt: number | null
+  lastConnector: { id: string; name: string; type: string } | null
+  connectors: { id: string; name: string; type: string; ready?: boolean }[]
+}
+
 type BaseAuthContextValue = {
   address: `0x${string}` | null
   chainId: number | null
@@ -33,6 +44,7 @@ type BaseAuthContextValue = {
   isAuthenticated: boolean
   session: BaseAuthSession | null
   error: string | null
+  diagnostics: BaseAuthDiagnostics
   signIn: () => Promise<void>
   signOut: () => void
 }
@@ -96,6 +108,12 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
   const { context: miniKitContext, isMiniAppReady, setMiniAppReady } = useMiniKit()
   const [session, setSession] = useState<BaseAuthSession | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lastAttemptAt, setLastAttemptAt] = useState<number | null>(null)
+  const [lastConnector, setLastConnector] = useState<{
+    id: string
+    name: string
+    type: string
+  } | null>(null)
 
   useEffect(() => {
     if (isMiniAppReady) return
@@ -104,6 +122,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async () => {
     setError(null)
+    setLastAttemptAt(Date.now())
     if (isConnected) {
       if (!session && address) {
         setSession({
@@ -169,6 +188,11 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       targetConnector: NonNullable<(typeof connectors)[number]>,
       withCapabilities = false,
     ) => {
+      setLastConnector({
+        id: targetConnector.id,
+        name: targetConnector.name ?? targetConnector.id,
+        type: targetConnector.type ?? targetConnector.id,
+      })
       try {
         return await withTimeout(
           connectAsync({
@@ -334,10 +358,41 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       isAuthenticated: isConnected,
       session,
       error: error ?? connectError?.message ?? null,
+      diagnostics: {
+        isMiniApp: Boolean(miniKitContext),
+        miniKitPlatform: miniKitContext?.client?.platformType ?? null,
+        miniKitReady: isMiniAppReady,
+        onchainKitApiKeyPresent: Boolean(process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY),
+        appOrigin: APP_ORIGIN,
+        lastAttemptAt,
+        lastConnector,
+        connectors: connectors.map((connector) => ({
+          id: connector.id,
+          name: connector.name ?? connector.id,
+          type: connector.type ?? connector.id,
+          ready: connector.ready,
+        })),
+      },
       signIn,
       signOut,
     }),
-    [address, chainId, connectError, error, isConnected, isConnecting, isPending, session, signIn, signOut],
+    [
+      address,
+      chainId,
+      connectError,
+      connectors,
+      error,
+      isConnected,
+      isConnecting,
+      isMiniAppReady,
+      isPending,
+      lastAttemptAt,
+      lastConnector,
+      miniKitContext,
+      session,
+      signIn,
+      signOut,
+    ],
   )
 
   return <BaseAuthContext.Provider value={value}>{children}</BaseAuthContext.Provider>
