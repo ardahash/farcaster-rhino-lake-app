@@ -1,17 +1,21 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
 import { getTownAssetForLevel, useGame } from "@/lib/game-state"
+import { useErc20Balance } from "@/lib/use-erc20-balance"
+import { ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
+import { SwapPanel } from "@/components/swap-panel"
+import { ToastAction } from "@/components/ui/toast"
 
 export function HomeScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -43,10 +47,26 @@ export function HomeScreen() {
     },
   })
 
+  const zenBalance = useErc20Balance({
+    token: ZEN_TOKEN_ADDRESS,
+    address,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(address),
+  })
+
+  const zenThresholdRaw = useMemo(() => {
+    const decimals = zenBalance.decimals ?? 18
+    return parseUnits("0.01", decimals)
+  }, [zenBalance.decimals])
+
   const handleSacrifice = async () => {
     try {
       if (!address || !isAuthenticated) {
         throw new Error("Connect your Base account to continue.")
+      }
+
+      if (!zenBalance.isLoading && zenBalance.raw < zenThresholdRaw) {
+        throw new Error("You need ZEN to burn. Swap first.")
       }
 
       const supportedChainIds = new Set(BASE_CHAINS.map((chain) => chain.id))
@@ -155,14 +175,20 @@ export function HomeScreen() {
       handledCallIdRef.current = callId
       setCallId(null)
       sacrificeZen(0.01)
+      zenBalance.refetch()
 
       const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "View in explorer"
       toast({
         title: "Sacrifice Complete!",
         description: `Tx ${shortHash}`,
+        action: txHash ? (
+          <ToastAction altText="Copy transaction hash" onClick={() => navigator.clipboard.writeText(txHash)}>
+            Copy
+          </ToastAction>
+        ) : undefined,
       })
     }
-  }, [callId, callsStatus, sacrificeZen, toast])
+  }, [callId, callsStatus, sacrificeZen, toast, zenBalance.refetch])
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
@@ -171,6 +197,17 @@ export function HomeScreen() {
   const avatarFallback = displayName[0] ?? "?"
   const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
   const townAsset = getTownAssetForLevel(state.cityLevel)
+  const hasZen = zenBalance.raw >= zenThresholdRaw
+  const shouldDisableBurn = isAuthenticated && !zenBalance.isLoading && !hasZen
+  const isPrimaryDisabled = isPrimaryLoading || shouldDisableBurn
+  const highlightSwap = isAuthenticated && !zenBalance.isLoading && !hasZen
+  const zenBalanceValue = Number(zenBalance.formatted)
+  const zenBalanceDisplay =
+    isAuthenticated && zenBalance.isLoading
+      ? "..."
+      : isAuthenticated && Number.isFinite(zenBalanceValue)
+        ? zenBalanceValue.toFixed(4)
+        : "--"
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
@@ -224,13 +261,18 @@ export function HomeScreen() {
             <p className="text-xl font-bold text-primary">{state.stakedZen}</p>
           </div>
         </div>
+
+        <div className="bg-muted/50 rounded-lg p-3 text-center">
+          <p className="text-xs text-muted-foreground mb-1">ZEN Balance</p>
+          <p className="text-xl font-bold text-foreground">{zenBalanceDisplay}</p>
+        </div>
       </Card>
 
       {/* Primary Sacrifice Button */}
       <div className="w-full max-w-md space-y-3">
         <Button
           onClick={isAuthenticated ? handleSacrifice : handleConnect}
-          disabled={isPrimaryLoading}
+          disabled={isPrimaryDisabled}
           className="w-full h-14 text-lg font-bold"
           size="lg"
         >
@@ -261,9 +303,16 @@ export function HomeScreen() {
             ? "Sacrifice to gain power and grow your empire"
             : "Connect your Base account to enable onchain sacrifices"}
         </p>
+        {shouldDisableBurn && (
+          <p className="text-center text-xs text-muted-foreground">You need ZEN to burn. Swap first.</p>
+        )}
         {authError && !isAuthenticated && (
           <p className="text-center text-xs text-muted-foreground">{authError}</p>
         )}
+      </div>
+
+      <div className="w-full max-w-md">
+        <SwapPanel highlightSwap={highlightSwap} onSwapSuccess={zenBalance.refetch} />
       </div>
     </div>
   )

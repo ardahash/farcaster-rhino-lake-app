@@ -208,7 +208,7 @@ export function SocialScreen() {
                 />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">#{index + 1} · Level {town.level}</p>
+                <p className="text-sm font-semibold text-foreground">#{index + 1} - Level {town.level}</p>
                 <p className="text-xs text-muted-foreground">
                   {town.baseName ?? `${town.address.slice(0, 6)}...${town.address.slice(-4)}`}
                 </p>

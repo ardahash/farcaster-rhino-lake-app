@@ -36,7 +36,7 @@ export function ProfileScreen() {
       chain: mainnet,
       transport: http(MAINNET_RPC_URL),
     })
-  }, [])
+  }, [MAINNET_RPC_URL])
 
   const achievements = [
     { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },

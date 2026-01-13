@@ -1,17 +1,20 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
 import { getNextLevelCost, getTotalBurnedForLevel, useGame } from "@/lib/game-state"
+import { useErc20Balance } from "@/lib/use-erc20-balance"
+import { ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { Loader2, Church, TrendingUp, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
 import { encodeFunctionData, parseUnits } from "viem"
+import { ToastAction } from "@/components/ui/toast"
 
 export function TempleScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -45,6 +48,18 @@ export function TempleScreen() {
       refetchInterval: callId ? 2000 : false,
     },
   })
+
+  const zenBalance = useErc20Balance({
+    token: ZEN_TOKEN_ADDRESS,
+    address,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(address),
+  })
+
+  const zenThresholdRaw = useMemo(() => {
+    const decimals = zenBalance.decimals ?? 18
+    return parseUnits("0.01", decimals)
+  }, [zenBalance.decimals])
 
   const handleConnect = async () => {
     setIsAuthLoading(true)
@@ -82,6 +97,14 @@ export function TempleScreen() {
         throw new Error("Connect your Base account to continue.")
       }
 
+      const decimals = typeof zenDecimals === "number" ? zenDecimals : Number(zenDecimals ?? 18)
+      const thresholdRaw = parseUnits("0.01", decimals)
+      const requestedRaw = parseUnits(burnAmount, decimals)
+      const requiredRaw = requestedRaw > thresholdRaw ? requestedRaw : thresholdRaw
+      if (!zenBalance.isLoading && zenBalance.raw < requiredRaw) {
+        throw new Error("You need ZEN to burn. Swap first.")
+      }
+
       const supportedChainIds = new Set(BASE_CHAINS.map((chain) => chain.id))
       const activeChainId = chainId ?? DEFAULT_CHAIN_ID
       if (!supportedChainIds.has(activeChainId)) {
@@ -103,7 +126,6 @@ export function TempleScreen() {
         throw new Error("Paymaster proxy must be HTTPS. Set NEXT_PUBLIC_PAYMASTER_PROXY_URL.")
       }
 
-      const decimals = typeof zenDecimals === "number" ? zenDecimals : Number(zenDecimals ?? 18)
       const amount = parseUnits(burnAmount, decimals)
       const approveData = encodeFunctionData({
         abi: ERC20_ABI,
@@ -172,15 +194,21 @@ export function TempleScreen() {
       const burnedAmount = pendingAmountRef.current ?? 0
       pendingAmountRef.current = null
       stakeZen(burnedAmount)
+      zenBalance.refetch()
       setBurnAmount("")
 
       const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "View in explorer"
       toast({
         title: "Burn Complete!",
         description: `Tx ${shortHash}`,
+        action: txHash ? (
+          <ToastAction altText="Copy transaction hash" onClick={() => navigator.clipboard.writeText(txHash)}>
+            Copy
+          </ToastAction>
+        ) : undefined,
       })
     }
-  }, [callId, callsStatus, stakeZen, toast])
+  }, [callId, callsStatus, stakeZen, toast, zenBalance.refetch])
 
   const currentLevelThreshold = getTotalBurnedForLevel(state.cityLevel)
   const nextLevelThreshold = getTotalBurnedForLevel(state.cityLevel + 1)
@@ -195,6 +223,10 @@ export function TempleScreen() {
     ),
   )
   const isPrimaryLoading = isSending || Boolean(callId) || isAuthLoading || isConnecting || isSwitching
+  const requestedRaw = burnAmount ? parseUnits(burnAmount, zenBalance.decimals ?? 18) : 0n
+  const requiredRaw = requestedRaw > zenThresholdRaw ? requestedRaw : zenThresholdRaw
+  const hasZen = zenBalance.raw >= requiredRaw
+  const shouldDisableBurn = isAuthenticated && !zenBalance.isLoading && !hasZen
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -234,7 +266,7 @@ export function TempleScreen() {
             />
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            {state.stakedZen.toFixed(2)} / {nextLevelThreshold.toFixed(2)} ZEN burned · {nextLevelCost.toFixed(2)} ZEN to
+            {state.stakedZen.toFixed(2)} / {nextLevelThreshold.toFixed(2)} ZEN burned - {nextLevelCost.toFixed(2)} ZEN to
             reach Level {state.cityLevel + 1}
           </p>
         </div>
@@ -257,7 +289,7 @@ export function TempleScreen() {
 
         <Button
           onClick={isAuthenticated ? handleBurn : handleConnect}
-          disabled={isPrimaryLoading || !burnAmount}
+          disabled={isPrimaryLoading || !burnAmount || shouldDisableBurn}
           className="w-full h-12 text-lg font-semibold"
           size="lg"
         >
@@ -283,6 +315,9 @@ export function TempleScreen() {
             </>
           )}
         </Button>
+        {shouldDisableBurn && (
+          <p className="text-xs text-muted-foreground text-center">You need ZEN to burn. Swap first.</p>
+        )}
         {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
       </Card>
 
