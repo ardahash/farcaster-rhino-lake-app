@@ -11,15 +11,16 @@
     "iconUrl": "https://rhinolake.com/icon.png",
     "splashImageUrl": "https://rhinolake.com/logo.png",
     "splashBackgroundColor": "#2e2a25",
-    "subtitle": "Sacrifice ZEN, grow empire",
+    "subtitle": "Sacrifice ZEN to grow empire",
     "description": "Sacrifice ZEN to grow your ancient empire on Base.",
     "screenshotUrls": ["https://rhinolake.com/image.png"],
     "primaryCategory": "games",
     "tags": ["games", "base", "miniapp", "zen", "rhinolake"],
     "heroImageUrl": "https://rhinolake.com/image.png",
-    "tagline": "Sacrifice ZEN. Grow empire.",
+    "tagline": "Grow your empire with ZEN",
     "ogTitle": "Rhino Lake",
     "ogDescription": "Sacrifice ZEN to grow your ancient empire on Base.",
-    "ogImageUrl": "https://rhinolake.com/image.png"
+    "ogImageUrl": "https://rhinolake.com/image.png",
+    "noindex": false
   }
 }

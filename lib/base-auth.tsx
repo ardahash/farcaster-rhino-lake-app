@@ -103,8 +103,10 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     }
 
     const nonce = createNonce()
-    const domain = typeof window !== "undefined" ? window.location.host : "farcaster-rhino-lake-app.vercel.app"
-    const uri = typeof window !== "undefined" ? window.location.origin : "https://farcaster-rhino-lake-app.vercel.app"
+    const fallbackOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://rhinolake.com"
+    const fallbackHost = fallbackOrigin.replace(/^https?:\/\//, "").replace(/\/$/, "")
+    const domain = typeof window !== "undefined" ? window.location.host : fallbackHost
+    const uri = typeof window !== "undefined" ? window.location.origin : fallbackOrigin
     const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
 
     const farcasterConnector = connectors.find(
