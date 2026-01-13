@@ -13,7 +13,6 @@ import {
   AERODROME_CLASSIC_ROUTER_ADDRESS,
   AERODROME_SLIPSTREAM_ROUTER_ABI,
   AERODROME_SLIPSTREAM_ROUTER_ADDRESS,
-  BASE_CHAIN_ID,
   UNISWAP_V3_ROUTER_ABI,
   UNISWAP_V3_ROUTER_ADDRESS,
   USDC_ADDRESS,
@@ -21,11 +20,11 @@ import {
   ZEN_TOKEN_ADDRESS,
 } from "@/lib/aerodrome"
 import { selectBestRoute } from "@/lib/router-selector"
-import { useErc20Balance } from "@/lib/use-erc20-balance"
-import { ERC20_ABI } from "@/lib/zen-burn"
+import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
+import { BASE_MAINNET_CHAIN_ID, ERC20_ABI } from "@/lib/zen-burn"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
 import { encodeFunctionData, parseUnits } from "viem"
-import { useCallsStatus, usePublicClient, useReadContract, useSendCalls, useSendTransaction, useSwitchChain } from "wagmi"
+import { useCallsStatus, usePublicClient, useSendCalls, useSendTransaction, useSwitchChain } from "wagmi"
 
 const DEFAULT_ETH_AMOUNT = "0.001"
 const DEFAULT_WETH_AMOUNT = "0.001"
@@ -48,7 +47,7 @@ export function SwapPanel({
 }) {
   const { address, chainId, isAuthenticated, isConnecting, signIn } = useBaseAuth()
   const { toast } = useToast()
-  const publicClient = usePublicClient({ chainId: BASE_CHAIN_ID })
+  const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { mutateAsync: sendCallsAsync, isPending: isSending } = useSendCalls()
   const { sendTransactionAsync } = useSendTransaction()
@@ -68,38 +67,56 @@ export function SwapPanel({
     },
   })
 
-  const { data: usdcDecimals } = useReadContract({
-    address: USDC_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: "decimals",
-    chainId: BASE_CHAIN_ID,
-  })
-
   const usdcBalance = useErc20Balance({
     token: USDC_ADDRESS,
     address: address as `0x${string}` | null,
-    chainId: BASE_CHAIN_ID,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(isAuthenticated && address),
+  })
+
+  const zenBalance = useErc20Balance({
+    token: ZEN_TOKEN_ADDRESS,
+    address: address as `0x${string}` | null,
+    chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
   })
 
   const wethBalance = useErc20Balance({
     token: WETH_ADDRESS,
     address: address as `0x${string}` | null,
-    chainId: BASE_CHAIN_ID,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(isAuthenticated && address),
+  })
+
+  const ethBalance = useNativeBalance({
+    address: address as `0x${string}` | null,
+    chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
   })
 
   const decimals = useMemo(
-    () => (typeof usdcDecimals === "number" ? usdcDecimals : Number(usdcDecimals ?? 6)),
-    [usdcDecimals],
+    () => (typeof usdcBalance.decimals === "number" ? usdcBalance.decimals : Number(usdcBalance.decimals ?? 6)),
+    [usdcBalance.decimals],
   )
+
+  const formatBalance = (value: string, isLoading: boolean) => {
+    if (!isAuthenticated) return "--"
+    if (isLoading) return "..."
+    const numeric = Number(value)
+    return Number.isFinite(numeric) ? numeric.toFixed(4) : "--"
+  }
+
+  const zenBalanceDisplay = formatBalance(zenBalance.formatted, zenBalance.isLoading)
+  const ethBalanceDisplay = formatBalance(ethBalance.formatted, ethBalance.isLoading)
+  const wethBalanceDisplay = formatBalance(wethBalance.formatted, wethBalance.isLoading)
+  const usdcBalanceDisplay = formatBalance(usdcBalance.formatted, usdcBalance.isLoading)
 
   const isSwapLoading = isSending || Boolean(pendingSwapId) || isSwitching || isConnecting
 
   const ensureBaseNetwork = async () => {
-    const activeChainId = chainId ?? BASE_CHAIN_ID
-    if (activeChainId !== BASE_CHAIN_ID) {
-      await switchChainAsync({ chainId: BASE_CHAIN_ID })
+    const activeChainId = chainId ?? BASE_MAINNET_CHAIN_ID
+    if (activeChainId !== BASE_MAINNET_CHAIN_ID) {
+      await switchChainAsync({ chainId: BASE_MAINNET_CHAIN_ID })
       throw new Error("Switching to Base mainnet. Please try again.")
     }
     return activeChainId
@@ -282,6 +299,12 @@ export function SwapPanel({
 
       const activeChainId = await ensureBaseNetwork()
       const amountIn = parseUnits(ethAmount, 18)
+      if (ethBalance.isLoading) {
+        throw new Error("ETH balance is still loading. Try again in a moment.")
+      }
+      if (ethBalance.raw < amountIn) {
+        throw new Error(`Insufficient ETH in this Base account. Balance: ${ethBalance.formatted}.`)
+      }
       const swapCall = await executeSwap({
         amountIn,
         tokenIn: WETH_ADDRESS,
@@ -309,7 +332,6 @@ export function SwapPanel({
               }
             : undefined,
           forceAtomic: true,
-          version: "1",
         })
         setPendingSwapId(response.id)
         return
@@ -396,7 +418,6 @@ export function SwapPanel({
               }
             : undefined,
           forceAtomic: true,
-          version: "1",
         })
         setPendingSwapId(response.id)
         return
@@ -493,7 +514,6 @@ export function SwapPanel({
               }
             : undefined,
           forceAtomic: true,
-          version: "1",
         })
         setPendingSwapId(response.id)
         return
@@ -560,6 +580,7 @@ export function SwapPanel({
         <div>
           <h3 className="font-semibold text-lg text-foreground">Swap to ZEN</h3>
           <p className="text-xs text-muted-foreground">Powered by Aerodrome</p>
+          <p className="text-xs text-muted-foreground">ZEN Balance: {zenBalanceDisplay}</p>
         </div>
         <RefreshCcw className="w-4 h-4 text-muted-foreground" />
       </div>
@@ -575,6 +596,7 @@ export function SwapPanel({
             onChange={(event) => setEthAmount(event.target.value)}
             className="h-11"
           />
+          <p className="text-xs text-muted-foreground">Balance: {ethBalanceDisplay}</p>
           <Button
             onClick={handleSwapEth}
             disabled={isSwapDisabled}
@@ -606,6 +628,7 @@ export function SwapPanel({
             onChange={(event) => setWethAmount(event.target.value)}
             className="h-11"
           />
+          <p className="text-xs text-muted-foreground">Balance: {wethBalanceDisplay}</p>
           <Button
             onClick={handleSwapWeth}
             disabled={isSwapDisabled}
@@ -637,6 +660,7 @@ export function SwapPanel({
             onChange={(event) => setUsdcAmount(event.target.value)}
             className="h-11"
           />
+          <p className="text-xs text-muted-foreground">Balance: {usdcBalanceDisplay}</p>
           <Button
             onClick={handleSwapUsdc}
             disabled={isSwapDisabled}

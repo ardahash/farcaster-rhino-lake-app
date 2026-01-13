@@ -1,9 +1,9 @@
 "use client"
 
 import type { Address } from "viem"
-import { base } from "wagmi/chains"
+import { BASE_MAINNET_CHAIN_ID as BASE_CHAIN_ID } from "@/lib/base-config"
 
-export const BASE_MAINNET_CHAIN_ID = base.id
+export const BASE_MAINNET_CHAIN_ID = BASE_CHAIN_ID
 
 export const ZEN_BURN_MANAGER_ADDRESS =
   (process.env.NEXT_PUBLIC_ZEN_BURN_MANAGER_ADDRESS as Address | undefined) ??

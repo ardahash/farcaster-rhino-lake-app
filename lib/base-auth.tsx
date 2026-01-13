@@ -4,15 +4,19 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react"
+import { OnchainKitProvider } from "@coinbase/onchainkit"
+import { useMiniKit } from "@coinbase/onchainkit/minikit"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { WagmiProvider, createConfig, http, useConnect, useConnection, useDisconnect } from "wagmi"
+import { WagmiProvider, createConfig, http, useAccount, useConnect, useDisconnect } from "wagmi"
 import { baseAccount, injected } from "wagmi/connectors"
-import { numberToHex } from "viem"
-import { BASE_CHAINS, DEFAULT_CHAIN_ID, getRpcUrlForChain } from "@/lib/base-config"
+import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector"
+import { createPublicClient, numberToHex } from "viem"
+import { BASE_CHAINS, BASE_MAINNET_CHAIN, DEFAULT_CHAIN_ID, getRpcUrlForChain } from "@/lib/base-config"
 
 type BaseAuthSession = {
   address: `0x${string}`
@@ -38,6 +42,7 @@ const BaseAuthContext = createContext<BaseAuthContextValue | null>(null)
 const wagmiConfig = createConfig({
   chains: BASE_CHAINS,
   connectors: [
+    farcasterMiniApp(),
     baseAccount({
       appName: "Rhino Lake",
       appLogoUrl: "/icon.svg",
@@ -55,6 +60,14 @@ const wagmiConfig = createConfig({
   ssr: true,
 })
 
+const baseRpcUrl = getRpcUrlForChain(DEFAULT_CHAIN_ID)
+const defaultPublicClients = {
+  [DEFAULT_CHAIN_ID]: createPublicClient({
+    chain: BASE_MAINNET_CHAIN,
+    transport: baseRpcUrl ? http(baseRpcUrl) : http(),
+  }),
+}
+
 const queryClient = new QueryClient()
 
 const createNonce = () => {
@@ -65,11 +78,17 @@ const createNonce = () => {
 }
 
 function BaseAuthInner({ children }: { children: ReactNode }) {
-  const { address, chainId, isConnected, isConnecting } = useConnection()
+  const { address, chainId, isConnected, isConnecting } = useAccount()
   const { connectAsync, connectors, error: connectError, isPending } = useConnect()
   const { disconnect } = useDisconnect()
+  const { context: miniKitContext, isMiniAppReady, setMiniAppReady } = useMiniKit()
   const [session, setSession] = useState<BaseAuthSession | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isMiniAppReady) return
+    setMiniAppReady().catch(() => undefined)
+  }, [isMiniAppReady, setMiniAppReady])
 
   const signIn = useCallback(async () => {
     setError(null)
@@ -88,8 +107,12 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     const uri = typeof window !== "undefined" ? window.location.origin : "https://farcaster-rhino-lake-app.vercel.app"
     const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
 
+    const farcasterConnector = connectors.find(
+      (item) => item.type === "farcasterMiniApp" || item.id === "farcaster",
+    )
     const baseConnector = connectors.find((item) => item.id === "baseAccount")
     const injectedConnector = connectors.find((item) => item.id === "injected")
+    const prefersMiniKit = Boolean(miniKitContext)
 
     const getConnectAddress = (result: Awaited<ReturnType<typeof connectAsync>>) => {
       const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
@@ -184,6 +207,16 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
         disconnect()
       }
 
+      if (prefersMiniKit && farcasterConnector) {
+        const result = await connectWithConnector(farcasterConnector)
+        const { address: walletAddress, chainId: connectedChainId } = getConnectAddress(result)
+        setSession({
+          address: walletAddress,
+          chainId: connectedChainId,
+        })
+        return
+      }
+
       if (!baseConnector) {
         if (!injectedConnector) {
           throw new Error("No supported wallet connector available.")
@@ -251,7 +284,17 @@ export function BaseAuthProvider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <BaseAuthInner>{children}</BaseAuthInner>
+        <OnchainKitProvider
+          apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
+          chain={BASE_MAINNET_CHAIN}
+          defaultPublicClients={defaultPublicClients}
+          miniKit={{
+            enabled: true,
+            autoConnect: true,
+          }}
+        >
+          <BaseAuthInner>{children}</BaseAuthInner>
+        </OnchainKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )

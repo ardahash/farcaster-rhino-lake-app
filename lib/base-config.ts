@@ -1,16 +1,17 @@
 "use client"
 
 import type { Address } from "viem"
-import { base, baseSepolia } from "wagmi/chains"
+import { base } from "wagmi/chains"
 
-export const BASE_CHAINS = [base, baseSepolia] as const
+export const BASE_MAINNET_CHAIN = base
+export const BASE_MAINNET_CHAIN_ID = base.id
+export const BASE_CHAINS = [base] as const
 
-export const DEFAULT_CHAIN = process.env.NEXT_PUBLIC_BASE_CHAIN === "sepolia" ? baseSepolia : base
-export const DEFAULT_CHAIN_ID = DEFAULT_CHAIN.id
+export const DEFAULT_CHAIN = base
+export const DEFAULT_CHAIN_ID = BASE_MAINNET_CHAIN_ID
 
 const RPC_URLS: Record<number, string | undefined> = {
   [base.id]: process.env.NEXT_PUBLIC_BASE_RPC_URL,
-  [baseSepolia.id]: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL,
 }
 
 const DEFAULT_UNIVERSAL_RESOLVER_ADDRESS = "0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe" as const
@@ -33,7 +34,6 @@ export const BASE_NAME_L2_RESOLVER_ADDRESS =
 
 export const CHAIN_LABELS: Record<number, string> = {
   [base.id]: "Base",
-  [baseSepolia.id]: "Base Sepolia",
 }
 
 export const PAYMASTER_PROXY_PATH = "/api/paymaster"

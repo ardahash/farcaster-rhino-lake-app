@@ -1,9 +1,10 @@
 "use client"
 
 import { useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 import type { Address } from "viem"
 import { formatUnits } from "viem"
-import { useReadContract } from "wagmi"
+import { usePublicClient } from "wagmi"
 import { ERC20_ABI } from "@/lib/zen-burn"
 
 type Erc20BalanceParams = {
@@ -13,29 +14,51 @@ type Erc20BalanceParams = {
   enabled?: boolean
 }
 
-export const useErc20Balance = ({ token, address, chainId, enabled = true }: Erc20BalanceParams) => {
-  const canRead = Boolean(address) && enabled
+type NativeBalanceParams = {
+  address?: Address | null
+  chainId: number
+  enabled?: boolean
+}
 
-  const decimalsQuery = useReadContract({
-    address: token,
-    abi: ERC20_ABI,
-    functionName: "decimals",
-    chainId,
-    query: {
-      enabled,
+const REFRESH_INTERVAL_MS = 15000
+
+export const useErc20Balance = ({ token, address, chainId, enabled = true }: Erc20BalanceParams) => {
+  const publicClient = usePublicClient({ chainId })
+  const canRead = Boolean(address && enabled && publicClient)
+
+  const decimalsQuery = useQuery({
+    queryKey: ["erc20-decimals", token, chainId],
+    queryFn: async () => {
+      if (!publicClient) {
+        throw new Error("RPC not ready.")
+      }
+      return publicClient.readContract({
+        address: token,
+        abi: ERC20_ABI,
+        functionName: "decimals",
+      })
     },
+    enabled: Boolean(enabled && publicClient),
+    staleTime: 1000 * 60 * 60,
+    retry: 2,
   })
 
-  const balanceQuery = useReadContract({
-    address: token,
-    abi: ERC20_ABI,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    chainId,
-    query: {
-      enabled: canRead,
-      refetchInterval: false,
+  const balanceQuery = useQuery({
+    queryKey: ["erc20-balance", token, address, chainId],
+    queryFn: async () => {
+      if (!publicClient || !address) {
+        throw new Error("RPC not ready.")
+      }
+      return publicClient.readContract({
+        address: token,
+        abi: ERC20_ABI,
+        functionName: "balanceOf",
+        args: [address],
+      })
     },
+    enabled: canRead,
+    refetchInterval: REFRESH_INTERVAL_MS,
+    retry: 2,
   })
 
   const decimals = typeof decimalsQuery.data === "number" ? decimalsQuery.data : Number(decimalsQuery.data ?? 18)
@@ -52,6 +75,38 @@ export const useErc20Balance = ({ token, address, chainId, enabled = true }: Erc
     decimals,
     isLoading: decimalsQuery.isLoading || balanceQuery.isLoading,
     error: decimalsQuery.error ?? balanceQuery.error ?? null,
+    refetch: balanceQuery.refetch,
+  }
+}
+
+export const useNativeBalance = ({ address, chainId, enabled = true }: NativeBalanceParams) => {
+  const publicClient = usePublicClient({ chainId })
+  const canRead = Boolean(address && enabled && publicClient)
+
+  const balanceQuery = useQuery({
+    queryKey: ["native-balance", address, chainId],
+    queryFn: async () => {
+      if (!publicClient || !address) {
+        throw new Error("RPC not ready.")
+      }
+      return publicClient.getBalance({ address })
+    },
+    enabled: canRead,
+    refetchInterval: REFRESH_INTERVAL_MS,
+    retry: 2,
+  })
+
+  const raw = balanceQuery.data ?? 0n
+  const formatted = useMemo(() => {
+    if (!canRead) return "0"
+    return formatUnits(raw, 18)
+  }, [raw, canRead])
+
+  return {
+    raw,
+    formatted,
+    isLoading: balanceQuery.isLoading,
+    error: balanceQuery.error ?? null,
     refetch: balanceQuery.refetch,
   }
 }

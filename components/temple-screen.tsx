@@ -159,7 +159,6 @@ export function TempleScreen() {
           },
         },
         forceAtomic: true,
-        version: "1",
       })
 
       setCallId(response.id)

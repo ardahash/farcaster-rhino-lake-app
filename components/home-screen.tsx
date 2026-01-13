@@ -1,17 +1,17 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
 import { getTownAssetForLevel, useGame } from "@/lib/game-state"
-import { useErc20Balance } from "@/lib/use-erc20-balance"
+import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
 import { USDC_ADDRESS, WETH_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useBalance, useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { SwapPanel } from "@/components/swap-panel"
@@ -68,13 +68,18 @@ export function HomeScreen() {
     enabled: Boolean(address),
   })
 
-  const ethBalance = useBalance({
+  const ethBalance = useNativeBalance({
     address,
     chainId: BASE_MAINNET_CHAIN_ID,
-    query: {
-      enabled: Boolean(address),
-    },
+    enabled: Boolean(address),
   })
+
+  const refetchBalances = useCallback(() => {
+    zenBalance.refetch()
+    usdcBalance.refetch()
+    wethBalance.refetch()
+    ethBalance.refetch()
+  }, [zenBalance.refetch, usdcBalance.refetch, wethBalance.refetch, ethBalance.refetch])
 
   const zenThresholdRaw = useMemo(() => {
     const decimals = zenBalance.decimals ?? 18
@@ -145,7 +150,6 @@ export function HomeScreen() {
           },
         },
         forceAtomic: true,
-        version: "1",
       })
 
       setCallId(response.id)
@@ -197,7 +201,7 @@ export function HomeScreen() {
       handledCallIdRef.current = callId
       setCallId(null)
       sacrificeZen(0.01)
-      zenBalance.refetch()
+      refetchBalances()
 
       const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : "View in explorer"
       toast({
@@ -210,7 +214,7 @@ export function HomeScreen() {
         ) : undefined,
       })
     }
-  }, [callId, callsStatus, sacrificeZen, toast, zenBalance.refetch])
+  }, [callId, callsStatus, sacrificeZen, toast, refetchBalances])
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
@@ -244,7 +248,7 @@ export function HomeScreen() {
       : isAuthenticated && Number.isFinite(wethBalanceValue)
         ? wethBalanceValue.toFixed(4)
         : "--"
-  const ethBalanceValue = Number(ethBalance.data?.formatted ?? "0")
+  const ethBalanceValue = Number(ethBalance.formatted ?? "0")
   const ethBalanceDisplay =
     isAuthenticated && ethBalance.isLoading
       ? "..."
@@ -369,7 +373,7 @@ export function HomeScreen() {
       </div>
 
       <div className="w-full max-w-md">
-        <SwapPanel highlightSwap={highlightSwap} onSwapSuccess={zenBalance.refetch} />
+        <SwapPanel highlightSwap={highlightSwap} onSwapSuccess={refetchBalances} />
       </div>
     </div>
   )
