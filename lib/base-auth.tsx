@@ -80,6 +80,8 @@ const defaultPublicClients = {
 
 const queryClient = new QueryClient()
 
+const CONNECT_TIMEOUT_MS = 12_000
+
 const createNonce = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID().replace(/-/g, "")
@@ -119,11 +121,30 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     const uri = typeof window !== "undefined" ? window.location.origin : fallbackOrigin
     const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
 
-    const farcasterConnector = connectors.find(
-      (item) => item.type === "farcasterMiniApp" || item.id === "farcaster",
-    )
+    const shouldTryFarcaster = Boolean(miniKitContext)
+    const farcasterConnector = shouldTryFarcaster
+      ? connectors.find((item) => item.type === "farcasterMiniApp" || item.id === "farcaster")
+      : undefined
     const baseConnector = connectors.find((item) => item.id === "baseAccount")
     const injectedConnector = connectors.find((item) => item.id === "injected")
+
+    const withTimeout = async <T,>(promise: Promise<T>) => {
+      let timeoutId: ReturnType<typeof setTimeout> | undefined
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            const timeoutError = new Error("Wallet connection timed out. Please try again.")
+            timeoutError.name = "ConnectorTimeoutError"
+            reject(timeoutError)
+          }, CONNECT_TIMEOUT_MS)
+        })
+        return await Promise.race([promise, timeoutPromise])
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+        }
+      }
+    }
 
     const getConnectAddress = (result: Awaited<ReturnType<typeof connectAsync>>) => {
       const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
@@ -149,12 +170,13 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       withCapabilities = false,
     ) => {
       try {
-        return await connectAsync({
-          connector: targetConnector,
-          chainId: DEFAULT_CHAIN_ID,
-          ...(withCapabilities
-            ? {
-                capabilities: {
+        return await withTimeout(
+          connectAsync({
+            connector: targetConnector,
+            chainId: DEFAULT_CHAIN_ID,
+            ...(withCapabilities
+              ? {
+                  capabilities: {
                   signInWithEthereum: {
                     nonce,
                     statement: "Sign in to Rhino Lake.",
@@ -163,33 +185,39 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
                     chainId: chainIdHex,
                     version: "1",
                   },
-                },
-                withCapabilities: true,
-              }
-            : {}),
-        })
-      } catch (caughtError) {
-        if (caughtError instanceof Error && caughtError.name === "ConnectorAlreadyConnectedError") {
-          disconnect()
-          return connectAsync({
-            connector: targetConnector,
-            chainId: DEFAULT_CHAIN_ID,
-            ...(withCapabilities
-              ? {
-                  capabilities: {
-                    signInWithEthereum: {
-                      nonce,
-                      statement: "Sign in to Rhino Lake.",
-                      domain,
-                      uri,
-                      chainId: chainIdHex,
-                      version: "1",
-                    },
                   },
                   withCapabilities: true,
                 }
               : {}),
-          })
+          }),
+        )
+      } catch (caughtError) {
+        if (caughtError instanceof Error && caughtError.name === "ConnectorTimeoutError") {
+          disconnect()
+        }
+        if (caughtError instanceof Error && caughtError.name === "ConnectorAlreadyConnectedError") {
+          disconnect()
+          return withTimeout(
+            connectAsync({
+              connector: targetConnector,
+              chainId: DEFAULT_CHAIN_ID,
+              ...(withCapabilities
+                ? {
+                    capabilities: {
+                      signInWithEthereum: {
+                        nonce,
+                        statement: "Sign in to Rhino Lake.",
+                        domain,
+                        uri,
+                        chainId: chainIdHex,
+                        version: "1",
+                      },
+                    },
+                    withCapabilities: true,
+                  }
+                : {}),
+            }),
+          )
         }
         throw caughtError
       }
@@ -280,7 +308,16 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       setError(message)
       throw caughtError
     }
-  }, [address, chainId, connectAsync, connectors, disconnect, isConnected, session])
+  }, [
+    address,
+    chainId,
+    connectAsync,
+    connectors,
+    disconnect,
+    isConnected,
+    miniKitContext,
+    session,
+  ])
 
   const signOut = useCallback(() => {
     disconnect()
