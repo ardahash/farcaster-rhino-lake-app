@@ -4,11 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getLevelFromBurned, getTownAssetForLevel } from "@/lib/game-state"
-import { BASE_NAME_GATEWAYS, BASE_NAME_RESOLVER_ADDRESS, MAINNET_RPC_URL } from "@/lib/base-config"
+import { resolveBaseName } from "@/lib/base-names"
 import { BASE_MAINNET_CHAIN_ID, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS, ZEN_BURNED_EVENT } from "@/lib/zen-burn"
 import { Loader2, RefreshCcw, Users } from "lucide-react"
-import { createPublicClient, formatUnits, http, toCoinType } from "viem"
-import { mainnet } from "viem/chains"
+import { formatUnits } from "viem"
 import { usePublicClient, useReadContract } from "wagmi"
 
 const resolveLookbackBlocks = () => {
@@ -47,30 +46,15 @@ export function SocialScreen() {
     return Number(zenDecimals ?? 18)
   }, [zenDecimals])
 
-  const ensClient = useMemo(() => {
-    if (!MAINNET_RPC_URL) return null
-    return createPublicClient({
-      chain: mainnet,
-      transport: http(MAINNET_RPC_URL),
-    })
-  }, [MAINNET_RPC_URL])
-
   const resolveTownNames = useCallback(
     async (entries: TownEntry[]) => {
-      if (!ensClient || !BASE_NAME_RESOLVER_ADDRESS) return
-      const coinType = toCoinType(BASE_MAINNET_CHAIN_ID)
+      if (!publicClient) return
       const nextEntries = [...entries]
       for (let i = 0; i < nextEntries.length; i += 1) {
         const entry = nextEntries[i]
         if (entry.baseName !== undefined) continue
         try {
-          const name = await ensClient.getEnsName({
-            address: entry.address,
-            coinType,
-            universalResolverAddress: BASE_NAME_RESOLVER_ADDRESS,
-            gatewayUrls: BASE_NAME_GATEWAYS?.length ? BASE_NAME_GATEWAYS : undefined,
-            strict: false,
-          })
+          const name = await resolveBaseName({ address: entry.address, publicClient })
           nextEntries[i] = { ...entry, baseName: name }
         } catch {
           nextEntries[i] = { ...entry, baseName: null }
@@ -78,7 +62,7 @@ export function SocialScreen() {
       }
       setTowns(nextEntries)
     },
-    [ensClient],
+    [publicClient],
   )
 
   const fetchTowns = useCallback(async () => {
@@ -143,7 +127,7 @@ export function SocialScreen() {
     } finally {
       setIsLoading(false)
     }
-  }, [publicClient, decimals])
+  }, [publicClient, decimals, resolveTownNames])
 
   useEffect(() => {
     fetchTowns()

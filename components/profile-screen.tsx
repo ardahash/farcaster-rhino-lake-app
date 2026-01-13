@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -9,18 +9,14 @@ import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import {
   BASE_CHAINS,
-  BASE_NAME_GATEWAYS,
-  BASE_NAME_RESOLVER_ADDRESS,
   DEFAULT_CHAIN_ID,
-  MAINNET_RPC_URL,
   getChainLabel,
 } from "@/lib/base-config"
+import { resolveBaseName } from "@/lib/base-names"
 import { useGame } from "@/lib/game-state"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/zen-burn"
 import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
-import { createPublicClient, http, toCoinType } from "viem"
-import { mainnet } from "viem/chains"
-import { useSwitchChain } from "wagmi"
+import { usePublicClient, useSwitchChain } from "wagmi"
 
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
@@ -30,13 +26,7 @@ export function ProfileScreen() {
   const [baseName, setBaseName] = useState<string | null>(null)
   const [isNameLoading, setIsNameLoading] = useState(false)
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
-  const ensClient = useMemo(() => {
-    if (!MAINNET_RPC_URL) return null
-    return createPublicClient({
-      chain: mainnet,
-      transport: http(MAINNET_RPC_URL),
-    })
-  }, [MAINNET_RPC_URL])
+  const baseNameClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
 
   const achievements = [
     { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
@@ -106,7 +96,7 @@ export function ProfileScreen() {
   const isActionLoading = isAuthLoading || isConnecting || isSwitching
 
   useEffect(() => {
-    if (!address || !ensClient || !BASE_NAME_RESOLVER_ADDRESS) {
+    if (!address || !baseNameClient) {
       setBaseName(null)
       return
     }
@@ -114,13 +104,7 @@ export function ProfileScreen() {
     const loadBaseName = async () => {
       setIsNameLoading(true)
       try {
-        const name = await ensClient.getEnsName({
-          address,
-          coinType: toCoinType(BASE_MAINNET_CHAIN_ID),
-          universalResolverAddress: BASE_NAME_RESOLVER_ADDRESS,
-          gatewayUrls: BASE_NAME_GATEWAYS?.length ? BASE_NAME_GATEWAYS : undefined,
-          strict: false,
-        })
+        const name = await resolveBaseName({ address, publicClient: baseNameClient })
         if (!cancelled) {
           setBaseName(name)
         }
@@ -138,7 +122,7 @@ export function ProfileScreen() {
     return () => {
       cancelled = true
     }
-  }, [address, ensClient])
+  }, [address, baseNameClient])
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">

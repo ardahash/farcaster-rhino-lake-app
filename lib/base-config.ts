@@ -23,6 +23,14 @@ export const BASE_NAME_GATEWAYS = process.env.NEXT_PUBLIC_BASE_NAME_GATEWAYS
   : undefined
 export const MAINNET_RPC_URL = process.env.NEXT_PUBLIC_MAINNET_RPC_URL
 
+export const BASE_NAME_REGISTRY_ADDRESS =
+  (process.env.NEXT_PUBLIC_BASE_NAME_REGISTRY_ADDRESS as Address | undefined) ??
+  ("0xb94704422c2a1e396835a571837aa5ae53285a95" as Address)
+
+export const BASE_NAME_L2_RESOLVER_ADDRESS =
+  (process.env.NEXT_PUBLIC_BASE_NAME_L2_RESOLVER_ADDRESS as Address | undefined) ??
+  ("0xC6d566A56A1aFf6508b41f6c90ff131615583BCD" as Address)
+
 export const CHAIN_LABELS: Record<number, string> = {
   [base.id]: "Base",
   [baseSepolia.id]: "Base Sepolia",
