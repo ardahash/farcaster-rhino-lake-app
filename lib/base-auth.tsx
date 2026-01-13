@@ -114,7 +114,6 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     )
     const baseConnector = connectors.find((item) => item.id === "baseAccount")
     const injectedConnector = connectors.find((item) => item.id === "injected")
-    const prefersMiniKit = Boolean(miniKitContext)
 
     const getConnectAddress = (result: Awaited<ReturnType<typeof connectAsync>>) => {
       const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
@@ -199,23 +198,38 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     }
 
     const connectWithCapabilities = async () =>
-      connectWithConnector(
-        baseConnector ?? connectors[0],
-        true,
-      )
+      connectWithConnector(baseConnector ?? connectors[0], true)
 
-    try {
-      if (isConnected) {
-        disconnect()
-      }
+    const shouldAbortFallback = (caughtError: unknown) => {
+      if (!(caughtError instanceof Error)) return false
+      const message = caughtError.message.toLowerCase()
+      return message.includes("user rejected") || message.includes("user denied") || message.includes("rejected")
+    }
 
-      if (prefersMiniKit && farcasterConnector) {
+    const tryFarcasterConnector = async () => {
+      if (!farcasterConnector) return false
+      try {
         const result = await connectWithConnector(farcasterConnector)
         const { address: walletAddress, chainId: connectedChainId } = getConnectAddress(result)
         setSession({
           address: walletAddress,
           chainId: connectedChainId,
         })
+        return true
+      } catch (caughtError) {
+        if (shouldAbortFallback(caughtError)) {
+          throw caughtError
+        }
+        return false
+      }
+    }
+
+    try {
+      if (isConnected) {
+        disconnect()
+      }
+
+      if (await tryFarcasterConnector()) {
         return
       }
 
