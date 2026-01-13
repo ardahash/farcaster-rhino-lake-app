@@ -13,6 +13,7 @@ import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGE
 import { Loader2, Church, TrendingUp, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import { useCapabilities } from "wagmi/experimental"
 import { encodeFunctionData, parseUnits } from "viem"
 import { ToastAction } from "@/components/ui/toast"
 
@@ -27,6 +28,9 @@ export function TempleScreen() {
   const handledCallIdRef = useRef<string | null>(null)
   const { sendCallsAsync, isPending: isSending } = useSendCalls()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+  const { data: availableCapabilities } = useCapabilities({
+    account: address ?? undefined,
+  })
 
   const { data: zenAddress } = useReadContract({
     address: ZEN_BURN_MANAGER_ADDRESS,
@@ -60,6 +64,23 @@ export function TempleScreen() {
     const decimals = zenBalance.decimals ?? 18
     return parseUnits("0.01", decimals)
   }, [zenBalance.decimals])
+
+  const resolvePaymasterCapabilities = useMemo(() => {
+    if (!availableCapabilities) return null
+    return (targetChainId: number, paymasterUrl?: string) => {
+      if (!paymasterUrl) return undefined
+      const chainCaps = availableCapabilities[targetChainId]
+      if (chainCaps?.paymasterService?.supported) {
+        return {
+          paymasterService: {
+            url: paymasterUrl,
+            optional: false,
+          },
+        }
+      }
+      return undefined
+    }
+  }, [availableCapabilities])
 
   const handleConnect = async () => {
     setIsAuthLoading(true)
@@ -122,9 +143,9 @@ export function TempleScreen() {
       }
 
       const paymasterUrl = getPaymasterUrl(activeChainId)
-      if (!paymasterUrl) {
-        throw new Error("Paymaster proxy must be HTTPS. Set NEXT_PUBLIC_PAYMASTER_PROXY_URL.")
-      }
+      const paymasterCapabilities = resolvePaymasterCapabilities
+        ? resolvePaymasterCapabilities(activeChainId, paymasterUrl)
+        : undefined
 
       const amount = parseUnits(burnAmount, decimals)
       const approveData = encodeFunctionData({
@@ -152,12 +173,7 @@ export function TempleScreen() {
             data: burnData,
           },
         ],
-        capabilities: {
-          paymasterService: {
-            url: paymasterUrl,
-            optional: false,
-          },
-        },
+        capabilities: paymasterCapabilities,
         forceAtomic: true,
       })
 

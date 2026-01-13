@@ -25,6 +25,7 @@ import { BASE_MAINNET_CHAIN_ID, ERC20_ABI } from "@/lib/zen-burn"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
 import { encodeFunctionData, parseUnits } from "viem"
 import { useCallsStatus, usePublicClient, useSendCalls, useSendTransaction, useSwitchChain } from "wagmi"
+import { useCapabilities } from "wagmi/experimental"
 
 const DEFAULT_ETH_AMOUNT = "0.001"
 const DEFAULT_WETH_AMOUNT = "0.001"
@@ -51,6 +52,9 @@ export function SwapPanel({
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { sendCallsAsync, isPending: isSending } = useSendCalls()
   const { sendTransactionAsync } = useSendTransaction()
+  const { data: availableCapabilities } = useCapabilities({
+    account: address ?? undefined,
+  })
 
   const [ethAmount, setEthAmount] = useState(DEFAULT_ETH_AMOUNT)
   const [wethAmount, setWethAmount] = useState(DEFAULT_WETH_AMOUNT)
@@ -283,6 +287,20 @@ export function SwapPanel({
     })
   }
 
+  const resolvePaymasterCapabilities = (targetChainId: number, paymasterUrl?: string) => {
+    if (!availableCapabilities || !paymasterUrl) return undefined
+    const chainCaps = availableCapabilities[targetChainId]
+    if (chainCaps?.paymasterService?.supported) {
+      return {
+        paymasterService: {
+          url: paymasterUrl,
+          optional: false,
+        },
+      }
+    }
+    return undefined
+  }
+
   const handleSwapEth = async () => {
     setActiveSwap("eth")
     try {
@@ -313,6 +331,7 @@ export function SwapPanel({
       })
 
       const paymasterUrl = getPaymasterUrl(activeChainId)
+      const paymasterCapabilities = resolvePaymasterCapabilities(activeChainId, paymasterUrl)
       const calls = [
         {
           to: swapCall.router,
@@ -326,11 +345,7 @@ export function SwapPanel({
           chainId: activeChainId,
           account: address,
           calls,
-          capabilities: paymasterUrl
-            ? {
-                paymasterService: { url: paymasterUrl, optional: false },
-              }
-            : undefined,
+          capabilities: paymasterCapabilities,
           forceAtomic: true,
         })
         setPendingSwapId(response.id)
@@ -392,6 +407,7 @@ export function SwapPanel({
 
       const approvalData = await sendApprovalIfNeeded(WETH_ADDRESS, swapCall.router, amountIn)
       const paymasterUrl = getPaymasterUrl(activeChainId)
+      const paymasterCapabilities = resolvePaymasterCapabilities(activeChainId, paymasterUrl)
       const calls = [
         ...(approvalData
           ? [
@@ -412,11 +428,7 @@ export function SwapPanel({
           chainId: activeChainId,
           account: address,
           calls,
-          capabilities: paymasterUrl
-            ? {
-                paymasterService: { url: paymasterUrl, optional: false },
-              }
-            : undefined,
+          capabilities: paymasterCapabilities,
           forceAtomic: true,
         })
         setPendingSwapId(response.id)
@@ -488,6 +500,7 @@ export function SwapPanel({
 
       const approvalData = await sendApprovalIfNeeded(USDC_ADDRESS, swapCall.router, amountIn)
       const paymasterUrl = getPaymasterUrl(activeChainId)
+      const paymasterCapabilities = resolvePaymasterCapabilities(activeChainId, paymasterUrl)
       const calls = [
         ...(approvalData
           ? [
@@ -508,11 +521,7 @@ export function SwapPanel({
           chainId: activeChainId,
           account: address,
           calls,
-          capabilities: paymasterUrl
-            ? {
-                paymasterService: { url: paymasterUrl, optional: false },
-              }
-            : undefined,
+          capabilities: paymasterCapabilities,
           forceAtomic: true,
         })
         setPendingSwapId(response.id)

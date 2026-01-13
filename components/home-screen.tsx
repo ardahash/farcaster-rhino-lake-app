@@ -12,6 +12,7 @@ import { USDC_ADDRESS, WETH_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import { useCapabilities } from "wagmi/experimental"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { SwapPanel } from "@/components/swap-panel"
@@ -26,6 +27,9 @@ export function HomeScreen() {
   const handledCallIdRef = useRef<string | null>(null)
   const { sendCallsAsync, isPending: isSending } = useSendCalls()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+  const { data: availableCapabilities } = useCapabilities({
+    account: address ?? undefined,
+  })
   const { data: zenAddress } = useReadContract({
     address: ZEN_BURN_MANAGER_ADDRESS,
     abi: ZEN_BURN_MANAGER_ABI,
@@ -86,6 +90,23 @@ export function HomeScreen() {
     return parseUnits("0.01", decimals)
   }, [zenBalance.decimals])
 
+  const resolvePaymasterCapabilities = useCallback(
+    (targetChainId: number, paymasterUrl?: string) => {
+      if (!availableCapabilities || !paymasterUrl) return undefined
+      const chainCaps = availableCapabilities[targetChainId]
+      if (chainCaps?.paymasterService?.supported) {
+        return {
+          paymasterService: {
+            url: paymasterUrl,
+            optional: false,
+          },
+        }
+      }
+      return undefined
+    },
+    [availableCapabilities],
+  )
+
   const handleSacrifice = async () => {
     try {
       if (!address || !isAuthenticated) {
@@ -113,9 +134,7 @@ export function HomeScreen() {
       }
 
       const paymasterUrl = getPaymasterUrl(activeChainId)
-      if (!paymasterUrl) {
-        throw new Error("Paymaster proxy must be HTTPS. Set NEXT_PUBLIC_PAYMASTER_PROXY_URL.")
-      }
+      const paymasterCapabilities = resolvePaymasterCapabilities(activeChainId, paymasterUrl)
 
       const decimals = typeof zenDecimals === "number" ? zenDecimals : Number(zenDecimals ?? 18)
       const amount = parseUnits("0.01", decimals)
@@ -143,12 +162,7 @@ export function HomeScreen() {
             data: burnData,
           },
         ],
-        capabilities: {
-          paymasterService: {
-            url: paymasterUrl,
-            optional: false,
-          },
-        },
+        capabilities: paymasterCapabilities,
         forceAtomic: true,
       })
 
