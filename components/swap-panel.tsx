@@ -18,7 +18,7 @@ import {
   WETH_ADDRESS,
   ZEN_TOKEN_ADDRESS,
 } from "@/lib/aerodrome"
-import { selectBestRoute, buildClassicRoute } from "@/lib/router-selector"
+import { selectBestRoute } from "@/lib/router-selector"
 import { ERC20_ABI } from "@/lib/zen-burn"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
 import { encodeFunctionData, parseUnits } from "viem"
@@ -153,7 +153,6 @@ export function SwapPanel({
       amountIn,
       tokenIn,
       tokenOut,
-      stable: false,
     })
 
     if (!routeChoice) {
@@ -186,7 +185,7 @@ export function SwapPanel({
       }
     }
 
-    const routes = buildClassicRoute(tokenIn, tokenOut, false)
+    const routes = routeChoice.routes
     if (isEth) {
       return {
         router: AERODROME_CLASSIC_ROUTER_ADDRESS,

@@ -8,11 +8,20 @@ import {
   AERODROME_SLIPSTREAM_QUOTER_ABI,
   AERODROME_SLIPSTREAM_QUOTER_ADDRESS,
   SLIPSTREAM_FEE_TIERS,
+  USDC_ADDRESS,
+  WETH_ADDRESS,
 } from "@/lib/aerodrome"
+
+export type ClassicRoute = {
+  from: Address
+  to: Address
+  stable: boolean
+  factory: Address
+}
 
 export type SwapRouteChoice =
   | { mode: "slipstream"; fee: number; amountOut: bigint }
-  | { mode: "classic"; stable: boolean; amountOut: bigint }
+  | { mode: "classic"; routes: ClassicRoute[]; amountOut: bigint }
 
 export const buildClassicRoute = (tokenIn: Address, tokenOut: Address, stable: boolean) => [
   {
@@ -23,18 +32,41 @@ export const buildClassicRoute = (tokenIn: Address, tokenOut: Address, stable: b
   },
 ]
 
+const buildClassicRoutes = (tokens: Address[], stableFlags: boolean[]): ClassicRoute[] =>
+  tokens.slice(0, -1).map((token, index) => ({
+    from: token,
+    to: tokens[index + 1] as Address,
+    stable: stableFlags[index] ?? false,
+    factory: AERODROME_CLASSIC_FACTORY_ADDRESS,
+  }))
+
+const getClassicCandidates = (tokenIn: Address, tokenOut: Address): ClassicRoute[][] => {
+  const candidates: ClassicRoute[][] = [
+    buildClassicRoutes([tokenIn, tokenOut], [false]),
+    buildClassicRoutes([tokenIn, tokenOut], [true]),
+  ]
+
+  const intermediates = [WETH_ADDRESS, USDC_ADDRESS].filter(
+    (token) => token !== tokenIn && token !== tokenOut,
+  )
+
+  for (const middle of intermediates) {
+    candidates.push(buildClassicRoutes([tokenIn, middle, tokenOut], [false, false]))
+  }
+
+  return candidates
+}
+
 export const selectBestRoute = async ({
   publicClient,
   amountIn,
   tokenIn,
   tokenOut,
-  stable = false,
 }: {
   publicClient: PublicClient
   amountIn: bigint
   tokenIn: Address
   tokenOut: Address
-  stable?: boolean
 }): Promise<SwapRouteChoice | null> => {
   if (amountIn <= 0n) {
     return null
@@ -64,20 +96,28 @@ export const selectBestRoute = async ({
     }
   }
 
-  try {
-    const amounts = (await publicClient.readContract({
-      address: AERODROME_CLASSIC_ROUTER_ADDRESS,
-      abi: AERODROME_CLASSIC_ROUTER_ABI,
-      functionName: "getAmountsOut",
-      args: [amountIn, buildClassicRoute(tokenIn, tokenOut, stable)],
-    })) as bigint[]
+  let bestClassic: { routes: ClassicRoute[]; amountOut: bigint } | null = null
+  const classicCandidates = getClassicCandidates(tokenIn, tokenOut)
+  for (const routes of classicCandidates) {
+    try {
+      const amounts = (await publicClient.readContract({
+        address: AERODROME_CLASSIC_ROUTER_ADDRESS,
+        abi: AERODROME_CLASSIC_ROUTER_ABI,
+        functionName: "getAmountsOut",
+        args: [amountIn, routes],
+      })) as bigint[]
 
-    const amountOut = amounts[amounts.length - 1] ?? 0n
-    if (amountOut > 0n) {
-      return { mode: "classic", stable, amountOut }
+      const amountOut = amounts[amounts.length - 1] ?? 0n
+      if (amountOut > 0n && (!bestClassic || amountOut > bestClassic.amountOut)) {
+        bestClassic = { routes, amountOut }
+      }
+    } catch {
+      // Ignore failing routes and continue.
     }
-  } catch {
-    // Ignore and fall through.
+  }
+
+  if (bestClassic) {
+    return { mode: "classic", ...bestClassic }
   }
 
   return null
