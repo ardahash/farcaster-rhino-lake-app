@@ -8,10 +8,10 @@ import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getPaymasterUrl } from "@/lib/base-config"
 import { getTownAssetForLevel, useGame } from "@/lib/game-state"
 import { useErc20Balance } from "@/lib/use-erc20-balance"
-import { ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
+import { USDC_ADDRESS, WETH_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
+import { useBalance, useCallsStatus, useReadContract, useSendCalls, useSwitchChain } from "wagmi"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { SwapPanel } from "@/components/swap-panel"
@@ -52,6 +52,28 @@ export function HomeScreen() {
     address,
     chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(address),
+  })
+
+  const usdcBalance = useErc20Balance({
+    token: USDC_ADDRESS,
+    address,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(address),
+  })
+
+  const wethBalance = useErc20Balance({
+    token: WETH_ADDRESS,
+    address,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(address),
+  })
+
+  const ethBalance = useBalance({
+    address,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    query: {
+      enabled: Boolean(address),
+    },
   })
 
   const zenThresholdRaw = useMemo(() => {
@@ -208,6 +230,27 @@ export function HomeScreen() {
       : isAuthenticated && Number.isFinite(zenBalanceValue)
         ? zenBalanceValue.toFixed(4)
         : "--"
+  const usdcBalanceValue = Number(usdcBalance.formatted)
+  const usdcBalanceDisplay =
+    isAuthenticated && usdcBalance.isLoading
+      ? "..."
+      : isAuthenticated && Number.isFinite(usdcBalanceValue)
+        ? usdcBalanceValue.toFixed(4)
+        : "--"
+  const wethBalanceValue = Number(wethBalance.formatted)
+  const wethBalanceDisplay =
+    isAuthenticated && wethBalance.isLoading
+      ? "..."
+      : isAuthenticated && Number.isFinite(wethBalanceValue)
+        ? wethBalanceValue.toFixed(4)
+        : "--"
+  const ethBalanceValue = Number(ethBalance.data?.formatted ?? "0")
+  const ethBalanceDisplay =
+    isAuthenticated && ethBalance.isLoading
+      ? "..."
+      : isAuthenticated && Number.isFinite(ethBalanceValue)
+        ? ethBalanceValue.toFixed(4)
+        : "--"
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
@@ -262,9 +305,23 @@ export function HomeScreen() {
           </div>
         </div>
 
-        <div className="bg-muted/50 rounded-lg p-3 text-center">
-          <p className="text-xs text-muted-foreground mb-1">ZEN Balance</p>
-          <p className="text-xl font-bold text-foreground">{zenBalanceDisplay}</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <p className="text-xs text-muted-foreground mb-1">ZEN Balance</p>
+            <p className="text-xl font-bold text-foreground">{zenBalanceDisplay}</p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <p className="text-xs text-muted-foreground mb-1">ETH Balance</p>
+            <p className="text-xl font-bold text-foreground">{ethBalanceDisplay}</p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <p className="text-xs text-muted-foreground mb-1">WETH Balance</p>
+            <p className="text-xl font-bold text-foreground">{wethBalanceDisplay}</p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <p className="text-xs text-muted-foreground mb-1">USDC Balance</p>
+            <p className="text-xl font-bold text-foreground">{usdcBalanceDisplay}</p>
+          </div>
         </div>
       </Card>
 
