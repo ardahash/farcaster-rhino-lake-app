@@ -11,6 +11,7 @@ type ManifestCheck = {
   fetchError: string | null
   miniappPresent: boolean | null
   accountAssociationPresent: boolean | null
+  accountAssociationDomain: string | null
   checkedAt: string | null
 }
 
@@ -22,7 +23,24 @@ const emptyState: ManifestCheck = {
   fetchError: null,
   miniappPresent: null,
   accountAssociationPresent: null,
+  accountAssociationDomain: null,
   checkedAt: null,
+}
+
+const decodePayloadDomain = (payload: string) => {
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/")
+    const paddingNeeded = (4 - (normalized.length % 4)) % 4
+    const padded = `${normalized}${"=".repeat(paddingNeeded)}`
+    const json = atob(padded)
+    const parsed = JSON.parse(json)
+    if (parsed && typeof parsed === "object" && "domain" in parsed && typeof parsed.domain === "string") {
+      return parsed.domain
+    }
+  } catch {
+    return null
+  }
+  return null
 }
 
 export function ManifestStatusPanel() {
@@ -52,6 +70,17 @@ export function ManifestStatusPanel() {
         parseError = error instanceof Error ? error.message : "Invalid JSON"
       }
 
+      const accountAssociationDomain =
+        parsed &&
+        typeof parsed === "object" &&
+        "accountAssociation" in parsed &&
+        typeof parsed.accountAssociation === "object" &&
+        parsed.accountAssociation !== null &&
+        "payload" in parsed.accountAssociation &&
+        typeof parsed.accountAssociation.payload === "string"
+          ? decodePayloadDomain(parsed.accountAssociation.payload)
+          : null
+
       setState({
         status: response.status,
         ok: response.ok,
@@ -61,6 +90,7 @@ export function ManifestStatusPanel() {
         miniappPresent: typeof parsed === "object" && parsed !== null && "miniapp" in parsed,
         accountAssociationPresent:
           typeof parsed === "object" && parsed !== null && "accountAssociation" in parsed,
+        accountAssociationDomain,
         checkedAt: new Date().toISOString(),
       })
     } catch (error) {
@@ -80,6 +110,10 @@ export function ManifestStatusPanel() {
   }, [debugEnabled, fetchManifest])
 
   if (!debugEnabled) return null
+
+  const host = typeof window === "undefined" ? null : window.location.host
+  const domainMismatch =
+    host && state.accountAssociationDomain ? host !== state.accountAssociationDomain : null
 
   return (
     <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
@@ -102,6 +136,10 @@ export function ManifestStatusPanel() {
           : state.accountAssociationPresent
             ? "present"
             : "missing"}
+      </p>
+      <p className="mt-1">
+        Account domain: {state.accountAssociationDomain ?? "--"}
+        {domainMismatch === null ? "" : domainMismatch ? " (mismatch)" : " (match)"}
       </p>
       {state.checkedAt && <p className="mt-1">Checked: {new Date(state.checkedAt).toLocaleTimeString()}</p>}
     </div>
