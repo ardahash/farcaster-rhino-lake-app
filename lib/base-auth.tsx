@@ -104,7 +104,7 @@ const createNonce = () => {
 
 function BaseAuthInner({ children }: { children: ReactNode }) {
   const { address, chainId, isConnected, isConnecting } = useAccount()
-  const { connectAsync, connectors, error: connectError, isPending } = useConnect()
+  const { connectAsync, connectors, error: connectError, isPending, reset: resetConnect } = useConnect()
   const { disconnect } = useDisconnect()
   const { context: miniKitContext, isMiniAppReady, setMiniAppReady } = useMiniKit()
   const [session, setSession] = useState<BaseAuthSession | null>(null)
@@ -140,6 +140,10 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     const domain = typeof window !== "undefined" ? window.location.host : fallbackHost
     const uri = typeof window !== "undefined" ? window.location.origin : fallbackOrigin
     const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
+
+    if (miniKitContext && !isMiniAppReady) {
+      await setMiniAppReady().catch(() => undefined)
+    }
 
     const shouldTryFarcaster = Boolean(miniKitContext)
     const farcasterConnector = shouldTryFarcaster
@@ -219,9 +223,11 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       } catch (caughtError) {
         if (caughtError instanceof Error && caughtError.name === "ConnectorTimeoutError") {
           disconnect()
+          resetConnect()
         }
         if (caughtError instanceof Error && caughtError.name === "ConnectorAlreadyConnectedError") {
           disconnect()
+          resetConnect()
           return withTimeout(
             connectAsync({
               connector: targetConnector,
@@ -340,7 +346,10 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     connectors,
     disconnect,
     isConnected,
+    isMiniAppReady,
     miniKitContext,
+    resetConnect,
+    setMiniAppReady,
     session,
   ])
 
@@ -409,7 +418,7 @@ export function BaseAuthProvider({ children }: { children: ReactNode }) {
           defaultPublicClients={defaultPublicClients}
           miniKit={{
             enabled: true,
-            autoConnect: true,
+            autoConnect: false,
           }}
         >
           <MiniAppReady />
