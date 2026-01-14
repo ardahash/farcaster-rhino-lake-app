@@ -435,6 +435,17 @@ export function BaseAuthProvider({ children }: { children: ReactNode }) {
           apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
           projectId={process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_ID}
           chain={BASE_MAINNET_CHAIN}
+          config={{
+            appearance: {
+              name: "Rhino Lake",
+              logo: APP_LOGO_URL,
+              mode: "auto",
+              theme: "default",
+            },
+            wallet: {
+              display: "modal",
+            },
+          }}
           defaultPublicClients={defaultPublicClients}
           miniKit={{
             enabled: true,
