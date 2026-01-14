@@ -11,6 +11,7 @@ import { ProfileScreen } from "@/components/profile-screen"
 import { InfoScreen } from "@/components/info-screen"
 import { BottomNav } from "@/components/bottom-nav"
 import { Toaster } from "@/components/ui/toaster"
+import { WalletIslandDock } from "@/components/wallet-island"
 
 export default function RhinoLakePage() {
   const [activeTab, setActiveTab] = useState("home")
@@ -33,6 +34,7 @@ export default function RhinoLakePage() {
           {/* Bottom Navigation */}
           <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
+          <WalletIslandDock />
           <Toaster />
         </div>
       </GameProvider>
