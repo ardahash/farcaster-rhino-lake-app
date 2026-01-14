@@ -65,6 +65,14 @@ export function ConnectionDebug() {
         Mini App context: {diagnostics.isMiniApp ? "detected" : "missing"}
         {diagnostics.miniKitPlatform ? ` (${diagnostics.miniKitPlatform})` : ""}
       </p>
+      <p className="mt-1">
+        Mini App detection:{" "}
+        {diagnostics.miniAppDetected === null
+          ? "pending"
+          : diagnostics.miniAppDetected
+            ? "true"
+            : "false"}
+      </p>
       <p className="mt-1">Elapsed: {(elapsedMs / 1000).toFixed(0)}s</p>
       {issues.length > 0 && (
         <div className="mt-2 space-y-1">

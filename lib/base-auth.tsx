@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react"
 import { OnchainKitProvider } from "@coinbase/onchainkit"
-import { useMiniKit } from "@coinbase/onchainkit/minikit"
+import { useIsInMiniApp, useMiniKit } from "@coinbase/onchainkit/minikit"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider, createConfig, http, useAccount, useConnect, useDisconnect } from "wagmi"
 import { baseAccount, injected } from "wagmi/connectors"
@@ -28,6 +28,7 @@ type BaseAuthSession = {
 
 type BaseAuthDiagnostics = {
   isMiniApp: boolean
+  miniAppDetected: boolean | null
   miniKitPlatform: string | null
   miniKitReady: boolean
   onchainKitApiKeyPresent: boolean
@@ -107,6 +108,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
   const { connectAsync, connectors, error: connectError, isPending, reset: resetConnect } = useConnect()
   const { disconnect } = useDisconnect()
   const { context: miniKitContext, isMiniAppReady, setMiniAppReady } = useMiniKit()
+  const { isInMiniApp, isSuccess: isMiniAppResolved } = useIsInMiniApp()
   const [session, setSession] = useState<BaseAuthSession | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lastAttemptAt, setLastAttemptAt] = useState<number | null>(null)
@@ -145,7 +147,13 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       await setMiniAppReady().catch(() => undefined)
     }
 
-    const shouldTryFarcaster = Boolean(miniKitContext)
+    const isMiniAppEnvironment = Boolean(miniKitContext) || isInMiniApp === true
+    const isMiniAppUnknown = isInMiniApp === undefined && !miniKitContext
+    if (!isMiniAppEnvironment && isMiniAppUnknown) {
+      throw new Error("Mini App context is still loading. Please try again.")
+    }
+
+    const shouldTryFarcaster = isMiniAppEnvironment
     const farcasterConnector = shouldTryFarcaster
       ? connectors.find((item) => item.type === "farcasterMiniApp" || item.id === "farcaster")
       : undefined
@@ -298,8 +306,14 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
         disconnect()
       }
 
-      if (await tryFarcasterConnector()) {
-        return
+      if (isMiniAppEnvironment) {
+        if (!farcasterConnector) {
+          throw new Error("Mini App wallet connector not available.")
+        }
+        if (await tryFarcasterConnector()) {
+          return
+        }
+        throw new Error("Mini App wallet connection failed. Please try again.")
       }
 
       if (!baseConnector) {
@@ -346,6 +360,8 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     connectors,
     disconnect,
     isConnected,
+    isInMiniApp,
+    isMiniAppResolved,
     isMiniAppReady,
     miniKitContext,
     resetConnect,
@@ -370,6 +386,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       error: error ?? connectError?.message ?? null,
       diagnostics: {
         isMiniApp: Boolean(miniKitContext),
+        miniAppDetected: isMiniAppResolved ? Boolean(isInMiniApp) : null,
         miniKitPlatform: miniKitContext?.client?.platformType ?? null,
         miniKitReady: isMiniAppReady,
         onchainKitApiKeyPresent: Boolean(process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY),
@@ -394,6 +411,8 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       error,
       isConnected,
       isConnecting,
+      isInMiniApp,
+      isMiniAppResolved,
       isMiniAppReady,
       isPending,
       lastAttemptAt,
