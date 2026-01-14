@@ -43,11 +43,8 @@ export function ConnectionDebug() {
     ) {
       list.push("App must be served over https on mobile.")
     }
-    if (!diagnostics.isMiniApp) {
-      list.push("Mini App context not detected (try opening from the Mini App list).")
-    }
     return list
-  }, [diagnostics.isMiniApp, diagnostics.onchainKitApiKeyPresent, isMobile])
+  }, [diagnostics.onchainKitApiKeyPresent, isMobile])
 
   const shouldShow = isMobile && (Boolean(error) || elapsedMs > CONNECTING_GRACE_MS)
   if (!shouldShow) return null
@@ -61,10 +58,13 @@ export function ConnectionDebug() {
           Connector: {diagnostics.lastConnector.name} ({diagnostics.lastConnector.id})
         </p>
       )}
+<<<<<<< Updated upstream
       <p className="mt-1">
         Mini App context: {diagnostics.isMiniApp ? "detected" : "missing"}
         {diagnostics.miniKitPlatform ? ` (${diagnostics.miniKitPlatform})` : ""}
       </p>
+=======
+>>>>>>> Stashed changes
       <p className="mt-1">Elapsed: {(elapsedMs / 1000).toFixed(0)}s</p>
       {issues.length > 0 && (
         <div className="mt-2 space-y-1">

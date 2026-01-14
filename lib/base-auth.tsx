@@ -1,23 +1,16 @@
 "use client"
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react"
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react"
 import { OnchainKitProvider } from "@coinbase/onchainkit"
+<<<<<<< Updated upstream
 import { useMiniKit } from "@coinbase/onchainkit/minikit"
+=======
+>>>>>>> Stashed changes
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider, createConfig, http, useAccount, useConnect, useDisconnect } from "wagmi"
 import { baseAccount, injected } from "wagmi/connectors"
-import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector"
 import { createPublicClient, numberToHex } from "viem"
 import { BASE_CHAINS, BASE_MAINNET_CHAIN, DEFAULT_CHAIN_ID, getRpcUrlForChain } from "@/lib/base-config"
-import { MiniAppReady } from "@/lib/miniapp-ready"
 
 type BaseAuthSession = {
   address: `0x${string}`
@@ -27,9 +20,12 @@ type BaseAuthSession = {
 }
 
 type BaseAuthDiagnostics = {
+<<<<<<< Updated upstream
   isMiniApp: boolean
   miniKitPlatform: string | null
   miniKitReady: boolean
+=======
+>>>>>>> Stashed changes
   onchainKitApiKeyPresent: boolean
   appOrigin: string
   lastAttemptAt: number | null
@@ -65,7 +61,6 @@ const APP_LOGO_URL = `${APP_ORIGIN}/icon.png`
 const wagmiConfig = createConfig({
   chains: BASE_CHAINS,
   connectors: [
-    farcasterMiniApp(),
     baseAccount({
       appName: "Rhino Lake",
       appLogoUrl: APP_LOGO_URL,
@@ -106,7 +101,10 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
   const { address, chainId, isConnected, isConnecting } = useAccount()
   const { connectAsync, connectors, error: connectError, isPending, reset: resetConnect } = useConnect()
   const { disconnect } = useDisconnect()
+<<<<<<< Updated upstream
   const { context: miniKitContext, isMiniAppReady, setMiniAppReady } = useMiniKit()
+=======
+>>>>>>> Stashed changes
   const [session, setSession] = useState<BaseAuthSession | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lastAttemptAt, setLastAttemptAt] = useState<number | null>(null)
@@ -115,11 +113,6 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     name: string
     type: string
   } | null>(null)
-
-  useEffect(() => {
-    if (isMiniAppReady) return
-    setMiniAppReady().catch(() => undefined)
-  }, [isMiniAppReady, setMiniAppReady])
 
   const signIn = useCallback(async () => {
     setError(null)
@@ -141,6 +134,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     const uri = typeof window !== "undefined" ? window.location.origin : fallbackOrigin
     const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
 
+<<<<<<< Updated upstream
     if (miniKitContext && !isMiniAppReady) {
       await setMiniAppReady().catch(() => undefined)
     }
@@ -149,6 +143,8 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     const farcasterConnector = shouldTryFarcaster
       ? connectors.find((item) => item.type === "farcasterMiniApp" || item.id === "farcaster")
       : undefined
+=======
+>>>>>>> Stashed changes
     const baseConnector = connectors.find((item) => item.id === "baseAccount")
     const injectedConnector = connectors.find((item) => item.id === "injected")
 
@@ -206,14 +202,14 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
             ...(withCapabilities
               ? {
                   capabilities: {
-                  signInWithEthereum: {
-                    nonce,
-                    statement: "Sign in to Rhino Lake.",
-                    domain,
-                    uri,
-                    chainId: chainIdHex,
-                    version: "1",
-                  },
+                    signInWithEthereum: {
+                      nonce,
+                      statement: "Sign in to Rhino Lake.",
+                      domain,
+                      uri,
+                      chainId: chainIdHex,
+                      version: "1",
+                    },
                   },
                   withCapabilities: true,
                 }
@@ -266,31 +262,11 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       )
     }
 
-    const connectWithCapabilities = async () =>
-      connectWithConnector(baseConnector ?? connectors[0], true)
-
-    const shouldAbortFallback = (caughtError: unknown) => {
-      if (!(caughtError instanceof Error)) return false
-      const message = caughtError.message.toLowerCase()
-      return message.includes("user rejected") || message.includes("user denied") || message.includes("rejected")
-    }
-
-    const tryFarcasterConnector = async () => {
-      if (!farcasterConnector) return false
-      try {
-        const result = await connectWithConnector(farcasterConnector)
-        const { address: walletAddress, chainId: connectedChainId } = getConnectAddress(result)
-        setSession({
-          address: walletAddress,
-          chainId: connectedChainId,
-        })
-        return true
-      } catch (caughtError) {
-        if (shouldAbortFallback(caughtError)) {
-          throw caughtError
-        }
-        return false
+    const connectWithCapabilities = async () => {
+      if (!baseConnector) {
+        throw new Error("Base Account connector not available.")
       }
+      return connectWithConnector(baseConnector, true)
     }
 
     try {
@@ -298,10 +274,13 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
         disconnect()
       }
 
+<<<<<<< Updated upstream
       if (await tryFarcasterConnector()) {
         return
       }
 
+=======
+>>>>>>> Stashed changes
       if (!baseConnector) {
         if (!injectedConnector) {
           throw new Error("No supported wallet connector available.")
@@ -346,10 +325,12 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     connectors,
     disconnect,
     isConnected,
+<<<<<<< Updated upstream
     isMiniAppReady,
     miniKitContext,
+=======
+>>>>>>> Stashed changes
     resetConnect,
-    setMiniAppReady,
     session,
   ])
 
@@ -369,9 +350,12 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       session,
       error: error ?? connectError?.message ?? null,
       diagnostics: {
+<<<<<<< Updated upstream
         isMiniApp: Boolean(miniKitContext),
         miniKitPlatform: miniKitContext?.client?.platformType ?? null,
         miniKitReady: isMiniAppReady,
+=======
+>>>>>>> Stashed changes
         onchainKitApiKeyPresent: Boolean(process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY),
         appOrigin: APP_ORIGIN,
         lastAttemptAt,
@@ -394,11 +378,13 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       error,
       isConnected,
       isConnecting,
+<<<<<<< Updated upstream
       isMiniAppReady,
+=======
+>>>>>>> Stashed changes
       isPending,
       lastAttemptAt,
       lastConnector,
-      miniKitContext,
       session,
       signIn,
       signOut,
@@ -417,12 +403,7 @@ export function BaseAuthProvider({ children }: { children: ReactNode }) {
           projectId={process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_ID}
           chain={BASE_MAINNET_CHAIN}
           defaultPublicClients={defaultPublicClients}
-          miniKit={{
-            enabled: true,
-            autoConnect: false,
-          }}
         >
-          <MiniAppReady />
           <BaseAuthInner>{children}</BaseAuthInner>
         </OnchainKitProvider>
       </QueryClientProvider>
