@@ -18,6 +18,7 @@ import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGE
 import { SwapPanel } from "@/components/swap-panel"
 import { ToastAction } from "@/components/ui/toast"
 import { ConnectionDebug } from "@/components/connection-debug"
+import { ManifestStatusPanel } from "@/components/manifest-status"
 
 export function HomeScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -435,6 +436,7 @@ export function HomeScreen() {
           <p className="text-center text-xs text-muted-foreground">{authError}</p>
         )}
         <ConnectionDebug />
+        <ManifestStatusPanel />
       </div>
 
       <div className="w-full max-w-md">

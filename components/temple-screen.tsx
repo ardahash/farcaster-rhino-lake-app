@@ -24,6 +24,7 @@ import { useCapabilities } from "wagmi/experimental"
 import { encodeFunctionData, parseUnits } from "viem"
 import { ToastAction } from "@/components/ui/toast"
 import { ConnectionDebug } from "@/components/connection-debug"
+import { ManifestStatusPanel } from "@/components/manifest-status"
 
 export function TempleScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
@@ -393,6 +394,7 @@ export function TempleScreen() {
         )}
         {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
         <ConnectionDebug />
+        <ManifestStatusPanel />
       </Card>
 
       {/* Level Benefits */}

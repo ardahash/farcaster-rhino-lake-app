@@ -1,0 +1,2837 @@
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+    
+  <url>
+    <loc>https://docs.base.org/base-account/basenames/basename-transfer</loc>
+    <lastmod>2026-01-05T15:17:52.169Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/basenames/basenames-faq</loc>
+    <lastmod>2025-09-10T13:25:49.081Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/contribute/contribute-to-base-account-docs</loc>
+    <lastmod>2026-01-14T08:47:49.304Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/contribute/security-and-bug-bounty</loc>
+    <lastmod>2025-08-07T21:00:09.747Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/cdp</loc>
+    <lastmod>2025-10-08T20:10:03.817Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/privy/authentication</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/privy/setup</loc>
+    <lastmod>2025-10-24T19:44:56.812Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/privy/sub-accounts</loc>
+    <lastmod>2025-10-08T20:10:06.171Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/privy/wallet-actions</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/rainbowkit</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/wagmi/basenames</loc>
+    <lastmod>2025-11-07T12:15:01.672Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/wagmi/batch-transactions</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/wagmi/other-use-cases</loc>
+    <lastmod>2025-10-08T20:10:06.168Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/framework-integrations/wagmi/setup</loc>
+    <lastmod>2025-11-07T12:15:01.675Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/guides/accept-payments</loc>
+    <lastmod>2026-01-05T15:17:52.166Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/guides/accept-recurring-payments</loc>
+    <lastmod>2025-10-31T17:16:11.875Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/guides/authenticate-users</loc>
+    <lastmod>2025-11-12T21:02:43.120Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/guides/migration-guide</loc>
+    <lastmod>2025-12-15T17:05:07.961Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/guides/sign-and-verify-typed-data</loc>
+    <lastmod>2025-10-08T20:10:06.199Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/improve-ux/batch-transactions</loc>
+    <lastmod>2025-11-07T17:29:03.821Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/improve-ux/magic-spend</loc>
+    <lastmod>2025-10-08T20:10:06.202Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/improve-ux/spend-permissions</loc>
+    <lastmod>2025-10-08T20:10:06.204Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/improve-ux/sponsor-gas/erc20-paymasters</loc>
+    <lastmod>2025-10-08T20:10:10.754Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/improve-ux/sponsor-gas/paymasters</loc>
+    <lastmod>2025-10-29T14:27:33.390Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/improve-ux/sub-accounts</loc>
+    <lastmod>2025-11-07T12:13:33.811Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/more/base-gasless-campaign</loc>
+    <lastmod>2025-10-29T14:27:33.388Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/more/telemetry</loc>
+    <lastmod>2025-11-06T15:03:40.912Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/more/troubleshooting/usage-details/gas-usage</loc>
+    <lastmod>2025-08-07T21:00:10.095Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/more/troubleshooting/usage-details/popups</loc>
+    <lastmod>2025-08-07T21:00:10.107Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/more/troubleshooting/usage-details/simulations</loc>
+    <lastmod>2025-09-30T17:43:32.515Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/more/troubleshooting/usage-details/unsupported-calls</loc>
+    <lastmod>2025-08-07T21:00:10.134Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/more/troubleshooting/usage-details/wallet-library-support</loc>
+    <lastmod>2025-08-07T21:00:10.150Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/overview/what-is-base-account</loc>
+    <lastmod>2025-08-07T15:48:54.265Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/quickstart/mobile-integration</loc>
+    <lastmod>2025-10-08T20:10:11.923Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/quickstart/web</loc>
+    <lastmod>2025-11-07T12:13:33.810Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/quickstart/web-react</loc>
+    <lastmod>2025-10-08T20:10:11.925Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/charge</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/getOrCreateSubscriptionOwnerWallet</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/getPaymentStatus</loc>
+    <lastmod>2025-10-08T20:10:11.924Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/getStatus</loc>
+    <lastmod>2025-10-31T17:16:11.908Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/pay</loc>
+    <lastmod>2025-10-08T20:10:11.928Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/prepareCharge</loc>
+    <lastmod>2025-10-31T17:16:11.926Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/prepareRevoke</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/revoke</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/subscribe</loc>
+    <lastmod>2025-10-31T17:16:11.930Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/base-pay/subscriptions-overview</loc>
+    <lastmod>2025-10-31T17:16:11.932Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/atomic</loc>
+    <lastmod>2025-10-08T20:10:11.953Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/auxiliaryFunds</loc>
+    <lastmod>2025-10-08T20:10:11.954Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/dataSuffix</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/datacallback</loc>
+    <lastmod>2025-10-08T20:10:11.963Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/flowControl</loc>
+    <lastmod>2025-10-08T20:10:11.957Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/overview</loc>
+    <lastmod>2026-01-13T18:25:21.980Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/paymasterService</loc>
+    <lastmod>2025-10-08T20:10:11.960Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/capabilities/signInWithEthereum</loc>
+    <lastmod>2025-10-08T20:10:11.955Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/createBaseAccount</loc>
+    <lastmod>2025-10-08T20:10:11.964Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/generateKeyPair</loc>
+    <lastmod>2025-10-08T20:10:11.958Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/getCryptoKeyAccount</loc>
+    <lastmod>2025-10-08T20:10:13.612Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/getKeypair</loc>
+    <lastmod>2025-10-08T20:10:13.608Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/getProvider</loc>
+    <lastmod>2025-10-08T20:10:13.603Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/coinbase_fetchPermission</loc>
+    <lastmod>2025-10-08T20:10:13.607Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/coinbase_fetchPermissions</loc>
+    <lastmod>2025-10-08T20:10:13.610Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_accounts</loc>
+    <lastmod>2025-10-08T20:10:13.606Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_blockNumber</loc>
+    <lastmod>2025-10-08T20:10:13.609Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_chainId</loc>
+    <lastmod>2025-10-08T20:10:13.610Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_coinbase</loc>
+    <lastmod>2025-10-08T20:10:13.604Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_estimateGas</loc>
+    <lastmod>2025-10-08T20:10:13.611Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_feeHistory</loc>
+    <lastmod>2025-10-08T20:10:13.642Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_gasPrice</loc>
+    <lastmod>2025-10-08T20:10:13.641Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getBalance</loc>
+    <lastmod>2025-10-08T20:10:13.648Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getBlockByHash</loc>
+    <lastmod>2025-10-08T20:10:13.639Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getBlockByNumber</loc>
+    <lastmod>2025-10-08T20:10:13.647Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getBlockTransactionCountByHash</loc>
+    <lastmod>2025-10-08T20:10:13.645Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getBlockTransactionCountByNumber</loc>
+    <lastmod>2025-10-08T20:10:13.636Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getCode</loc>
+    <lastmod>2025-10-08T20:10:13.638Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getLogs</loc>
+    <lastmod>2025-10-08T20:10:13.646Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getProof</loc>
+    <lastmod>2025-10-08T20:10:13.640Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getStorageAt</loc>
+    <lastmod>2025-10-08T20:10:13.664Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getTransactionByBlockHashAndIndex</loc>
+    <lastmod>2025-10-08T20:10:13.669Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getTransactionByBlockNumberAndIndex</loc>
+    <lastmod>2025-10-08T20:10:13.671Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getTransactionByHash</loc>
+    <lastmod>2025-10-08T20:10:13.670Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getTransactionCount</loc>
+    <lastmod>2025-10-08T20:10:13.667Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getTransactionReceipt</loc>
+    <lastmod>2025-10-08T20:10:13.673Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getUncleCountByBlockHash</loc>
+    <lastmod>2025-10-08T20:10:13.668Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_getUncleCountByBlockNumber</loc>
+    <lastmod>2025-10-08T20:10:13.666Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_requestAccounts</loc>
+    <lastmod>2025-10-08T20:10:13.672Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_sendRawTransaction</loc>
+    <lastmod>2025-10-08T20:10:13.669Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_sendTransaction</loc>
+    <lastmod>2025-10-08T20:10:13.713Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/eth_signTypedData_v4</loc>
+    <lastmod>2025-10-08T20:10:13.709Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/personal_sign</loc>
+    <lastmod>2025-10-08T20:10:13.712Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/request-overview</loc>
+    <lastmod>2025-10-08T20:10:13.714Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_addEthereumChain</loc>
+    <lastmod>2025-10-08T20:10:13.717Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_addSubAccount</loc>
+    <lastmod>2025-10-08T20:10:13.715Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_connect</loc>
+    <lastmod>2025-10-08T20:10:13.716Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_getCallsStatus</loc>
+    <lastmod>2025-10-08T20:10:13.717Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_getCapabilities</loc>
+    <lastmod>2025-10-08T20:10:15.227Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_getSubAccounts</loc>
+    <lastmod>2025-10-08T20:10:15.223Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_sendCalls</loc>
+    <lastmod>2025-10-08T20:10:15.228Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_switchEthereumChain</loc>
+    <lastmod>2025-10-08T20:10:15.224Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/wallet_watchAsset</loc>
+    <lastmod>2025-10-08T20:10:15.226Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/core/provider-rpc-methods/web3_clientVersion</loc>
+    <lastmod>2025-10-08T20:10:15.225Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/onchain-contracts/basenames</loc>
+    <lastmod>2025-08-07T21:00:10.992Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/onchain-contracts/smart-wallet</loc>
+    <lastmod>2025-08-07T21:00:11.006Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/onchain-contracts/spend-permissions</loc>
+    <lastmod>2025-10-08T20:10:15.231Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/prolink-utilities/createProlinkUrl</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/prolink-utilities/decodeProlink</loc>
+    <lastmod>2025-12-04T15:15:33.678Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/prolink-utilities/encodeProlink</loc>
+    <lastmod>2025-12-04T15:15:33.676Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/spend-permission-utilities/fetchPermission</loc>
+    <lastmod>2025-10-08T20:10:15.255Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/spend-permission-utilities/fetchPermissions</loc>
+    <lastmod>2025-10-08T20:10:15.258Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/spend-permission-utilities/getPermissionStatus</loc>
+    <lastmod>2025-10-08T20:10:15.255Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/spend-permission-utilities/prepareRevokeCallData</loc>
+    <lastmod>2025-10-08T20:10:15.253Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/spend-permission-utilities/prepareSpendCallData</loc>
+    <lastmod>2025-10-08T20:10:15.254Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/spend-permission-utilities/requestRevoke</loc>
+    <lastmod>2025-10-08T20:10:15.252Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/spend-permission-utilities/requestSpendPermission</loc>
+    <lastmod>2025-10-08T20:10:15.257Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/ui-elements/base-pay-button</loc>
+    <lastmod>2025-10-08T20:10:15.259Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/ui-elements/brand-guidelines</loc>
+    <lastmod>2025-10-02T16:28:48.535Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-account/reference/ui-elements/sign-in-with-base-button</loc>
+    <lastmod>2025-10-14T14:45:23.392Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/building-quality-agents</loc>
+    <lastmod>2025-09-30T17:43:36.844Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/chat-agents</loc>
+    <lastmod>2025-10-27T17:41:16.846Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/deeplinks</loc>
+    <lastmod>2025-10-27T17:41:16.844Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/getting-started</loc>
+    <lastmod>2025-10-27T17:41:16.848Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/mini-apps-and-agents</loc>
+    <lastmod>2025-10-27T17:41:16.845Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/quick-actions</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/transaction-trays</loc>
+    <lastmod>2025-10-08T20:10:15.286Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/agents/x402-agents</loc>
+    <lastmod>2025-10-27T17:41:16.850Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-app/introduction/beta-faq</loc>
+    <lastmod>2025-10-30T13:33:46.632Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/flashblocks/apps</loc>
+    <lastmod>2025-10-08T20:10:17.270Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/flashblocks/docs</loc>
+    <lastmod>2025-10-07T02:34:23.376Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/flashblocks/node-providers</loc>
+    <lastmod>2025-10-08T20:10:17.271Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/base-contracts</loc>
+    <lastmod>2025-12-22T22:27:56.795Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/block-building</loc>
+    <lastmod>2025-12-15T18:45:56.620Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/configuration-changelog</loc>
+    <lastmod>2025-12-18T20:53:24.243Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/diffs-ethereum-base</loc>
+    <lastmod>2025-12-15T18:45:56.621Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/ecosystem-contracts</loc>
+    <lastmod>2025-08-07T21:00:11.269Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/network-fees</loc>
+    <lastmod>2025-12-18T20:53:24.246Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/transaction-finality</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/network-information/troubleshooting-transactions</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/node-operators/performance-tuning</loc>
+    <lastmod>2025-10-27T15:53:08.089Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/node-operators/run-a-base-node</loc>
+    <lastmod>2025-12-12T18:26:42.747Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/node-operators/snapshots</loc>
+    <lastmod>2025-10-27T15:53:08.087Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/node-operators/troubleshooting</loc>
+    <lastmod>2025-10-27T15:53:08.088Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/quickstart/base-solana-bridge</loc>
+    <lastmod>2026-01-05T15:52:36.249Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/quickstart/bridge-token</loc>
+    <lastmod>2025-10-09T18:14:02.185Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/quickstart/builder-codes</loc>
+    <lastmod>2026-01-13T22:19:52.743Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/quickstart/connecting-to-base</loc>
+    <lastmod>2025-08-07T21:00:11.356Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/quickstart/deploy-on-base</loc>
+    <lastmod>2025-10-20T20:01:14.532Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/quickstart/why-base</loc>
+    <lastmod>2025-08-07T21:00:11.381Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/security/avoid-malicious-flags</loc>
+    <lastmod>2025-08-07T21:00:11.393Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/security/report-vulnerability</loc>
+    <lastmod>2025-10-20T12:58:39.720Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/security/security-council</loc>
+    <lastmod>2025-08-07T21:00:11.433Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/account-abstraction</loc>
+    <lastmod>2025-08-07T21:00:11.446Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/base-products</loc>
+    <lastmod>2025-08-07T21:00:11.458Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/block-explorers</loc>
+    <lastmod>2025-08-07T21:00:11.472Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/cross-chain</loc>
+    <lastmod>2025-10-02T15:31:17.721Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/data-indexers</loc>
+    <lastmod>2025-10-02T15:56:50.437Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/network-faucets</loc>
+    <lastmod>2025-11-20T15:57:10.897Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/node-providers</loc>
+    <lastmod>2025-12-16T22:35:04.221Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/onboarding</loc>
+    <lastmod>2025-11-25T15:55:35.342Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/onchain-registry-api</loc>
+    <lastmod>2025-10-08T20:10:17.320Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/onramps</loc>
+    <lastmod>2025-10-20T13:15:36.096Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/oracles</loc>
+    <lastmod>2025-08-07T21:00:11.576Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/base-chain/tools/tokens-in-wallet</loc>
+    <lastmod>2025-10-30T13:33:46.639Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/accept-crypto-payments</loc>
+    <lastmod>2025-10-08T20:10:17.354Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/ai-assisted-documentation-reading</loc>
+    <lastmod>2025-10-08T20:10:17.351Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/ai-powered-development-fundamentals</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/ai-prompting</loc>
+    <lastmod>2025-09-30T17:43:40.635Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/base-app-coins</loc>
+    <lastmod>2025-10-08T20:10:17.358Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/base-builder-mcp</loc>
+    <lastmod>2025-08-07T21:00:11.644Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/converting-customizing-mini-apps</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/defi-your-app</loc>
+    <lastmod>2025-10-08T20:10:20.846Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/essential-documentation-resources</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/go-gasless</loc>
+    <lastmod>2025-10-08T20:10:20.848Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/introduction-to-mini-apps</loc>
+    <lastmod>2026-01-05T15:17:52.162Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/launch-ai-agents</loc>
+    <lastmod>2025-10-08T20:10:20.852Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/launch-tokens</loc>
+    <lastmod>2025-10-08T20:10:20.854Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/mastering-ai-prompt-engineering</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/add-frame-metadata</loc>
+    <lastmod>2025-10-08T20:10:20.850Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/add-minikit</loc>
+    <lastmod>2025-10-08T20:10:20.851Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/build-your-mini-app-with-prompt</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/configure-environment</loc>
+    <lastmod>2025-10-08T20:10:23.533Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/create-manifest</loc>
+    <lastmod>2025-10-08T20:10:23.531Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/fork-and-customize</loc>
+    <lastmod>2025-10-08T20:10:23.534Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/install</loc>
+    <lastmod>2025-10-08T20:10:23.530Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/manifest-cli</loc>
+    <lastmod>2025-10-08T20:10:23.531Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/minikit/test-and-deploy</loc>
+    <lastmod>2025-09-11T20:07:20.962Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/onboard-any-user</loc>
+    <lastmod>2025-10-08T20:10:23.528Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/onchain-social</loc>
+    <lastmod>2025-10-08T20:10:23.529Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/spend-permissions-ai-agent</loc>
+    <lastmod>2025-10-08T20:10:23.535Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/successful-miniapps-in-tba</loc>
+    <lastmod>2026-01-05T15:17:52.165Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/cookbook/testing-onchain-apps</loc>
+    <lastmod>2025-10-08T20:10:26.829Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/ai-prompting</loc>
+    <lastmod>2025-09-30T17:43:51.243Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/base</loc>
+    <lastmod>2025-12-16T23:44:09.805Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/base-mentorship-program</loc>
+    <lastmod>2025-12-02T12:50:40.477Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/base-services-hub</loc>
+    <lastmod>2025-12-23T20:10:24.870Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/build-app</loc>
+    <lastmod>2025-10-30T13:33:46.633Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/country-leads-and-ambassadors</loc>
+    <lastmod>2025-09-30T12:55:26.857Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/deploy-smart-contracts</loc>
+    <lastmod>2025-10-08T20:10:27.840Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/get-funded</loc>
+    <lastmod>2026-01-06T13:10:23.420Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/launch-token</loc>
+    <lastmod>2025-10-11T15:09:28.571Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/get-started/prompt-library</loc>
+    <lastmod>2025-08-07T21:00:11.929Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/address-and-payable/address-and-payable</loc>
+    <lastmod>2025-10-08T20:10:27.843Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/advanced-functions/function-modifiers</loc>
+    <lastmod>2025-10-08T20:10:27.866Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/advanced-functions/function-modifiers-vid</loc>
+    <lastmod>2025-08-07T21:00:11.967Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/advanced-functions/function-visibility</loc>
+    <lastmod>2025-10-08T20:10:27.863Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/advanced-functions/function-visibility-vid</loc>
+    <lastmod>2025-08-07T21:00:11.992Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/arrays/array-storage-layout-vid</loc>
+    <lastmod>2025-08-07T21:00:12.021Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/arrays/arrays-exercise</loc>
+    <lastmod>2025-10-08T20:10:27.864Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/arrays/arrays-in-solidity</loc>
+    <lastmod>2025-10-08T20:10:27.867Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/arrays/arrays-in-solidity-vid</loc>
+    <lastmod>2025-08-07T21:00:12.047Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/arrays/filtering-an-array-sbs</loc>
+    <lastmod>2025-10-08T20:10:27.867Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/arrays/fixed-size-arrays-vid</loc>
+    <lastmod>2025-08-07T21:00:12.085Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/arrays/writing-arrays-in-solidity-vid</loc>
+    <lastmod>2025-08-07T21:00:12.098Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/contracts-and-basic-functions/basic-functions-exercise</loc>
+    <lastmod>2025-08-07T21:00:12.110Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/contracts-and-basic-functions/basic-types</loc>
+    <lastmod>2025-10-08T20:10:27.889Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/contracts-and-basic-functions/hello-world-step-by-step</loc>
+    <lastmod>2025-10-08T20:10:27.892Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/contracts-and-basic-functions/intro-to-contracts-vid</loc>
+    <lastmod>2025-08-07T21:00:12.150Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/control-structures/control-structures</loc>
+    <lastmod>2025-10-08T20:10:27.891Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/control-structures/control-structures-exercise</loc>
+    <lastmod>2025-10-08T20:10:27.888Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/control-structures/loops-vid</loc>
+    <lastmod>2025-08-07T21:00:12.191Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/control-structures/require-revert-error-vid</loc>
+    <lastmod>2025-08-07T21:00:12.207Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/control-structures/standard-control-structures-vid</loc>
+    <lastmod>2025-08-07T21:00:12.219Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/deployment-to-testnet/contract-verification-sbs</loc>
+    <lastmod>2025-09-30T17:43:52.723Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/deployment-to-testnet/deployment-to-base-sepolia-sbs</loc>
+    <lastmod>2025-09-30T17:43:53.851Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/deployment-to-testnet/deployment-to-testnet-exercise</loc>
+    <lastmod>2025-10-08T20:10:27.924Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/deployment-to-testnet/overview-of-test-networks-vid</loc>
+    <lastmod>2025-08-07T21:00:12.270Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/deployment-to-testnet/test-networks</loc>
+    <lastmod>2025-09-30T17:43:53.852Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/error-triage/error-triage</loc>
+    <lastmod>2025-10-08T20:10:27.928Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/error-triage/error-triage-exercise</loc>
+    <lastmod>2025-10-08T20:10:27.926Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/error-triage/error-triage-vid</loc>
+    <lastmod>2025-08-07T21:00:12.310Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/events/hardhat-events-sbs</loc>
+    <lastmod>2025-10-08T20:10:27.922Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/exercise-contracts</loc>
+    <lastmod>2025-08-07T21:00:12.348Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/foundry/deploy-with-foundry</loc>
+    <lastmod>2025-10-08T20:10:27.927Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/foundry/generate-random-numbers-contracts</loc>
+    <lastmod>2025-10-08T20:10:29.279Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/foundry/setup-with-base</loc>
+    <lastmod>2025-10-20T12:58:39.722Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/foundry/testing-smart-contracts</loc>
+    <lastmod>2025-10-08T20:10:29.282Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/foundry/verify-contract-with-basescan</loc>
+    <lastmod>2025-10-08T20:10:29.283Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/etherscan/etherscan-sbs</loc>
+    <lastmod>2025-09-30T17:43:55.689Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/etherscan/etherscan-vid</loc>
+    <lastmod>2025-08-07T21:00:12.436Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-deploy/deployment-vid</loc>
+    <lastmod>2025-08-07T21:00:12.448Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-deploy/hardhat-deploy-sbs</loc>
+    <lastmod>2025-10-08T20:10:29.280Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-deploy/installing-hardhat-deploy-vid</loc>
+    <lastmod>2025-08-07T21:00:12.474Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-deploy/setup-deploy-script-vid</loc>
+    <lastmod>2025-08-07T21:00:12.486Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-deploy/test-network-configuration-vid</loc>
+    <lastmod>2025-08-07T21:00:12.498Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-deploy/testing-our-deployment-vid</loc>
+    <lastmod>2025-08-07T21:00:12.512Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-forking/hardhat-forking</loc>
+    <lastmod>2025-10-08T20:10:30.680Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-forking/mainnet-forking-vid</loc>
+    <lastmod>2025-08-07T21:00:12.539Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-setup-overview/creating-a-project-vid</loc>
+    <lastmod>2025-08-07T21:00:12.551Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-setup-overview/hardhat-overview-vid</loc>
+    <lastmod>2025-08-07T21:00:12.563Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-setup-overview/hardhat-setup-overview-sbs</loc>
+    <lastmod>2025-10-08T20:10:30.678Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-testing/contract-abi-and-testing-vid</loc>
+    <lastmod>2025-08-07T21:00:12.588Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-testing/hardhat-testing-sbs</loc>
+    <lastmod>2025-10-08T20:10:30.679Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-testing/testing-overview-vid</loc>
+    <lastmod>2025-08-07T21:00:12.614Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-testing/writing-tests-vid</loc>
+    <lastmod>2025-08-07T21:00:12.626Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-tools-and-testing/analyzing-test-coverage</loc>
+    <lastmod>2025-10-08T20:10:32.277Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-tools-and-testing/debugging-smart-contracts</loc>
+    <lastmod>2025-10-08T20:10:32.280Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-tools-and-testing/deploy-with-hardhat</loc>
+    <lastmod>2025-10-08T20:10:32.284Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-tools-and-testing/optimizing-gas-usage</loc>
+    <lastmod>2025-10-08T20:10:32.281Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-tools-and-testing/overview</loc>
+    <lastmod>2025-08-07T21:00:12.693Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-tools-and-testing/reducing-contract-size</loc>
+    <lastmod>2025-10-08T20:10:32.282Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-verify/hardhat-verify-sbs</loc>
+    <lastmod>2025-10-08T20:10:32.280Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/hardhat/hardhat-verify/hardhat-verify-vid</loc>
+    <lastmod>2025-08-07T21:00:12.735Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/imports/imports-exercise</loc>
+    <lastmod>2025-10-08T20:10:32.279Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/imports/imports-sbs</loc>
+    <lastmod>2025-10-08T20:10:34.262Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/imports/imports-vid</loc>
+    <lastmod>2025-08-07T21:00:12.779Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/inheritance/abstract-contracts-sbs</loc>
+    <lastmod>2025-10-08T20:10:34.259Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/inheritance/abstract-contracts-vid</loc>
+    <lastmod>2025-08-07T21:00:12.803Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/inheritance/inheritance-exercise</loc>
+    <lastmod>2025-10-08T20:10:34.261Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/inheritance/inheritance-sbs</loc>
+    <lastmod>2025-10-08T20:10:34.264Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/inheritance/inheritance-vid</loc>
+    <lastmod>2025-08-07T21:00:12.840Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/inheritance/multiple-inheritance</loc>
+    <lastmod>2025-10-08T20:10:34.265Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/inheritance/multiple-inheritance-vid</loc>
+    <lastmod>2025-08-07T21:00:12.853Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/interfaces/calling-another-contract-vid</loc>
+    <lastmod>2025-08-07T21:00:12.878Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/interfaces/contract-to-contract-interaction</loc>
+    <lastmod>2025-10-08T20:10:34.288Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/interfaces/intro-to-interfaces-vid</loc>
+    <lastmod>2025-08-07T21:00:12.902Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/interfaces/testing-the-interface-vid</loc>
+    <lastmod>2025-08-07T21:00:12.914Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-ethereum/ethereum-applications</loc>
+    <lastmod>2025-09-30T17:44:01.015Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-ethereum/ethereum-dev-overview-vid</loc>
+    <lastmod>2025-08-07T21:00:12.938Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-ethereum/evm-diagram</loc>
+    <lastmod>2025-09-30T17:44:01.013Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-ethereum/gas-use-in-eth-transactions</loc>
+    <lastmod>2025-09-30T17:44:01.011Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-ethereum/introduction-to-ethereum-vid</loc>
+    <lastmod>2025-08-07T21:00:12.986Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/anatomy-of-a-smart-contract-vid</loc>
+    <lastmod>2025-08-07T21:00:12.998Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/deployment-in-remix</loc>
+    <lastmod>2025-10-08T20:10:34.362Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/deployment-in-remix-vid</loc>
+    <lastmod>2025-08-07T21:00:13.011Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/introduction-to-remix</loc>
+    <lastmod>2025-09-30T17:44:02.543Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/introduction-to-remix-vid</loc>
+    <lastmod>2025-08-07T21:00:13.037Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/introduction-to-solidity-overview</loc>
+    <lastmod>2025-08-07T21:00:13.061Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/introduction-to-solidity-vid</loc>
+    <lastmod>2025-08-07T21:00:13.074Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/introduction-to-solidity/solidity-overview</loc>
+    <lastmod>2025-10-08T20:10:34.365Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/mappings/how-mappings-are-stored-vid</loc>
+    <lastmod>2025-08-07T21:00:13.102Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/mappings/mappings-exercise</loc>
+    <lastmod>2025-10-08T20:10:34.339Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/mappings/mappings-sbs</loc>
+    <lastmod>2025-10-08T20:10:34.363Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/mappings/mappings-vid</loc>
+    <lastmod>2025-08-07T21:00:13.141Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/mappings/using-msg-sender-vid</loc>
+    <lastmod>2025-08-07T21:00:13.153Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/new-keyword/creating-a-new-contract-vid</loc>
+    <lastmod>2025-08-07T21:00:13.165Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/new-keyword/new-keyword-exercise</loc>
+    <lastmod>2025-10-08T20:10:35.606Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/new-keyword/new-keyword-sbs</loc>
+    <lastmod>2025-10-08T20:10:35.609Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/account-abstraction/account-abstraction-on-base-using-biconomy</loc>
+    <lastmod>2025-10-08T20:10:35.608Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/account-abstraction/account-abstraction-on-base-using-particle-network</loc>
+    <lastmod>2025-10-08T20:10:35.610Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/account-abstraction/account-abstraction-on-base-using-privy-and-the-base-paymaster</loc>
+    <lastmod>2025-10-08T20:10:35.614Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/account-abstraction/gasless-transactions-with-paymaster</loc>
+    <lastmod>2025-10-08T20:10:35.613Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/cross-chain/bridge-tokens-with-layerzero</loc>
+    <lastmod>2025-10-10T10:18:54.873Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/cross-chain/send-messages-and-tokens-from-base-chainlink</loc>
+    <lastmod>2025-10-21T08:47:29.058Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/deploy-with-fleek</loc>
+    <lastmod>2025-10-08T20:10:38.598Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/finance/access-real-time-asset-data-pyth-price-feeds</loc>
+    <lastmod>2025-10-21T08:47:29.057Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/finance/access-real-world-data-chainlink</loc>
+    <lastmod>2025-10-21T08:47:29.056Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/finance/build-a-smart-wallet-funding-app</loc>
+    <lastmod>2025-10-08T20:10:38.606Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/frontend-setup/building-an-onchain-app</loc>
+    <lastmod>2025-10-08T20:10:38.609Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/frontend-setup/introduction-to-providers</loc>
+    <lastmod>2025-10-08T20:10:38.611Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/frontend-setup/overview</loc>
+    <lastmod>2025-08-07T21:00:13.355Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/frontend-setup/viem</loc>
+    <lastmod>2025-10-08T20:10:38.610Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/frontend-setup/wallet-connectors</loc>
+    <lastmod>2025-10-08T20:10:38.608Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/frontend-setup/web3</loc>
+    <lastmod>2025-10-08T20:10:39.873Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/reading-and-displaying-data/configuring-useReadContract</loc>
+    <lastmod>2025-10-08T20:10:39.874Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/reading-and-displaying-data/useAccount</loc>
+    <lastmod>2025-10-08T20:10:39.879Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/reading-and-displaying-data/useReadContract</loc>
+    <lastmod>2025-10-08T20:10:39.881Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/writing-to-contracts/useSimulateContract</loc>
+    <lastmod>2025-10-08T20:10:39.878Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-app-development/writing-to-contracts/useWriteContract</loc>
+    <lastmod>2025-10-08T20:10:39.882Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-ai</loc>
+    <lastmod>2025-08-07T21:00:13.463Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-frontend-development</loc>
+    <lastmod>2025-08-07T21:00:13.474Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-gas</loc>
+    <lastmod>2025-08-07T21:00:13.486Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-identity</loc>
+    <lastmod>2025-08-07T21:00:13.498Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-nodes</loc>
+    <lastmod>2025-10-02T15:37:13.310Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-onramps</loc>
+    <lastmod>2025-08-07T21:00:13.528Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-social-networks</loc>
+    <lastmod>2025-08-07T21:00:13.542Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/building-onchain-wallets</loc>
+    <lastmod>2025-08-07T21:00:13.556Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/core-concepts</loc>
+    <lastmod>2025-08-07T21:00:13.580Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/development-flow</loc>
+    <lastmod>2025-08-07T21:00:13.594Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/onchain-concepts/understanding-the-onchain-tech-stack</loc>
+    <lastmod>2025-08-07T21:00:13.608Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/storage/how-storage-works</loc>
+    <lastmod>2025-10-08T20:10:41.452Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/storage/how-storage-works-video</loc>
+    <lastmod>2025-08-07T21:00:13.774Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/storage/simple-storage-sbs</loc>
+    <lastmod>2025-10-08T20:10:41.453Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/storage/simple-storage-video</loc>
+    <lastmod>2025-08-07T21:00:13.808Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/storage/storage-exercise</loc>
+    <lastmod>2025-10-08T20:10:41.449Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/structs/structs-exercise</loc>
+    <lastmod>2025-10-08T20:10:41.450Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/structs/structs-sbs</loc>
+    <lastmod>2025-10-08T20:10:41.451Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/structs/structs-vid</loc>
+    <lastmod>2025-08-07T21:00:13.858Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-20-token/analyzing-erc-20-vid</loc>
+    <lastmod>2025-08-07T21:00:13.871Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-20-token/erc-20-exercise</loc>
+    <lastmod>2025-10-08T20:10:41.452Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-20-token/erc-20-standard</loc>
+    <lastmod>2025-09-30T17:44:12.632Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-20-token/erc-20-testing-vid</loc>
+    <lastmod>2025-08-07T21:00:13.908Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-20-token/erc-20-token-sbs</loc>
+    <lastmod>2025-10-08T20:10:42.701Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-20-token/openzeppelin-erc-20-vid</loc>
+    <lastmod>2025-08-07T21:00:13.931Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-721-token/erc-721-exercise</loc>
+    <lastmod>2025-10-08T20:10:42.699Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-721-token/erc-721-on-opensea-vid</loc>
+    <lastmod>2025-08-07T21:00:13.956Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-721-token/erc-721-sbs</loc>
+    <lastmod>2025-10-08T20:10:42.702Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-721-token/erc-721-standard</loc>
+    <lastmod>2025-09-30T17:44:12.633Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-721-token/erc-721-standard-video</loc>
+    <lastmod>2025-08-07T21:00:13.980Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-721-token/implementing-an-erc-721-vid</loc>
+    <lastmod>2025-08-07T21:00:14.006Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/erc-721-token/openzeppelin-erc-721-vid</loc>
+    <lastmod>2025-08-07T21:00:14.018Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/intro-to-tokens/intro-to-tokens-vid</loc>
+    <lastmod>2025-08-07T21:00:14.030Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/intro-to-tokens/misconceptions-about-tokens-vid</loc>
+    <lastmod>2025-08-07T21:00:14.042Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/intro-to-tokens/tokens-overview</loc>
+    <lastmod>2025-09-30T17:44:14.183Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/minimal-tokens/creating-a-minimal-token-vid</loc>
+    <lastmod>2025-08-07T21:00:14.067Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/minimal-tokens/minimal-token-sbs</loc>
+    <lastmod>2025-10-08T20:10:43.533Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/minimal-tokens/minimal-tokens-exercise</loc>
+    <lastmod>2025-10-08T20:10:43.534Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/minimal-tokens/transferring-a-minimal-token-vid</loc>
+    <lastmod>2025-08-07T21:00:14.106Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/nft-guides/complex-onchain-nfts</loc>
+    <lastmod>2025-10-08T20:10:43.536Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/nft-guides/dynamic-nfts</loc>
+    <lastmod>2025-10-08T20:10:43.535Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/nft-guides/signature-mint</loc>
+    <lastmod>2025-10-08T20:10:47.413Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/nft-guides/simple-onchain-nfts</loc>
+    <lastmod>2025-10-08T20:10:47.414Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/token-development/nft-guides/thirdweb-unreal-nft-items</loc>
+    <lastmod>2025-10-08T20:10:47.415Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/learn/welcome</loc>
+    <lastmod>2025-09-30T17:44:18.205Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/core-concepts/authentication</loc>
+    <lastmod>2025-10-17T13:04:21.287Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/core-concepts/base-account</loc>
+    <lastmod>2025-11-04T19:50:47.799Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/core-concepts/context</loc>
+    <lastmod>2025-10-08T20:10:47.408Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/core-concepts/embeds-and-previews</loc>
+    <lastmod>2025-10-08T20:10:47.398Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/core-concepts/manifest</loc>
+    <lastmod>2025-12-16T15:41:36.452Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/core-concepts/navigation</loc>
+    <lastmod>2025-11-06T18:53:20.512Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/core-concepts/notifications</loc>
+    <lastmod>2025-12-02T15:16:58.690Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/featured-guidelines/design-guidelines</loc>
+    <lastmod>2025-12-16T15:41:36.451Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/featured-guidelines/notification-guidelines</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/featured-guidelines/overview</loc>
+    <lastmod>2025-12-01T19:25:05.741Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/featured-guidelines/product-guidelines</loc>
+    <lastmod>2025-10-28T19:42:34.835Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/featured-guidelines/technical-guidelines</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/growth/build-viral-mini-apps</loc>
+    <lastmod>2025-10-10T17:38:25.561Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/growth/optimize-onboarding</loc>
+    <lastmod>2025-10-21T14:19:37.492Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/growth/rewards</loc>
+    <lastmod>2025-10-10T17:38:25.558Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/introduction/overview</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/quickstart/build-checklist</loc>
+    <lastmod>2025-10-21T14:19:37.538Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/quickstart/building-for-the-base-app</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/quickstart/create-new-miniapp</loc>
+    <lastmod>2025-11-26T13:34:22.834Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/quickstart/migrate-existing-apps</loc>
+    <lastmod>2025-12-09T19:31:11.648Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/resources/design-resources</loc>
+    <lastmod>2025-12-16T15:41:37.599Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/resources/templates</loc>
+    <lastmod>2025-10-07T13:29:17.703Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/technical-guides/accept-payments</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/technical-guides/dynamic-embeds</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/technical-guides/neynar-notifications</loc>
+    <lastmod>2025-10-16T22:04:22.054Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/technical-guides/sign-manifest</loc>
+    <lastmod>2025-10-08T20:10:54.500Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/troubleshooting/base-app-compatibility</loc>
+    <lastmod>2025-10-29T18:53:51.326Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/troubleshooting/common-issues</loc>
+    <lastmod>2025-12-09T19:31:11.647Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/troubleshooting/how-search-works</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/mini-apps/troubleshooting/testing</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/build-deposit-to-morpho-tx</loc>
+    <lastmod>2025-10-08T20:10:55.992Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/build-mint-transaction</loc>
+    <lastmod>2025-10-08T20:10:55.986Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/build-swap-transaction</loc>
+    <lastmod>2025-10-08T20:10:55.988Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/build-withdraw-from-morpho-tx</loc>
+    <lastmod>2025-10-08T20:10:55.993Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/get-mint-details</loc>
+    <lastmod>2025-10-08T20:10:55.987Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/get-portfolios</loc>
+    <lastmod>2025-10-08T20:10:55.988Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/get-swap-quote</loc>
+    <lastmod>2025-10-08T20:10:55.991Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/get-token-details</loc>
+    <lastmod>2025-10-08T20:10:55.990Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/get-tokens</loc>
+    <lastmod>2025-10-08T20:10:57.145Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/api/types</loc>
+    <lastmod>2025-10-08T20:10:57.140Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/buy/buy</loc>
+    <lastmod>2025-10-08T20:10:57.147Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/checkout/checkout</loc>
+    <lastmod>2025-10-08T20:10:57.146Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/checkout/types</loc>
+    <lastmod>2025-10-08T20:10:57.148Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/config/is-base</loc>
+    <lastmod>2025-10-08T20:10:57.145Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/config/is-ethereum</loc>
+    <lastmod>2025-10-08T20:10:57.144Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/config/onchainkit-provider</loc>
+    <lastmod>2025-10-08T20:10:58.924Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/config/supplemental-providers</loc>
+    <lastmod>2025-10-08T20:10:58.923Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/config/types</loc>
+    <lastmod>2025-10-08T20:10:58.924Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/earn/earn</loc>
+    <lastmod>2025-10-08T20:10:58.928Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/earn/types</loc>
+    <lastmod>2025-10-08T20:10:58.931Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/fetch-onramp-config</loc>
+    <lastmod>2025-10-08T20:10:58.922Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/fetch-onramp-options</loc>
+    <lastmod>2025-10-08T20:10:58.925Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/fetch-onramp-quote</loc>
+    <lastmod>2025-10-08T20:10:58.932Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/fetch-onramp-transaction-status</loc>
+    <lastmod>2025-10-08T20:10:58.930Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/fund-button</loc>
+    <lastmod>2025-11-19T22:40:50.133Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/fund-card</loc>
+    <lastmod>2025-11-19T22:40:50.139Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/get-onramp-buy-url</loc>
+    <lastmod>2025-10-14T18:39:12.440Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/setup-onramp-event-listeners</loc>
+    <lastmod>2025-10-08T20:11:00.454Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/fund/types</loc>
+    <lastmod>2025-10-14T18:39:12.441Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/getting-started</loc>
+    <lastmod>2025-10-08T20:11:00.456Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/ai-prompting-guide</loc>
+    <lastmod>2025-10-08T20:11:00.459Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/contribution</loc>
+    <lastmod>2025-10-08T20:11:00.460Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/lifecycle-status</loc>
+    <lastmod>2025-10-08T20:11:00.460Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/reporting-bug</loc>
+    <lastmod>2025-08-07T21:00:14.654Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/tailwind</loc>
+    <lastmod>2025-10-08T20:11:02.582Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/telemetry</loc>
+    <lastmod>2025-10-08T20:11:02.584Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/themes</loc>
+    <lastmod>2025-10-08T20:11:02.588Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/troubleshooting</loc>
+    <lastmod>2025-10-08T20:11:02.592Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/use-basename-in-onchain-app</loc>
+    <lastmod>2025-10-08T20:11:02.590Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/guides/using-ai-powered-ides</loc>
+    <lastmod>2025-09-30T17:44:34.739Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/hooks/use-build-deposit-to-morpho-tx</loc>
+    <lastmod>2025-10-08T20:11:02.587Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/hooks/use-build-withdraw-from-morpho-tx</loc>
+    <lastmod>2025-10-08T20:11:02.585Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/hooks/use-earn-context</loc>
+    <lastmod>2025-10-08T20:11:03.867Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/hooks/use-mint-details</loc>
+    <lastmod>2025-10-08T20:11:03.874Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/hooks/use-token-details</loc>
+    <lastmod>2025-10-08T20:11:03.866Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/address</loc>
+    <lastmod>2025-10-08T20:11:03.870Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/avatar</loc>
+    <lastmod>2025-10-08T20:11:03.869Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/badge</loc>
+    <lastmod>2025-10-08T20:11:03.868Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/get-address</loc>
+    <lastmod>2025-10-08T20:11:03.866Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/get-attestations</loc>
+    <lastmod>2025-10-20T12:38:32.855Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/get-avatar</loc>
+    <lastmod>2025-10-08T20:11:03.863Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/get-avatars</loc>
+    <lastmod>2025-10-08T20:11:03.898Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/get-name</loc>
+    <lastmod>2025-10-08T20:11:03.896Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/get-names</loc>
+    <lastmod>2025-10-08T20:11:03.890Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/identity</loc>
+    <lastmod>2025-10-08T20:11:03.897Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/identity-card</loc>
+    <lastmod>2025-10-08T20:11:03.893Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/name</loc>
+    <lastmod>2025-10-08T20:11:03.894Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/socials</loc>
+    <lastmod>2025-10-08T20:11:03.895Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/types</loc>
+    <lastmod>2025-10-20T12:38:18.410Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/use-address</loc>
+    <lastmod>2025-10-08T20:11:03.891Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/use-avatar</loc>
+    <lastmod>2025-10-08T20:11:03.898Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/use-avatars</loc>
+    <lastmod>2025-10-08T20:11:03.918Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/use-name</loc>
+    <lastmod>2025-10-08T20:11:03.914Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/identity/use-names</loc>
+    <lastmod>2025-10-08T20:11:03.916Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/installation/astro</loc>
+    <lastmod>2025-10-08T20:11:03.919Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/installation/nextjs</loc>
+    <lastmod>2025-10-08T20:11:03.921Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/installation/remix</loc>
+    <lastmod>2025-10-08T20:11:03.915Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/installation/vite</loc>
+    <lastmod>2025-10-08T20:11:03.918Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/buy/buy</loc>
+    <lastmod>2025-10-08T20:11:03.917Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/checkout/checkout</loc>
+    <lastmod>2025-10-24T15:31:57.965Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/connected/connected</loc>
+    <lastmod>2025-10-08T20:11:07.545Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/earn/earn</loc>
+    <lastmod>2025-10-08T20:11:07.547Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/fund/fund-button</loc>
+    <lastmod>2025-11-19T22:40:50.138Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/fund/fund-card</loc>
+    <lastmod>2025-11-19T22:40:50.141Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/identity/address</loc>
+    <lastmod>2025-10-08T20:11:07.550Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/identity/avatar</loc>
+    <lastmod>2025-10-08T20:11:07.548Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/identity/badge</loc>
+    <lastmod>2025-10-08T20:11:07.549Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/identity/identity</loc>
+    <lastmod>2025-10-08T20:11:07.551Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/identity/identity-card</loc>
+    <lastmod>2025-10-08T20:11:07.548Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/identity/name</loc>
+    <lastmod>2025-10-08T20:11:09.777Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/identity/socials</loc>
+    <lastmod>2025-10-08T20:11:09.778Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useAddFrame</loc>
+    <lastmod>2026-01-05T17:00:53.660Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useAuthenticate</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useClose</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useComposeCast</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useMiniKit</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useNotification</loc>
+    <lastmod>2025-10-24T16:55:14.048Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useOpenUrl</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/usePrimaryButton</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useViewCast</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/hooks/useViewProfile</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/overview</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/minikit/provider-and-initialization</loc>
+    
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/mint/nft-card</loc>
+    <lastmod>2025-10-08T20:11:09.776Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/mint/nft-mint-card</loc>
+    <lastmod>2025-10-08T20:11:09.772Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/signature/signature</loc>
+    <lastmod>2025-10-08T20:11:09.773Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/swap/swap</loc>
+    <lastmod>2025-10-08T20:11:09.775Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/swap/swap-settings</loc>
+    <lastmod>2025-10-08T20:11:09.774Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/token/token-chip</loc>
+    <lastmod>2025-10-08T20:11:11.884Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/token/token-image</loc>
+    <lastmod>2025-10-08T20:11:11.885Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/token/token-row</loc>
+    <lastmod>2025-10-08T20:11:11.882Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/token/token-search</loc>
+    <lastmod>2025-10-08T20:11:11.881Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/token/token-select-dropdown</loc>
+    <lastmod>2025-10-08T20:11:11.879Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/transaction/transaction</loc>
+    <lastmod>2025-10-08T20:11:11.887Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/wallet/wallet</loc>
+    <lastmod>2025-10-08T20:11:13.563Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/wallet/wallet-dropdown-basename</loc>
+    <lastmod>2025-10-08T20:11:11.882Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/wallet/wallet-dropdown-disconnect</loc>
+    <lastmod>2025-10-08T20:11:11.886Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/wallet/wallet-dropdown-fund-link</loc>
+    <lastmod>2025-10-08T20:11:11.883Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/wallet/wallet-dropdown-link</loc>
+    <lastmod>2025-10-08T20:11:11.885Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/wallet/wallet-island</loc>
+    <lastmod>2025-10-08T20:11:13.565Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/components/wallet/wallet-modal</loc>
+    <lastmod>2025-10-08T20:11:13.564Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/configuration/onchainkit-provider</loc>
+    <lastmod>2025-10-08T20:11:13.567Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/configuration/themes</loc>
+    <lastmod>2025-10-08T20:11:13.571Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/configuration/wagmi-viem-integration</loc>
+    <lastmod>2025-10-08T20:11:13.566Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/getting-started/manual-installation</loc>
+    <lastmod>2025-10-08T20:11:13.570Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/getting-started/overview</loc>
+    <lastmod>2025-10-08T20:11:13.567Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/getting-started/quickstart-guide</loc>
+    <lastmod>2025-10-08T20:11:13.568Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/getting-started/troubleshooting</loc>
+    <lastmod>2025-10-08T20:11:13.569Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/guides/ai-prompting-guide</loc>
+    <lastmod>2025-10-08T20:11:16.047Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/guides/contributing</loc>
+    <lastmod>2025-10-08T20:11:16.040Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/earn/use-build-deposit-to-morpho-tx</loc>
+    <lastmod>2025-10-08T20:11:16.044Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/earn/use-build-withdraw-from-morpho-tx</loc>
+    <lastmod>2025-10-08T20:11:16.044Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/earn/use-earn-context</loc>
+    <lastmod>2025-10-08T20:11:16.046Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/earn/use-morpho-vault</loc>
+    <lastmod>2025-10-08T20:11:16.039Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/identity/use-address</loc>
+    <lastmod>2025-10-08T20:11:16.042Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/identity/use-avatar</loc>
+    <lastmod>2025-10-08T20:11:16.043Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/identity/use-avatars</loc>
+    <lastmod>2025-10-08T20:11:16.034Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/identity/use-name</loc>
+    <lastmod>2025-10-08T20:11:16.045Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/identity/use-names</loc>
+    <lastmod>2025-10-08T20:11:16.080Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/mint/use-mint-details</loc>
+    <lastmod>2025-10-08T20:11:16.068Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/hooks/mint/use-token-details</loc>
+    <lastmod>2025-10-08T20:11:16.082Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/earn/build-deposit-to-morpho-tx</loc>
+    <lastmod>2025-10-08T20:11:16.066Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/earn/build-withdraw-from-morpho-tx</loc>
+    <lastmod>2025-10-08T20:11:16.070Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/fund/fetch-onramp-config</loc>
+    <lastmod>2025-10-08T20:11:16.069Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/fund/fetch-onramp-options</loc>
+    <lastmod>2025-10-08T20:11:16.081Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/fund/fetch-onramp-quote</loc>
+    <lastmod>2025-10-08T20:11:16.065Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/fund/fetch-onramp-transaction-status</loc>
+    <lastmod>2025-10-08T20:11:16.068Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/fund/get-onramp-buy-url</loc>
+    <lastmod>2025-10-14T18:39:12.439Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/fund/setup-onramp-event-listeners</loc>
+    <lastmod>2025-10-08T20:11:16.122Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/identity/get-address</loc>
+    <lastmod>2025-10-08T20:11:16.120Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/identity/get-attestations</loc>
+    <lastmod>2025-10-08T20:11:16.119Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/identity/get-avatar</loc>
+    <lastmod>2025-10-08T20:11:16.118Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/identity/get-avatars</loc>
+    <lastmod>2025-10-08T20:11:16.124Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/identity/get-name</loc>
+    <lastmod>2025-10-08T20:11:16.123Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/identity/get-names</loc>
+    <lastmod>2025-10-08T20:11:16.123Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/token/format-amount</loc>
+    <lastmod>2025-10-08T20:11:16.121Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/wallet/is-valid-aa-entrypoint</loc>
+    <lastmod>2025-10-08T20:11:16.126Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/latest/utilities/wallet/is-wallet-a-coinbase-smart-wallet</loc>
+    <lastmod>2025-10-08T20:11:16.121Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/mint/nft-card</loc>
+    <lastmod>2025-10-08T20:11:16.143Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/mint/nft-mint-card</loc>
+    <lastmod>2025-10-08T20:11:16.142Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/mint/types</loc>
+    <lastmod>2025-10-08T20:11:16.141Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/signature/signature</loc>
+    <lastmod>2025-10-08T20:11:19.365Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/signature/types</loc>
+    <lastmod>2025-10-08T20:11:19.363Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/swap/swap</loc>
+    <lastmod>2025-10-08T20:11:19.367Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/swap/swap-settings</loc>
+    <lastmod>2025-10-08T20:11:19.366Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/swap/types</loc>
+    <lastmod>2025-10-08T20:11:19.366Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/token/format-amount</loc>
+    <lastmod>2025-10-08T20:11:19.383Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/token/token-chip</loc>
+    <lastmod>2025-10-08T20:11:19.387Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/token/token-image</loc>
+    <lastmod>2025-10-08T20:11:19.387Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/token/token-row</loc>
+    <lastmod>2025-10-08T20:11:19.385Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/token/token-search</loc>
+    <lastmod>2025-10-08T20:11:19.390Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/token/token-select-dropdown</loc>
+    <lastmod>2025-10-08T20:11:19.384Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/token/types</loc>
+    <lastmod>2025-10-08T20:11:19.386Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/transaction/transaction</loc>
+    <lastmod>2025-10-08T20:11:19.388Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/transaction/types</loc>
+    <lastmod>2025-10-08T20:11:19.389Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/is-valid-aa-entrypoint</loc>
+    <lastmod>2025-10-08T20:11:20.662Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/is-wallet-a-coinbase-smart-wallet</loc>
+    <lastmod>2025-10-08T20:11:20.686Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/types</loc>
+    <lastmod>2025-10-08T20:11:20.689Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/wallet</loc>
+    <lastmod>2025-10-08T20:11:22.257Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/wallet-dropdown-basename</loc>
+    <lastmod>2025-10-08T20:11:20.683Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/wallet-dropdown-disconnect</loc>
+    <lastmod>2025-10-08T20:11:20.664Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/wallet-dropdown-fund-link</loc>
+    <lastmod>2025-10-08T20:11:20.663Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/wallet-dropdown-link</loc>
+    <lastmod>2025-10-08T20:11:20.665Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/wallet-island</loc>
+    <lastmod>2025-10-08T20:11:20.688Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/onchainkit/wallet/wallet-modal</loc>
+    <lastmod>2025-10-08T20:11:20.687Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://docs.base.org/showcase</loc>
+    <lastmod>2025-09-30T17:44:52.997Z</lastmod>
+  </url>
+</urlset>

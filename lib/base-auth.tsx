@@ -17,6 +17,7 @@ import { baseAccount, injected } from "wagmi/connectors"
 import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector"
 import { createPublicClient, numberToHex } from "viem"
 import { BASE_CHAINS, BASE_MAINNET_CHAIN, DEFAULT_CHAIN_ID, getRpcUrlForChain } from "@/lib/base-config"
+import { MiniAppReady } from "@/lib/miniapp-ready"
 
 type BaseAuthSession = {
   address: `0x${string}`
@@ -411,6 +412,7 @@ export function BaseAuthProvider({ children }: { children: ReactNode }) {
             autoConnect: true,
           }}
         >
+          <MiniAppReady />
           <BaseAuthInner>{children}</BaseAuthInner>
         </OnchainKitProvider>
       </QueryClientProvider>

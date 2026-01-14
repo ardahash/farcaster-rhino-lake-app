@@ -34,7 +34,7 @@ export const minikitConfig = {
     homeUrl: ROOT_URL,
     webhookUrl: `${ROOT_URL}/api/webhook`,
     primaryCategory: "games",
-    tags: ["games", "base", "miniapp", "zen", "rhino-lake"],
+    tags: ["games", "base", "miniapp", "zen", "rhinolake"],
     heroImageUrl: `${ROOT_URL}/image.png`,
     tagline: "Grow your empire with ZEN",
     ogTitle: "Rhino Lake",
