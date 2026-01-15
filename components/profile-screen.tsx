@@ -18,6 +18,18 @@ import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
 import { useSwitchChain } from "wagmi"
 import { base } from "wagmi/chains"
 
+const formatBaseHandle = (name: string) => {
+  const trimmed = name.startsWith("@") ? name.slice(1) : name
+  const lowered = trimmed.toLowerCase()
+  if (lowered.endsWith(".base.eth")) {
+    return trimmed.slice(0, -".base.eth".length)
+  }
+  if (lowered.endsWith(".base")) {
+    return trimmed.slice(0, -".base".length)
+  }
+  return trimmed.split(".")[0] ?? trimmed
+}
+
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { state } = useGame()
@@ -89,9 +101,10 @@ export function ProfileScreen() {
       : resolvedName && typeof resolvedName === "object" && "name" in resolvedName
         ? resolvedName.name
         : null
+  const baseHandle = baseName ? formatBaseHandle(baseName) : null
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
-  const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
-  const username = isAuthenticated ? baseName ?? shortAddress : "rhino-lake"
+  const displayName = isAuthenticated ? (baseHandle ? `@${baseHandle}` : "Base Account") : "Rhino Lake Ruler"
+  const username = isAuthenticated ? (baseName?.startsWith("@") ? baseName.slice(1) : baseName ?? shortAddress) : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
   const profileBio = "Builder of empires, master of ZEN"
