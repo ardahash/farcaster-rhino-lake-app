@@ -25,3 +25,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# login workflow from my working dapp lol
+./BarGatcha/
+/BarGatcha

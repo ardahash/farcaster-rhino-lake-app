@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useName } from "@coinbase/onchainkit/identity"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,6 +14,7 @@ import { Loader2, Sparkles, Coins } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCallsStatus, usePublicClient, useReadContract, useSendCalls, useSendTransaction, useSwitchChain } from "wagmi"
 import { useCapabilities } from "wagmi/experimental"
+import { base } from "wagmi/chains"
 import { encodeFunctionData, parseUnits } from "viem"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI, ZEN_BURN_MANAGER_ABI, ZEN_BURN_MANAGER_ADDRESS } from "@/lib/zen-burn"
 import { SwapPanel } from "@/components/swap-panel"
@@ -34,6 +36,7 @@ export function HomeScreen() {
   const { data: availableCapabilities } = useCapabilities({
     account: address ?? undefined,
   })
+  const { data: resolvedName } = useName({ address, chain: base })
   const { data: zenAddress } = useReadContract({
     address: ZEN_BURN_MANAGER_ADDRESS,
     abi: ZEN_BURN_MANAGER_ABI,
@@ -280,9 +283,15 @@ export function HomeScreen() {
     }
   }, [callId, callsStatus, handleSacrificeError, handleSacrificeSuccess])
 
+  const baseName =
+    typeof resolvedName === "string"
+      ? resolvedName
+      : resolvedName && typeof resolvedName === "object" && "name" in resolvedName
+        ? resolvedName.name
+        : null
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
-  const username = isAuthenticated ? shortAddress : "rhino-lake"
+  const username = isAuthenticated ? baseName ?? shortAddress : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
   const isPrimaryLoading =

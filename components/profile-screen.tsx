@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useName } from "@coinbase/onchainkit/identity"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -12,21 +13,18 @@ import {
   DEFAULT_CHAIN_ID,
   getChainLabel,
 } from "@/lib/base-config"
-import { resolveBaseName } from "@/lib/base-names"
 import { useGame } from "@/lib/game-state"
-import { BASE_MAINNET_CHAIN_ID } from "@/lib/zen-burn"
 import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
-import { usePublicClient, useSwitchChain } from "wagmi"
+import { useSwitchChain } from "wagmi"
+import { base } from "wagmi/chains"
 
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { state } = useGame()
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
-  const [baseName, setBaseName] = useState<string | null>(null)
-  const [isNameLoading, setIsNameLoading] = useState(false)
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
-  const baseNameClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
+  const { data: resolvedName, isLoading: isNameLoading } = useName({ address, chain: base })
 
   const achievements = [
     { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
@@ -85,44 +83,22 @@ export function ProfileScreen() {
     }
   }
 
+  const baseName =
+    typeof resolvedName === "string"
+      ? resolvedName
+      : resolvedName && typeof resolvedName === "object" && "name" in resolvedName
+        ? resolvedName.name
+        : null
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? "Base Account" : "Rhino Lake Ruler"
-  const username = isAuthenticated ? shortAddress : "rhino-lake"
+  const username = isAuthenticated ? baseName ?? shortAddress : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
   const profileBio = "Builder of empires, master of ZEN"
-  const profileTag = baseName ?? (isAuthenticated ? `Base ${shortAddress}` : "Base Mini App")
+  const profileTag = baseName ?? (isAuthenticated ? shortAddress : "Base Mini App")
+  const walletLabel = baseName ?? shortAddress
   const currentNetwork = getChainLabel(chainId)
   const isActionLoading = isAuthLoading || isConnecting || isSwitching
-
-  useEffect(() => {
-    if (!address || !baseNameClient) {
-      setBaseName(null)
-      return
-    }
-    let cancelled = false
-    const loadBaseName = async () => {
-      setIsNameLoading(true)
-      try {
-        const name = await resolveBaseName({ address, publicClient: baseNameClient })
-        if (!cancelled) {
-          setBaseName(name)
-        }
-      } catch {
-        if (!cancelled) {
-          setBaseName(null)
-        }
-      } finally {
-        if (!cancelled) {
-          setIsNameLoading(false)
-        }
-      }
-    }
-    loadBaseName()
-    return () => {
-      cancelled = true
-    }
-  }, [address, baseNameClient])
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -141,9 +117,7 @@ export function ProfileScreen() {
               <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
               <p className="text-muted-foreground">@{username}</p>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">{profileBio}</p>
-              {isAuthenticated && (
-                <p className="text-xs text-muted-foreground mt-2">Wallet: {address}</p>
-              )}
+              {isAuthenticated && <p className="text-xs text-muted-foreground mt-2">Wallet: {walletLabel}</p>}
               {isAuthenticated && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Base Name: {isNameLoading ? "Loading..." : baseName ?? "Not set"}

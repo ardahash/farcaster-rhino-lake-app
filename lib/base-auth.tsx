@@ -1,31 +1,18 @@
 "use client"
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react"
-import { OnchainKitProvider } from "@coinbase/onchainkit"
-<<<<<<< Updated upstream
-import { useMiniKit } from "@coinbase/onchainkit/minikit"
-=======
->>>>>>> Stashed changes
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { OnchainKitProvider } from "@coinbase/onchainkit"
 import { WagmiProvider, createConfig, http, useAccount, useConnect, useDisconnect } from "wagmi"
-import { baseAccount, injected } from "wagmi/connectors"
-import { createPublicClient, numberToHex } from "viem"
-import { BASE_CHAINS, BASE_MAINNET_CHAIN, DEFAULT_CHAIN_ID, getRpcUrlForChain } from "@/lib/base-config"
+import { base } from "wagmi/chains"
+import { coinbaseWallet, injected } from "wagmi/connectors"
 
 type BaseAuthSession = {
   address: `0x${string}`
   chainId: number
-  message?: string
-  signature?: `0x${string}`
 }
 
 type BaseAuthDiagnostics = {
-<<<<<<< Updated upstream
-  isMiniApp: boolean
-  miniKitPlatform: string | null
-  miniKitReady: boolean
-=======
->>>>>>> Stashed changes
   onchainKitApiKeyPresent: boolean
   appOrigin: string
   lastAttemptAt: number | null
@@ -56,55 +43,39 @@ const DEFAULT_APP_ORIGIN =
 
 const normalizeOrigin = (origin: string) => origin.replace(/\/$/, "")
 const APP_ORIGIN = normalizeOrigin(DEFAULT_APP_ORIGIN)
-const APP_LOGO_URL = `${APP_ORIGIN}/icon.png`
+
+const baseRpcUrl = process.env.NEXT_PUBLIC_BASE_RPC_URL || "https://mainnet.base.org"
 
 const wagmiConfig = createConfig({
-  chains: BASE_CHAINS,
+  chains: [base],
   connectors: [
-    baseAccount({
+    coinbaseWallet({
       appName: "Rhino Lake",
-      appLogoUrl: APP_LOGO_URL,
     }),
     injected(),
   ],
-  transports: BASE_CHAINS.reduce(
-    (acc, chain) => {
-      const rpcUrl = getRpcUrlForChain(chain.id)
-      acc[chain.id] = rpcUrl ? http(rpcUrl) : http()
-      return acc
-    },
-    {} as Record<(typeof BASE_CHAINS)[number]["id"], ReturnType<typeof http>>,
-  ),
+  transports: {
+    [base.id]: http(baseRpcUrl),
+  },
   ssr: true,
 })
 
-const baseRpcUrl = getRpcUrlForChain(DEFAULT_CHAIN_ID)
-const defaultPublicClients = {
-  [DEFAULT_CHAIN_ID]: createPublicClient({
-    chain: BASE_MAINNET_CHAIN,
-    transport: baseRpcUrl ? http(baseRpcUrl) : http(),
-  }),
-}
-
 const queryClient = new QueryClient()
 
-const CONNECT_TIMEOUT_MS = 12_000
-
-const createNonce = () => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID().replace(/-/g, "")
+const resolveWalletAddress = (account: unknown) => {
+  if (!account) return null
+  if (typeof account === "string") return account
+  if (typeof account === "object" && account && "address" in account) {
+    const address = (account as { address?: string }).address
+    return address ?? null
   }
-  return `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`
+  return null
 }
 
 function BaseAuthInner({ children }: { children: ReactNode }) {
   const { address, chainId, isConnected, isConnecting } = useAccount()
-  const { connectAsync, connectors, error: connectError, isPending, reset: resetConnect } = useConnect()
+  const { connectAsync, connectors, error: connectError, isPending } = useConnect()
   const { disconnect } = useDisconnect()
-<<<<<<< Updated upstream
-  const { context: miniKitContext, isMiniAppReady, setMiniAppReady } = useMiniKit()
-=======
->>>>>>> Stashed changes
   const [session, setSession] = useState<BaseAuthSession | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lastAttemptAt, setLastAttemptAt] = useState<number | null>(null)
@@ -121,218 +92,44 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       if (!session && address) {
         setSession({
           address,
-          chainId: chainId ?? DEFAULT_CHAIN_ID,
+          chainId: chainId ?? base.id,
         })
       }
       return
     }
 
-    const nonce = createNonce()
-    const fallbackOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://rhinolake.com"
-    const fallbackHost = fallbackOrigin.replace(/^https?:\/\//, "").replace(/\/$/, "")
-    const domain = typeof window !== "undefined" ? window.location.host : fallbackHost
-    const uri = typeof window !== "undefined" ? window.location.origin : fallbackOrigin
-    const chainIdHex = numberToHex(DEFAULT_CHAIN_ID)
+    const coinbaseConnector =
+      connectors.find((connector) => connector.name?.toLowerCase().includes("coinbase")) || connectors[0]
 
-<<<<<<< Updated upstream
-    if (miniKitContext && !isMiniAppReady) {
-      await setMiniAppReady().catch(() => undefined)
+    if (!coinbaseConnector) {
+      const noConnectorError = new Error("No supported wallet connector available.")
+      setError(noConnectorError.message)
+      throw noConnectorError
     }
 
-    const shouldTryFarcaster = Boolean(miniKitContext)
-    const farcasterConnector = shouldTryFarcaster
-      ? connectors.find((item) => item.type === "farcasterMiniApp" || item.id === "farcaster")
-      : undefined
-=======
->>>>>>> Stashed changes
-    const baseConnector = connectors.find((item) => item.id === "baseAccount")
-    const injectedConnector = connectors.find((item) => item.id === "injected")
-
-    const withTimeout = async <T,>(promise: Promise<T>) => {
-      let timeoutId: ReturnType<typeof setTimeout> | undefined
-      try {
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            const timeoutError = new Error("Wallet connection timed out. Please try again.")
-            timeoutError.name = "ConnectorTimeoutError"
-            reject(timeoutError)
-          }, CONNECT_TIMEOUT_MS)
-        })
-        return await Promise.race([promise, timeoutPromise])
-      } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId)
-        }
-      }
-    }
-
-    const getConnectAddress = (result: Awaited<ReturnType<typeof connectAsync>>) => {
-      const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
-      if (!account) {
-        throw new Error("No account returned from wallet.")
-      }
-
-      if (typeof account === "string") {
-        return { address: account, chainId: result.chainId }
-      }
-
-      const siwe = account.capabilities?.signInWithEthereum
-      return {
-        address: account.address,
-        chainId: result.chainId,
-        message: siwe?.message,
-        signature: siwe?.signature,
-      }
-    }
-
-    const connectWithConnector = async (
-      targetConnector: NonNullable<(typeof connectors)[number]>,
-      withCapabilities = false,
-    ) => {
-      setLastConnector({
-        id: targetConnector.id,
-        name: targetConnector.name ?? targetConnector.id,
-        type: targetConnector.type ?? targetConnector.id,
-      })
-      try {
-        return await withTimeout(
-          connectAsync({
-            connector: targetConnector,
-            chainId: DEFAULT_CHAIN_ID,
-            ...(withCapabilities
-              ? {
-                  capabilities: {
-                    signInWithEthereum: {
-                      nonce,
-                      statement: "Sign in to Rhino Lake.",
-                      domain,
-                      uri,
-                      chainId: chainIdHex,
-                      version: "1",
-                    },
-                  },
-                  withCapabilities: true,
-                }
-              : {}),
-          }),
-        )
-      } catch (caughtError) {
-        if (caughtError instanceof Error && caughtError.name === "ConnectorTimeoutError") {
-          disconnect()
-          resetConnect()
-        }
-        if (caughtError instanceof Error && caughtError.name === "ConnectorAlreadyConnectedError") {
-          disconnect()
-          resetConnect()
-          return withTimeout(
-            connectAsync({
-              connector: targetConnector,
-              chainId: DEFAULT_CHAIN_ID,
-              ...(withCapabilities
-                ? {
-                    capabilities: {
-                      signInWithEthereum: {
-                        nonce,
-                        statement: "Sign in to Rhino Lake.",
-                        domain,
-                        uri,
-                        chainId: chainIdHex,
-                        version: "1",
-                      },
-                    },
-                    withCapabilities: true,
-                  }
-                : {}),
-            }),
-          )
-        }
-        throw caughtError
-      }
-    }
-
-    const shouldFallbackToInjected = (caughtError: unknown) => {
-      if (!(caughtError instanceof Error)) return false
-      const message = caughtError.message.toLowerCase()
-      return (
-        message.includes("wallet_connect") ||
-        message.includes("not supported") ||
-        message.includes("connector not ready") ||
-        message.includes("connector not found") ||
-        message.includes("provider not found")
-      )
-    }
-
-    const connectWithCapabilities = async () => {
-      if (!baseConnector) {
-        throw new Error("Base Account connector not available.")
-      }
-      return connectWithConnector(baseConnector, true)
-    }
+    setLastConnector({
+      id: coinbaseConnector.id,
+      name: coinbaseConnector.name ?? coinbaseConnector.id,
+      type: coinbaseConnector.type ?? coinbaseConnector.id,
+    })
 
     try {
-      if (isConnected) {
-        disconnect()
+      const result = await connectAsync({ connector: coinbaseConnector })
+      const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
+      const walletAddress = resolveWalletAddress(account)
+      if (!walletAddress) {
+        throw new Error("No account returned from wallet.")
       }
-
-<<<<<<< Updated upstream
-      if (await tryFarcasterConnector()) {
-        return
-      }
-
-=======
->>>>>>> Stashed changes
-      if (!baseConnector) {
-        if (!injectedConnector) {
-          throw new Error("No supported wallet connector available.")
-        }
-        const result = await connectWithConnector(injectedConnector)
-        const { address: walletAddress, chainId: connectedChainId } = getConnectAddress(result)
-        setSession({
-          address: walletAddress,
-          chainId: connectedChainId,
-        })
-        return
-      }
-
-      const result = await connectWithCapabilities()
-      const { address: walletAddress, chainId: connectedChainId, message, signature } = getConnectAddress(result)
-
       setSession({
-        address: walletAddress,
-        message,
-        signature,
-        chainId: connectedChainId,
+        address: walletAddress as `0x${string}`,
+        chainId: result.chainId,
       })
     } catch (caughtError) {
-      if (shouldFallbackToInjected(caughtError) && injectedConnector) {
-        const result = await connectWithConnector(injectedConnector)
-        const { address: walletAddress, chainId: connectedChainId } = getConnectAddress(result)
-        setSession({
-          address: walletAddress,
-          chainId: connectedChainId,
-        })
-        return
-      }
-
       const message = caughtError instanceof Error ? caughtError.message : "Failed to sign in."
       setError(message)
       throw caughtError
     }
-  }, [
-    address,
-    chainId,
-    connectAsync,
-    connectors,
-    disconnect,
-    isConnected,
-<<<<<<< Updated upstream
-    isMiniAppReady,
-    miniKitContext,
-=======
->>>>>>> Stashed changes
-    resetConnect,
-    session,
-  ])
+  }, [address, chainId, connectAsync, connectors, isConnected, session])
 
   const signOut = useCallback(() => {
     disconnect()
@@ -350,12 +147,6 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       session,
       error: error ?? connectError?.message ?? null,
       diagnostics: {
-<<<<<<< Updated upstream
-        isMiniApp: Boolean(miniKitContext),
-        miniKitPlatform: miniKitContext?.client?.platformType ?? null,
-        miniKitReady: isMiniAppReady,
-=======
->>>>>>> Stashed changes
         onchainKitApiKeyPresent: Boolean(process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY),
         appOrigin: APP_ORIGIN,
         lastAttemptAt,
@@ -378,10 +169,6 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       error,
       isConnected,
       isConnecting,
-<<<<<<< Updated upstream
-      isMiniAppReady,
-=======
->>>>>>> Stashed changes
       isPending,
       lastAttemptAt,
       lastConnector,
@@ -395,15 +182,12 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
 }
 
 export function BaseAuthProvider({ children }: { children: ReactNode }) {
+  const apiKey = process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY
+
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <OnchainKitProvider
-          apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
-          projectId={process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_ID}
-          chain={BASE_MAINNET_CHAIN}
-          defaultPublicClients={defaultPublicClients}
-        >
+        <OnchainKitProvider apiKey={apiKey ?? ""} chain={base}>
           <BaseAuthInner>{children}</BaseAuthInner>
         </OnchainKitProvider>
       </QueryClientProvider>
