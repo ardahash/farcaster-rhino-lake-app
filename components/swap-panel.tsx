@@ -11,8 +11,8 @@ import { USDC_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI } from "@/lib/zen-burn"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
-import { concat, encodeFunctionData, numberToHex, parseUnits, size, type Address, type Hex } from "viem"
-import { usePublicClient, useSendTransaction, useSignTypedData, useSwitchChain } from "wagmi"
+import { encodeFunctionData, parseUnits, type Address, type Hex } from "viem"
+import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
 
 const DEFAULT_ETH_AMOUNT = "0.001"
 const DEFAULT_USDC_AMOUNT = "1"
@@ -92,11 +92,10 @@ export function SwapPanel({
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
-  const { signTypedDataAsync, isPending: isSigning } = useSignTypedData()
 
   const [ethAmount, setEthAmount] = useState(DEFAULT_ETH_AMOUNT)
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_USDC_AMOUNT)
-  const [activeSwap, setActiveSwap] = useState<"eth" | "usdc" | null>(null)
+  const [activeSwap, setActiveSwap] = useState<"eth-zen" | "usdc-zen" | "eth-bar" | "usdc-bar" | null>(null)
 
   const usdcBalance = useErc20Balance({
     token: USDC_ADDRESS,
@@ -134,7 +133,7 @@ export function SwapPanel({
   const ethBalanceDisplay = formatBalance(ethBalance.formatted, ethBalance.isLoading)
   const usdcBalanceDisplay = formatBalance(usdcBalance.formatted, usdcBalance.isLoading)
 
-  const isSwapLoading = isTxPending || isSigning || isSwitching || isConnecting
+  const isSwapLoading = isTxPending || isSwitching || isConnecting
   const isOnBase = !chainId || chainId === BASE_MAINNET_CHAIN_ID
 
   const ensureBaseNetwork = async () => {
@@ -250,7 +249,7 @@ export function SwapPanel({
     decimals: number
     tokenIn: Address
     tokenOut: Address
-    swapKey: "eth" | "usdc"
+    swapKey: "eth-zen" | "usdc-zen" | "eth-bar" | "usdc-bar"
     balanceRaw: bigint
     balanceLoading: boolean
     balanceLabel: string
@@ -301,7 +300,7 @@ export function SwapPanel({
         slippageBps: SLIPPAGE_BPS,
       })
 
-      const quote = await fetchSwapQuote(payload)
+      let quote = await fetchSwapQuote(payload)
 
       console.info("[swap] quote response", quote)
 
@@ -326,27 +325,17 @@ export function SwapPanel({
         await sendApprovalIfNeeded(tokenIn, spender, amountIn)
       }
 
-      let txData = quote.transaction.data as Hex
       if (quote.permit2?.eip712) {
-        console.info("[swap] signing permit2", quote.permit2.eip712)
-        const domain = { ...quote.permit2.eip712.domain } as Record<string, unknown>
-        if (typeof domain.chainId === "string") {
-          domain.chainId = Number(domain.chainId)
+        const refreshedQuote = await fetchSwapQuote(payload)
+        if (refreshedQuote.liquidityAvailable && refreshedQuote.transaction) {
+          quote = refreshedQuote
         }
-        const signature = await signTypedDataAsync({
-          account: address,
-          domain: domain as Record<string, unknown>,
-          types: quote.permit2.eip712.types as Record<string, unknown>,
-          primaryType: quote.permit2.eip712.primaryType,
-          message: quote.permit2.eip712.message as Record<string, unknown>,
-        })
-
-        const signatureLength = numberToHex(size(signature), {
-          signed: false,
-          size: 32,
-        })
-        txData = concat([txData, signatureLength, signature])
+        if (quote.permit2?.eip712) {
+          console.warn("[swap] permit2 present, proceeding with approval-based swap")
+        }
       }
+
+      const txData = quote.transaction.data as Hex
 
       const txRequest = {
         chainId: BASE_MAINNET_CHAIN_ID,
@@ -432,7 +421,7 @@ export function SwapPanel({
                 decimals: 18,
                 tokenIn: NATIVE_ETH_ADDRESS,
                 tokenOut: ZEN_TOKEN_ADDRESS,
-                swapKey: "eth",
+                swapKey: "eth-zen",
                 balanceRaw: ethBalance.raw,
                 balanceLoading: ethBalance.isLoading,
                 balanceLabel: "ETH",
@@ -443,7 +432,7 @@ export function SwapPanel({
             size="lg"
             variant={highlightSwap ? "default" : "outline"}
           >
-            {activeSwap === "eth" ? (
+            {activeSwap === "eth-zen" ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Swapping ETH...
@@ -475,7 +464,7 @@ export function SwapPanel({
                 decimals: usdcDecimals,
                 tokenIn: USDC_ADDRESS,
                 tokenOut: ZEN_TOKEN_ADDRESS,
-                swapKey: "usdc",
+                swapKey: "usdc-zen",
                 balanceRaw: usdcBalance.raw,
                 balanceLoading: usdcBalance.isLoading,
                 balanceLabel: "USDC",
@@ -486,7 +475,7 @@ export function SwapPanel({
             size="lg"
             variant={highlightSwap ? "default" : "outline"}
           >
-            {activeSwap === "usdc" ? (
+            {activeSwap === "usdc-zen" ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Swapping USDC...
@@ -506,28 +495,67 @@ export function SwapPanel({
 
         <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-2">
           <p className="font-semibold text-foreground">Get $BAR</p>
+          <p>Swap in-app to keep gas sponsorship options open.</p>
           <div className="grid grid-cols-1 gap-2">
             <Button
               type="button"
               variant="outline"
               className="w-full"
-              onClick={() => {
-                const url = `https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=${BAR_TOKEN_ADDRESS}`
-                window.open(url, "_blank", "noopener,noreferrer")
-              }}
+              onClick={() =>
+                executeSwap({
+                  amount: ethAmount,
+                  decimals: 18,
+                  tokenIn: NATIVE_ETH_ADDRESS,
+                  tokenOut: BAR_TOKEN_ADDRESS,
+                  swapKey: "eth-bar",
+                  balanceRaw: ethBalance.raw,
+                  balanceLoading: ethBalance.isLoading,
+                  balanceLabel: "ETH",
+                })
+              }
+              disabled={isSwapDisabled}
             >
-              Buy BAR with ETH (Uniswap)
+              {activeSwap === "eth-bar" ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Swapping ETH...
+                </>
+              ) : (
+                <>
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Swap ETH to BAR
+                </>
+              )}
             </Button>
             <Button
               type="button"
               variant="outline"
               className="w-full"
-              onClick={() => {
-                const url = `https://app.uniswap.org/swap?chain=base&inputCurrency=${USDC_ADDRESS}&outputCurrency=${BAR_TOKEN_ADDRESS}`
-                window.open(url, "_blank", "noopener,noreferrer")
-              }}
+              onClick={() =>
+                executeSwap({
+                  amount: usdcAmount,
+                  decimals: usdcDecimals,
+                  tokenIn: USDC_ADDRESS,
+                  tokenOut: BAR_TOKEN_ADDRESS,
+                  swapKey: "usdc-bar",
+                  balanceRaw: usdcBalance.raw,
+                  balanceLoading: usdcBalance.isLoading,
+                  balanceLabel: "USDC",
+                })
+              }
+              disabled={isSwapDisabled}
             >
-              Buy BAR with USDC (Uniswap)
+              {activeSwap === "usdc-bar" ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Swapping USDC...
+                </>
+              ) : (
+                <>
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Swap USDC to BAR
+                </>
+              )}
             </Button>
           </div>
         </div>
