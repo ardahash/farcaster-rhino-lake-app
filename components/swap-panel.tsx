@@ -7,17 +7,19 @@ import { Input } from "@/components/ui/input"
 import { ToastAction } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
-import { USDC_ADDRESS, WETH_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
+import { USDC_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
 import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
 import { BASE_MAINNET_CHAIN_ID, ERC20_ABI } from "@/lib/zen-burn"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
 import { concat, encodeFunctionData, numberToHex, parseUnits, size, type Address, type Hex } from "viem"
 import { usePublicClient, useSendTransaction, useSignTypedData, useSwitchChain } from "wagmi"
 
-const DEFAULT_WETH_AMOUNT = "0.001"
+const DEFAULT_ETH_AMOUNT = "0.001"
 const DEFAULT_USDC_AMOUNT = "1"
 const SLIPPAGE_BPS = 100
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+const NATIVE_ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" as Address
+const BAR_TOKEN_ADDRESS = "0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07" as Address
 
 type SwapQuoteIssueAllowance = {
   currentAllowance: string
@@ -92,9 +94,9 @@ export function SwapPanel({
   const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { signTypedDataAsync, isPending: isSigning } = useSignTypedData()
 
-  const [wethAmount, setWethAmount] = useState(DEFAULT_WETH_AMOUNT)
+  const [ethAmount, setEthAmount] = useState(DEFAULT_ETH_AMOUNT)
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_USDC_AMOUNT)
-  const [activeSwap, setActiveSwap] = useState<"weth" | "usdc" | null>(null)
+  const [activeSwap, setActiveSwap] = useState<"eth" | "usdc" | null>(null)
 
   const usdcBalance = useErc20Balance({
     token: USDC_ADDRESS,
@@ -105,13 +107,6 @@ export function SwapPanel({
 
   const zenBalance = useErc20Balance({
     token: ZEN_TOKEN_ADDRESS,
-    address: address as `0x${string}` | null,
-    chainId: BASE_MAINNET_CHAIN_ID,
-    enabled: Boolean(isAuthenticated && address),
-  })
-
-  const wethBalance = useErc20Balance({
-    token: WETH_ADDRESS,
     address: address as `0x${string}` | null,
     chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
@@ -137,7 +132,6 @@ export function SwapPanel({
 
   const zenBalanceDisplay = formatBalance(zenBalance.formatted, zenBalance.isLoading)
   const ethBalanceDisplay = formatBalance(ethBalance.formatted, ethBalance.isLoading)
-  const wethBalanceDisplay = formatBalance(wethBalance.formatted, wethBalance.isLoading)
   const usdcBalanceDisplay = formatBalance(usdcBalance.formatted, usdcBalance.isLoading)
 
   const isSwapLoading = isTxPending || isSigning || isSwitching || isConnecting
@@ -214,6 +208,9 @@ export function SwapPanel({
   }
 
   const sendApprovalIfNeeded = async (token: Address, spender: Address, amount: bigint) => {
+    if (token.toLowerCase() === NATIVE_ETH_ADDRESS.toLowerCase()) {
+      return
+    }
     if (!publicClient || !address) return
     const allowance = (await publicClient.readContract({
       address: token,
@@ -253,7 +250,7 @@ export function SwapPanel({
     decimals: number
     tokenIn: Address
     tokenOut: Address
-    swapKey: "weth" | "usdc"
+    swapKey: "eth" | "usdc"
     balanceRaw: bigint
     balanceLoading: boolean
     balanceLabel: string
@@ -380,12 +377,11 @@ export function SwapPanel({
 
   useEffect(() => {
     if (!shouldLogBalances || !address) return
-    if (ethBalance.isLoading || wethBalance.isLoading || usdcBalance.isLoading) return
+    if (ethBalance.isLoading || usdcBalance.isLoading) return
     console.info("[balances]", {
       address,
       chainId: BASE_MAINNET_CHAIN_ID,
       eth: ethBalance.formatted,
-      weth: wethBalance.formatted,
       usdc: usdcBalance.formatted,
       zen: zenBalance.formatted,
     })
@@ -396,8 +392,6 @@ export function SwapPanel({
     shouldLogBalances,
     usdcBalance.formatted,
     usdcBalance.isLoading,
-    wethBalance.formatted,
-    wethBalance.isLoading,
     zenBalance.formatted,
   ])
 
@@ -421,27 +415,27 @@ export function SwapPanel({
 
       <div className="space-y-3">
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground">WETH Amount</label>
+          <label className="text-xs font-semibold text-muted-foreground">ETH Amount</label>
           <Input
             type="number"
             min="0"
             step="0.0001"
-            value={wethAmount}
-            onChange={(event) => setWethAmount(event.target.value)}
+            value={ethAmount}
+            onChange={(event) => setEthAmount(event.target.value)}
             className="h-11"
           />
-          <p className="text-xs text-muted-foreground">Balance: {wethBalanceDisplay}</p>
+          <p className="text-xs text-muted-foreground">Balance: {ethBalanceDisplay}</p>
           <Button
             onClick={() =>
               executeSwap({
-                amount: wethAmount,
+                amount: ethAmount,
                 decimals: 18,
-                tokenIn: WETH_ADDRESS,
+                tokenIn: NATIVE_ETH_ADDRESS,
                 tokenOut: ZEN_TOKEN_ADDRESS,
-                swapKey: "weth",
-                balanceRaw: wethBalance.raw,
-                balanceLoading: wethBalance.isLoading,
-                balanceLabel: "WETH",
+                swapKey: "eth",
+                balanceRaw: ethBalance.raw,
+                balanceLoading: ethBalance.isLoading,
+                balanceLabel: "ETH",
               })
             }
             disabled={isSwapDisabled}
@@ -449,15 +443,15 @@ export function SwapPanel({
             size="lg"
             variant={highlightSwap ? "default" : "outline"}
           >
-            {activeSwap === "weth" ? (
+            {activeSwap === "eth" ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Swapping WETH...
+                Swapping ETH...
               </>
             ) : (
               <>
                 <ArrowLeftRight className="w-4 h-4 mr-2" />
-                Swap WETH to ZEN
+                Swap ETH to ZEN
               </>
             )}
           </Button>
@@ -505,10 +499,37 @@ export function SwapPanel({
             )}
           </Button>
         </div>
-
         <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
           <p>ETH Balance: {ethBalanceDisplay}</p>
-          <p>ETH swaps are not supported yet. Use WETH for swaps.</p>
+          <p>Swaps route through the best available Base liquidity.</p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-2">
+          <p className="font-semibold text-foreground">Get $BAR</p>
+          <div className="grid grid-cols-1 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                const url = `https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=${BAR_TOKEN_ADDRESS}`
+                window.open(url, "_blank", "noopener,noreferrer")
+              }}
+            >
+              Buy BAR with ETH (Uniswap)
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                const url = `https://app.uniswap.org/swap?chain=base&inputCurrency=${USDC_ADDRESS}&outputCurrency=${BAR_TOKEN_ADDRESS}`
+                window.open(url, "_blank", "noopener,noreferrer")
+              }}
+            >
+              Buy BAR with USDC (Uniswap)
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
