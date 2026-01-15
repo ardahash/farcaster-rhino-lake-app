@@ -157,6 +157,10 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-foreground">{state.zenPower.toFixed(0)}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-1">BAR Points</p>
+              <p className="text-3xl font-bold text-foreground">{state.barPoints.toFixed(0)}</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground mb-1">Total Sacrifices</p>
               <p className="text-3xl font-bold text-foreground">{state.totalSacrifices}</p>
             </div>

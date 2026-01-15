@@ -4,6 +4,7 @@ import { createContext, useContext, type ReactNode, useEffect, useState } from "
 
 interface GameState {
   zenPower: number
+  barPoints: number
   cityLevel: number
   totalSacrifices: number
   stakedZen: number
@@ -23,6 +24,7 @@ const STORAGE_KEY = "rhino-lake-game-state"
 
 const INITIAL_STATE: GameState = {
   zenPower: 100,
+  barPoints: 0,
   cityLevel: 1,
   totalSacrifices: 0,
   stakedZen: 0,
@@ -30,6 +32,7 @@ const INITIAL_STATE: GameState = {
 }
 
 const clampLevel = (level: number) => Math.max(1, Math.floor(level))
+const BAR_POINTS_PER_ZEN = 10000
 
 export const getTotalBurnedForLevel = (level: number) => {
   const safeLevel = clampLevel(level)
@@ -89,12 +92,14 @@ const loadInitialState = () => {
     const parsed = JSON.parse(stored) as Partial<GameState>
     const stakedZen = coerceNumber(parsed.stakedZen, INITIAL_STATE.stakedZen)
     const zenPower = coerceNumber(parsed.zenPower, INITIAL_STATE.zenPower)
+    const barPoints = coerceNumber(parsed.barPoints, INITIAL_STATE.barPoints)
     const totalSacrifices = coerceNumber(parsed.totalSacrifices, INITIAL_STATE.totalSacrifices)
     const hasSeenOnboarding = coerceBoolean(parsed.hasSeenOnboarding, INITIAL_STATE.hasSeenOnboarding)
     const cityLevel = getLevelFromBurned(stakedZen)
 
     return {
       zenPower,
+      barPoints,
       cityLevel,
       totalSacrifices,
       stakedZen,
@@ -124,6 +129,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({
       ...prev,
       zenPower: prev.zenPower + amount * 10,
+      barPoints: prev.barPoints + amount * BAR_POINTS_PER_ZEN,
       totalSacrifices: prev.totalSacrifices + 1,
     }))
   }
@@ -133,6 +139,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ...prev,
       stakedZen: prev.stakedZen + amount,
       cityLevel: getLevelFromBurned(prev.stakedZen + amount),
+      barPoints: prev.barPoints + amount * BAR_POINTS_PER_ZEN,
     }))
   }
 

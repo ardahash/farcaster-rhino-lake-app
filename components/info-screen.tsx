@@ -49,8 +49,8 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                The primary way to gain power. Each sacrifice of 0.01 ZEN grants you 0.1 Power, increasing your empire's
-                strength and unlocking new possibilities.
+                The primary way to gain power. Each sacrifice of 0.01 ZEN grants you 0.1 Power and 100 BAR points
+                (10,000x the ZEN burned), increasing your empire's strength and unlocking new possibilities.
               </AccordionContent>
             </AccordionItem>
 
@@ -63,7 +63,8 @@ export function InfoScreen() {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
                 Burn your ZEN in the Temple to upgrade your city level. The first upgrade costs 1 ZEN, then 2, then 4,
-                doubling each level to unlock special abilities and benefits.
+                doubling each level to unlock special abilities and benefits. Temple burns also award BAR points based on
+                the ZEN burned.
               </AccordionContent>
             </AccordionItem>
 
