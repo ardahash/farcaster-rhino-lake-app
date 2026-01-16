@@ -1,63 +1,47 @@
 "use client"
 
-import { createContext, useContext, type ReactNode, useEffect, useState } from "react"
+import { createContext, useContext, type ReactNode, useEffect, useMemo, useState } from "react"
+import { useConnectedAddress } from "@/hooks/use-connected-address"
+import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 
 interface GameState {
-  zenPower: number
-  barPoints: number
-  barPowerPending: number
-  lastBarAccrualAt: number | null
-  cityLevel: number
-  totalSacrifices: number
-  stakedZen: number
   hasSeenOnboarding: boolean
 }
 
 interface GameContextType {
   state: GameState
-  sacrificeZen: (amount: number) => Promise<void>
-  stakeZen: (amount: number) => Promise<void>
-  grantPower: (amount: number) => void
-  addPendingPower: (amount: number, accruedAt: number) => void
-  setLastBarAccrualAt: (value: number | null) => void
-  claimPendingPower: () => void
   completeOnboarding: () => void
 }
 
 const GameContext = createContext<GameContextType | null>(null)
 
-const STORAGE_KEY = "rhino-lake-game-state"
-
 const INITIAL_STATE: GameState = {
-  zenPower: 100,
-  barPoints: 0,
-  barPowerPending: 0,
-  lastBarAccrualAt: null,
-  cityLevel: 1,
-  totalSacrifices: 0,
-  stakedZen: 0,
   hasSeenOnboarding: false,
 }
 
-const clampLevel = (level: number) => Math.max(1, Math.floor(level))
-const BAR_POINTS_PER_ZEN = 10000
+const LEVEL_BAR_THRESHOLDS = [
+  1_000_000,
+  10_000_000,
+  20_000_000,
+  40_000_000,
+  80_000_000,
+  120_000_000,
+  200_000_000,
+  400_000_000,
+  700_000_000,
+  1_000_000_000,
+  10_000_000_000,
+] as const
 
-export const getTotalBurnedForLevel = (level: number) => {
-  const safeLevel = clampLevel(level)
-  if (safeLevel <= 1) return 0
-  return Math.pow(2, safeLevel - 1) - 1
-}
-
-export const getNextLevelCost = (currentLevel: number) => {
-  const safeLevel = clampLevel(currentLevel)
-  return Math.pow(2, safeLevel - 1)
-}
-
-export const getLevelFromBurned = (burned: number) => {
-  if (!Number.isFinite(burned) || burned <= 0) return 1
-  let level = 1
-  while (burned >= getTotalBurnedForLevel(level + 1)) {
-    level += 1
+export const getLevelFromBarLocked = (barLockedTokens: number) => {
+  if (!Number.isFinite(barLockedTokens) || barLockedTokens <= 0) {
+    return 0
+  }
+  let level = 0
+  for (let i = 0; i < LEVEL_BAR_THRESHOLDS.length; i += 1) {
+    if (barLockedTokens >= LEVEL_BAR_THRESHOLDS[i]) {
+      level = i + 1
+    }
   }
   return level
 }
@@ -83,39 +67,21 @@ export const getTownAssetForLevel = (level: number) => {
   }
 }
 
-const coerceNumber = (value: unknown, fallback: number) =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback
-
 const coerceBoolean = (value: unknown, fallback: boolean) =>
   typeof value === "boolean" ? value : fallback
 
-const loadInitialState = () => {
+const loadInitialState = (storageKey: string) => {
   if (typeof window === "undefined") {
     return INITIAL_STATE
   }
 
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
+    const stored = window.localStorage.getItem(storageKey)
     if (!stored) return INITIAL_STATE
     const parsed = JSON.parse(stored) as Partial<GameState>
-    const stakedZen = coerceNumber(parsed.stakedZen, INITIAL_STATE.stakedZen)
-    const zenPower = coerceNumber(parsed.zenPower, INITIAL_STATE.zenPower)
-    const barPoints = coerceNumber(parsed.barPoints, INITIAL_STATE.barPoints)
-    const barPowerPending = coerceNumber(parsed.barPowerPending, INITIAL_STATE.barPowerPending)
-    const lastBarAccrualAt =
-      typeof parsed.lastBarAccrualAt === "number" ? parsed.lastBarAccrualAt : INITIAL_STATE.lastBarAccrualAt
-    const totalSacrifices = coerceNumber(parsed.totalSacrifices, INITIAL_STATE.totalSacrifices)
     const hasSeenOnboarding = coerceBoolean(parsed.hasSeenOnboarding, INITIAL_STATE.hasSeenOnboarding)
-    const cityLevel = getLevelFromBurned(stakedZen)
 
     return {
-      zenPower,
-      barPoints,
-      barPowerPending,
-      lastBarAccrualAt,
-      cityLevel,
-      totalSacrifices,
-      stakedZen,
       hasSeenOnboarding,
     }
   } catch {
@@ -124,95 +90,33 @@ const loadInitialState = () => {
 }
 
 export function GameProvider({ children }: { children: ReactNode }) {
+  const { address, chainId } = useConnectedAddress()
+  const storageKey = useMemo(() => {
+    const scopedChainId = chainId ?? BASE_MAINNET_CHAIN_ID
+    const scopedAddress = address ?? "anon"
+    return `rhino-lake:${scopedChainId}:${scopedAddress}:state`
+  }, [address, chainId])
+
   const [state, setState] = useState<GameState>(INITIAL_STATE)
-  const [hasHydrated, setHasHydrated] = useState(false)
+  const [activeKey, setActiveKey] = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof window === "undefined") return
-    setState(loadInitialState())
-    setHasHydrated(true)
-  }, [])
+    setState(loadInitialState(storageKey))
+    setActiveKey(storageKey)
+  }, [storageKey])
 
   useEffect(() => {
-    if (!hasHydrated || typeof window === "undefined") return
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  }, [hasHydrated, state])
-
-  const sacrificeZen = async (amount: number) => {
-    setState((prev) => ({
-      ...prev,
-      zenPower: prev.zenPower + amount * 10,
-      barPoints: prev.barPoints + amount * BAR_POINTS_PER_ZEN,
-      totalSacrifices: prev.totalSacrifices + 1,
-    }))
-  }
-
-  const stakeZen = async (amount: number) => {
-    setState((prev) => ({
-      ...prev,
-      stakedZen: prev.stakedZen + amount,
-      cityLevel: getLevelFromBurned(prev.stakedZen + amount),
-      barPoints: prev.barPoints + amount * BAR_POINTS_PER_ZEN,
-    }))
-  }
-
-  const grantPower = (amount: number) => {
-    if (!Number.isFinite(amount) || amount <= 0) return
-    setState((prev) => ({
-      ...prev,
-      zenPower: prev.zenPower + amount,
-    }))
-  }
-
-  const addPendingPower = (amount: number, accruedAt: number) => {
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setState((prev) => ({ ...prev, lastBarAccrualAt: accruedAt }))
-      return
-    }
-    setState((prev) => ({
-      ...prev,
-      barPowerPending: prev.barPowerPending + amount,
-      lastBarAccrualAt: accruedAt,
-    }))
-  }
-
-  const setLastBarAccrualAt = (value: number | null) => {
-    setState((prev) => ({ ...prev, lastBarAccrualAt: value }))
-  }
-
-  const claimPendingPower = () => {
-    setState((prev) => {
-      if (prev.barPowerPending <= 0) {
-        return prev
-      }
-      return {
-        ...prev,
-        zenPower: prev.zenPower + prev.barPowerPending,
-        barPowerPending: 0,
-      }
-    })
-  }
+    if (typeof window === "undefined") return
+    if (!activeKey || activeKey !== storageKey) return
+    window.localStorage.setItem(storageKey, JSON.stringify(state))
+  }, [activeKey, state, storageKey])
 
   const completeOnboarding = () => {
     setState((prev) => ({ ...prev, hasSeenOnboarding: true }))
   }
 
-  return (
-    <GameContext.Provider
-      value={{
-        state,
-        sacrificeZen,
-        stakeZen,
-        grantPower,
-        addPendingPower,
-        setLastBarAccrualAt,
-        claimPendingPower,
-        completeOnboarding,
-      }}
-    >
-      {children}
-    </GameContext.Provider>
-  )
+  return <GameContext.Provider value={{ state, completeOnboarding }}>{children}</GameContext.Provider>
 }
 
 export function useGame() {

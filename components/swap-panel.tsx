@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input"
 import { ToastAction } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
-import { USDC_ADDRESS, ZEN_TOKEN_ADDRESS } from "@/lib/aerodrome"
+import { USDC_ADDRESS } from "@/lib/aerodrome"
 import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
-import { BASE_MAINNET_CHAIN_ID, ERC20_ABI } from "@/lib/zen-burn"
+import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
+import { CONTRACTS, ERC20_ABI } from "@/lib/contracts"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
 import { encodeFunctionData, parseUnits, type Address, type Hex } from "viem"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
@@ -19,7 +20,6 @@ const DEFAULT_USDC_AMOUNT = "1"
 const SLIPPAGE_BPS = 100
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
 const NATIVE_ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" as Address
-const BAR_TOKEN_ADDRESS = "0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07" as Address
 
 type SwapQuoteIssueAllowance = {
   currentAllowance: string
@@ -107,14 +107,14 @@ export function SwapPanel({
   })
 
   const zenBalance = useErc20Balance({
-    token: ZEN_TOKEN_ADDRESS,
+    token: CONTRACTS.ZEN,
     address: address as `0x${string}` | null,
     chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
   })
 
   const barBalance = useErc20Balance({
-    token: BAR_TOKEN_ADDRESS,
+    token: CONTRACTS.BAR,
     address: address as `0x${string}` | null,
     chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
@@ -434,7 +434,7 @@ export function SwapPanel({
                 amount: ethAmount,
                 decimals: 18,
                 tokenIn: NATIVE_ETH_ADDRESS,
-                tokenOut: ZEN_TOKEN_ADDRESS,
+                tokenOut: CONTRACTS.ZEN,
                 swapKey: "eth-zen",
                 balanceRaw: ethBalance.raw,
                 balanceLoading: ethBalance.isLoading,
@@ -477,7 +477,7 @@ export function SwapPanel({
                 amount: usdcAmount,
                 decimals: usdcDecimals,
                 tokenIn: USDC_ADDRESS,
-                tokenOut: ZEN_TOKEN_ADDRESS,
+                tokenOut: CONTRACTS.ZEN,
                 swapKey: "usdc-zen",
                 balanceRaw: usdcBalance.raw,
                 balanceLoading: usdcBalance.isLoading,
@@ -531,7 +531,7 @@ export function SwapPanel({
                     amount: ethBarAmount,
                     decimals: 18,
                     tokenIn: NATIVE_ETH_ADDRESS,
-                    tokenOut: BAR_TOKEN_ADDRESS,
+                    tokenOut: CONTRACTS.BAR,
                     swapKey: "eth-bar",
                     balanceRaw: ethBalance.raw,
                     balanceLoading: ethBalance.isLoading,
@@ -572,7 +572,7 @@ export function SwapPanel({
                   executeSwap({
                     amount: barAmount,
                     decimals: barBalance.decimals ?? 18,
-                    tokenIn: BAR_TOKEN_ADDRESS,
+                    tokenIn: CONTRACTS.BAR,
                     tokenOut: NATIVE_ETH_ADDRESS,
                     swapKey: "bar-eth",
                     balanceRaw: barBalance.raw,

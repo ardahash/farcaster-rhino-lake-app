@@ -1,7 +1,7 @@
 "use client"
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query"
 import { OnchainKitProvider } from "@coinbase/onchainkit"
 import { WagmiProvider, createConfig, http, useAccount, useConnect, useDisconnect } from "wagmi"
 import { base } from "wagmi/chains"
@@ -76,6 +76,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
   const { address, chainId, isConnected, isConnecting } = useAccount()
   const { connectAsync, connectors, error: connectError, isPending } = useConnect()
   const { disconnect } = useDisconnect()
+  const queryClient = useQueryClient()
   const [session, setSession] = useState<BaseAuthSession | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lastAttemptAt, setLastAttemptAt] = useState<number | null>(null)
@@ -84,6 +85,21 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     name: string
     type: string
   } | null>(null)
+  const lastAddressRef = useRef<string | null>(null)
+  const lastChainRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const nextAddress = address ?? null
+    const nextChain = chainId ?? null
+    if (lastAddressRef.current && lastAddressRef.current !== nextAddress) {
+      queryClient.clear()
+    }
+    if (lastChainRef.current && lastChainRef.current !== nextChain) {
+      queryClient.clear()
+    }
+    lastAddressRef.current = nextAddress
+    lastChainRef.current = nextChain
+  }, [address, chainId, queryClient])
 
   const signIn = useCallback(async (preferred?: "coinbase" | "injected") => {
     setError(null)

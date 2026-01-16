@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import type { Address } from "viem"
 import { formatUnits } from "viem"
 import { usePublicClient } from "wagmi"
-import { ERC20_ABI } from "@/lib/zen-burn"
+import { ERC20_ABI } from "@/lib/contracts"
 
 type Erc20BalanceParams = {
   token: Address

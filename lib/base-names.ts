@@ -4,8 +4,7 @@ import type { Address, PublicClient } from "viem"
 import { createPublicClient, http, zeroAddress } from "viem"
 import { namehash } from "viem/ens"
 import { base } from "viem/chains"
-import { BASE_NAME_L2_RESOLVER_ADDRESS, BASE_NAME_REGISTRY_ADDRESS, getRpcUrlForChain } from "@/lib/base-config"
-import { BASE_MAINNET_CHAIN_ID } from "@/lib/zen-burn"
+import { BASE_MAINNET_CHAIN_ID, BASE_NAME_L2_RESOLVER_ADDRESS, BASE_NAME_REGISTRY_ADDRESS, getRpcUrlForChain } from "@/lib/base-config"
 
 const REGISTRY_ABI = [
   {

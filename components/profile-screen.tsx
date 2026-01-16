@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useName } from "@coinbase/onchainkit/identity"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -8,17 +8,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
-import {
-  BASE_CHAINS,
-  DEFAULT_CHAIN_ID,
-  getChainLabel,
-} from "@/lib/base-config"
-import { useGame } from "@/lib/game-state"
-import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
-import { useSwitchChain } from "wagmi"
+import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
+import { CONTRACTS, GAME_ABI } from "@/lib/contracts"
+import { useCityId } from "@/hooks/use-city-id"
+import { useCityState } from "@/hooks/use-city-state"
 import { useErc20Balance } from "@/lib/use-erc20-balance"
-import { BASE_MAINNET_CHAIN_ID } from "@/lib/zen-burn"
+import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
+import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
 import { base } from "wagmi/chains"
+import { encodeFunctionData, formatUnits } from "viem"
 
 const formatBaseHandle = (name: string) => {
   const trimmed = name.startsWith("@") ? name.slice(1) : name
@@ -32,25 +30,48 @@ const formatBaseHandle = (name: string) => {
   return trimmed.split(".")[0] ?? trimmed
 }
 
+const formatTokenValue = (raw: bigint, decimals: number, fallback = "--") => {
+  try {
+    const value = Number(formatUnits(raw, decimals))
+    if (!Number.isFinite(value)) return fallback
+    return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
+  } catch {
+    return fallback
+  }
+}
+
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
-  const { state, claimPendingPower } = useGame()
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [isClaiming, setIsClaiming] = useState(false)
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+  const publicClient = usePublicClient({ chainId: DEFAULT_CHAIN_ID })
+  const { sendTransactionAsync } = useSendTransaction()
+
   const { data: resolvedName, isLoading: isNameLoading } = useName({ address, chain: base })
+  const { cityId } = useCityId(address)
+  const { cityState, level, ethClaimable, refetch: refetchCityState } = useCityState(cityId)
+
   const barBalance = useErc20Balance({
-    token: "0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07",
-    address: address as `0x${string}` | null,
-    chainId: BASE_MAINNET_CHAIN_ID,
+    token: CONTRACTS.BAR,
+    address,
+    chainId: DEFAULT_CHAIN_ID,
+    enabled: Boolean(isAuthenticated && address),
+  })
+
+  const rhinoBalance = useErc20Balance({
+    token: CONTRACTS.RHINO,
+    address,
+    chainId: DEFAULT_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
   })
 
   const achievements = [
-    { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
-    { id: 2, name: "Power Builder", icon: TrendingUp, unlocked: state.zenPower >= 100 },
-    { id: 3, name: "Temple Master", icon: Crown, unlocked: state.cityLevel >= 3 },
-    { id: 4, name: "Legendary Ruler", icon: Trophy, unlocked: state.cityLevel >= 10 },
+    { id: 1, name: "First City", icon: Sparkles, unlocked: cityId > 0n },
+    { id: 2, name: "Power Builder", icon: TrendingUp, unlocked: cityState.barLocked > 0n },
+    { id: 3, name: "Temple Master", icon: Crown, unlocked: level >= 3 },
+    { id: 4, name: "Legendary Ruler", icon: Trophy, unlocked: level >= 10 },
   ]
 
   const handleConnect = async (preferred?: "coinbase" | "injected") => {
@@ -103,6 +124,64 @@ export function ProfileScreen() {
     }
   }
 
+  const ensureBaseNetwork = async () => {
+    const activeChainId = chainId ?? DEFAULT_CHAIN_ID
+    if (activeChainId !== DEFAULT_CHAIN_ID) {
+      await switchChainAsync({ chainId: DEFAULT_CHAIN_ID })
+      throw new Error("Switching to Base mainnet. Please try again.")
+    }
+    return DEFAULT_CHAIN_ID
+  }
+
+  const handleClaimEth = async () => {
+    setIsClaiming(true)
+    try {
+      if (!isAuthenticated || !address) {
+        await handleConnect("coinbase")
+        return
+      }
+
+      if (cityId <= 0n) {
+        throw new Error("Mint a city to claim rewards.")
+      }
+
+      if (ethClaimable <= 0n) {
+        throw new Error("No ETH rewards available.")
+      }
+
+      await ensureBaseNetwork()
+
+      const txHash = await sendTransactionAsync({
+        chainId: DEFAULT_CHAIN_ID,
+        account: address,
+        to: CONTRACTS.GAME,
+        data: encodeFunctionData({
+          abi: GAME_ABI,
+          functionName: "claimEth",
+          args: [cityId],
+        }),
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: txHash })
+      }
+
+      toast({
+        title: "Rewards Claimed",
+        description: "ETH rewards sent to your wallet.",
+      })
+      refetchCityState()
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Unable to claim rewards."
+      toast({
+        title: "Claim Failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsClaiming(false)
+    }
+  }
+
   const baseName =
     typeof resolvedName === "string"
       ? resolvedName
@@ -111,22 +190,22 @@ export function ProfileScreen() {
         : null
   const baseHandle = baseName ? formatBaseHandle(baseName) : null
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
-  const displayName = isAuthenticated ? (baseHandle ? `@${baseHandle}` : "Base Account") : "Rhino Lake Ruler"
+  const displayName = isAuthenticated ? (baseHandle ? `@${baseHandle}` : shortAddress) : "Rhino Lake Ruler"
   const username = isAuthenticated ? (baseName?.startsWith("@") ? baseName.slice(1) : baseName ?? shortAddress) : "rhino-lake"
   const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
-  const profileBio = "Builder of empires, master of ZEN"
+  const profileBio = "Builder of empires, master of BAR and RHINO"
   const profileTag = baseName ?? (isAuthenticated ? shortAddress : "Base Mini App")
   const walletLabel = baseName ?? shortAddress
   const currentNetwork = getChainLabel(chainId)
   const isActionLoading = isAuthLoading || isConnecting || isSwitching
-  const barBalanceValue = Number(barBalance.formatted)
-  const barBalanceDisplay =
-    isAuthenticated && barBalance.isLoading
-      ? "..."
-      : isAuthenticated && Number.isFinite(barBalanceValue)
-        ? barBalanceValue.toFixed(4)
-        : "--"
+  const isOnBase = !chainId || chainId === DEFAULT_CHAIN_ID
+
+  const barBalanceDisplay = formatTokenValue(barBalance.raw, barBalance.decimals ?? 18)
+  const powerDisplay = formatTokenValue(cityState.barLocked, barBalance.decimals ?? 18)
+  const rhinoLockedDisplay = formatTokenValue(cityState.rhinoLocked, rhinoBalance.decimals ?? 18)
+  const ethClaimableDisplay = useMemo(() => formatTokenValue(ethClaimable, 18), [ethClaimable])
+
   const barDecimals = barBalance.decimals ?? 18
   const barBadges = [
     { label: "BAR Whale 1M+", threshold: 1_000_000 },
@@ -143,7 +222,6 @@ export function ProfileScreen() {
       <div className="pt-4">
         <h1 className="text-3xl font-bold text-center text-foreground mb-6">Your Profile</h1>
 
-        {/* Profile Card */}
         <Card className="game-card p-6 space-y-6">
           <div className="flex flex-col items-center space-y-4">
             <Avatar className="w-24 h-24 border-4 border-primary">
@@ -179,55 +257,60 @@ export function ProfileScreen() {
             </div>
           </div>
 
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground mb-1">City Level</p>
-              <p className="text-3xl font-bold text-primary">{state.cityLevel}</p>
+              <p className="text-3xl font-bold text-primary">{level}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Power</p>
-              <p className="text-3xl font-bold text-foreground">{state.zenPower.toFixed(0)}</p>
+              <p className="text-sm text-muted-foreground mb-1">Power (BAR Locked)</p>
+              <p className="text-3xl font-bold text-foreground">{powerDisplay}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">BAR Points</p>
-              <p className="text-3xl font-bold text-foreground">{state.barPoints.toFixed(0)}</p>
+              <p className="text-sm text-muted-foreground mb-1">War Power</p>
+              <p className="text-3xl font-bold text-foreground">{rhinoLockedDisplay}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Pending Power</p>
-              <p className="text-3xl font-bold text-foreground">{state.barPowerPending.toFixed(0)}</p>
+              <p className="text-sm text-muted-foreground mb-1">Hits Taken</p>
+              <p className="text-3xl font-bold text-foreground">{cityState.hits}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Total Sacrifices</p>
-              <p className="text-3xl font-bold text-foreground">{state.totalSacrifices}</p>
+              <p className="text-sm text-muted-foreground mb-1">ETH Claimable</p>
+              <p className="text-3xl font-bold text-foreground">{ethClaimableDisplay}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Temple Burned</p>
-              <p className="text-3xl font-bold text-primary">{state.stakedZen}</p>
+              <p className="text-sm text-muted-foreground mb-1">City Status</p>
+              <p className={`text-3xl font-bold ${cityState.dead ? "text-destructive" : "text-primary"}`}>
+                {cityId > 0n ? (cityState.dead ? "Dead" : "Alive") : "No City"}
+              </p>
             </div>
           </div>
         </Card>
 
         <Card className="game-card p-6 space-y-4 mt-6">
           <div className="space-y-2 text-center">
-            <h3 className="font-semibold text-lg text-foreground">BAR Power Claim</h3>
+            <h3 className="font-semibold text-lg text-foreground">ETH Rewards</h3>
             <p className="text-sm text-muted-foreground">
-              Hold 10,000,000 BAR to earn passive power. Claim it when you want.
+              Claim ETH rewards based on your city&apos;s BAR + RHINO weight.
             </p>
           </div>
+          {!isOnBase && isAuthenticated && (
+            <p className="text-xs text-amber-500 text-center">Switch to Base mainnet to claim rewards.</p>
+          )}
           <Button
-            onClick={() => {
-              claimPendingPower()
-              toast({
-                title: "Power Claimed",
-                description: "Your BAR power has been added to your total power.",
-              })
-            }}
-            disabled={!isAuthenticated || state.barPowerPending <= 0}
+            onClick={handleClaimEth}
+            disabled={!isAuthenticated || ethClaimable <= 0n || isClaiming || !isOnBase}
             className="w-full h-12 text-lg font-semibold"
             size="lg"
           >
-            Claim {state.barPowerPending.toFixed(0)} Power
+            {isClaiming ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Claiming...
+              </>
+            ) : (
+              `Claim ${ethClaimableDisplay} ETH`
+            )}
           </Button>
         </Card>
 
@@ -235,7 +318,7 @@ export function ProfileScreen() {
           <div className="space-y-2 text-center">
             <h3 className="font-semibold text-lg text-foreground">Base Account</h3>
             <p className="text-sm text-muted-foreground">
-              Connect your Base account to enable onchain sacrifices and rewards.
+              Connect your Base account to enable onchain actions and rewards.
             </p>
           </div>
           <Button
@@ -274,7 +357,6 @@ export function ProfileScreen() {
           {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
         </Card>
 
-        {/* Achievements */}
         <Card className="game-card p-6 space-y-4 mt-6">
           <h3 className="font-semibold text-lg text-foreground">Achievements</h3>
           <div className="grid grid-cols-2 gap-3">

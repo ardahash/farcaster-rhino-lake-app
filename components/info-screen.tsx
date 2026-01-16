@@ -25,13 +25,11 @@ export function InfoScreen() {
               mountain. The waters shimmered with an otherworldly energy called ZEN.
             </p>
             <p>
-              Warriors and builders from across the lands discovered that by sacrificing ZEN to the lake, they could
-              gain divine power to construct magnificent city-states. The more they sacrificed, the greater their empire
-              grew.
+              Warriors and builders from across the lands discovered that burning ZEN at the lake could forge legendary
+              RHINO, and that locking BAR into their cities awakened true power.
             </p>
             <p>
-              Those who learned to balance sacrifice with temple burns became legendary rulers, their names echoing
-              through eternity.
+              Those who mastered growth, war, and rewards became legendary rulers, their names echoing through eternity.
             </p>
           </div>
         </Card>
@@ -41,30 +39,29 @@ export function InfoScreen() {
           <h3 className="font-semibold text-lg text-foreground">How to Play</h3>
 
           <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="sacrifice">
+            <AccordionItem value="burn">
               <AccordionTrigger className="text-foreground">
                 <div className="flex items-center gap-2">
                   <Coins className="w-5 h-5 text-primary" />
-                  <span>Sacrifice ZEN</span>
+                  <span>Burn ZEN</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                The primary way to gain power. Each sacrifice of 0.01 ZEN grants you 0.1 Power and 100 BAR points
-                (10,000x the ZEN burned), increasing your empire's strength and unlocking new possibilities.
+                Burn ZEN in the Temple to mint RHINO directly to your wallet. RHINO fuels war and city defense, and all
+                burns happen on Base mainnet.
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="temple">
+            <AccordionItem value="city-growth">
               <AccordionTrigger className="text-foreground">
                 <div className="flex items-center gap-2">
                   <Castle className="w-5 h-5 text-primary" />
-                  <span>Visit the Temple</span>
+                  <span>Grow Your City</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Burn your ZEN in the Temple to upgrade your city level. The first upgrade costs 1 ZEN, then 2, then 4,
-                doubling each level to unlock special abilities and benefits. Temple burns also award BAR points based on
-                the ZEN burned.
+                Power comes from BAR locked inside the Game contract. Each level is unlocked by hitting BAR locked
+                thresholds, from 1M up to 10B BAR. Lock BAR to grow, and lock RHINO to build war strength.
               </AccordionContent>
             </AccordionItem>
 
@@ -76,9 +73,8 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                BAR is the Rhino Lake token. Holding BAR unlocks passive Power accrual: 10M BAR earns 1 Power per minute,
-                100M BAR earns 5 Power per minute, and 1B BAR earns 10 Power per minute. Accrued Power can be claimed from
-                your profile at any time.
+                BAR is the Rhino Lake growth token. Locking BAR directly increases your city power and determines your
+                level. More BAR locked means stronger cities and higher rewards.
               </AccordionContent>
             </AccordionItem>
 
@@ -90,8 +86,8 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Balance between sacrificing for immediate power and temple burns for long-term upgrades. Higher city
-                levels unlock powerful bonuses and establish your legacy as a legendary ruler.
+                Balance between burning ZEN for RHINO, locking BAR for growth, and using RHINO for war. Strong cities
+                accumulate ETH rewards based on their total locked weight.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
