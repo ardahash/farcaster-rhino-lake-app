@@ -72,6 +72,11 @@ const resolveWalletAddress = (account: unknown) => {
   return null
 }
 
+const isMobileUserAgent = () => {
+  if (typeof navigator === "undefined") return false
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
 function BaseAuthInner({ children }: { children: ReactNode }) {
   const { address, chainId, isConnected, isConnecting } = useAccount()
   const { connectAsync, connectors, error: connectError, isPending } = useConnect()
@@ -98,23 +103,28 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
       return
     }
 
-    const coinbaseConnector =
-      connectors.find((connector) => connector.name?.toLowerCase().includes("coinbase")) || connectors[0]
+    const injectedConnector = connectors.find((connector) => connector.id === "injected")
+    const coinbaseConnector = connectors.find((connector) => connector.name?.toLowerCase().includes("coinbase"))
+    const hasInjectedProvider =
+      typeof window !== "undefined" && Boolean((window as Window & { ethereum?: unknown }).ethereum)
+    const shouldPreferInjected = hasInjectedProvider && !isMobileUserAgent()
+    const targetConnector =
+      (shouldPreferInjected ? injectedConnector : coinbaseConnector) || injectedConnector || coinbaseConnector || connectors[0]
 
-    if (!coinbaseConnector) {
+    if (!targetConnector) {
       const noConnectorError = new Error("No supported wallet connector available.")
       setError(noConnectorError.message)
       throw noConnectorError
     }
 
     setLastConnector({
-      id: coinbaseConnector.id,
-      name: coinbaseConnector.name ?? coinbaseConnector.id,
-      type: coinbaseConnector.type ?? coinbaseConnector.id,
+      id: targetConnector.id,
+      name: targetConnector.name ?? targetConnector.id,
+      type: targetConnector.type ?? targetConnector.id,
     })
 
     try {
-      const result = await connectAsync({ connector: coinbaseConnector })
+      const result = await connectAsync({ connector: targetConnector })
       const account = Array.isArray(result.accounts) ? result.accounts[0] : undefined
       const walletAddress = resolveWalletAddress(account)
       if (!walletAddress) {
