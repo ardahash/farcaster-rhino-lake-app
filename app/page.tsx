@@ -12,6 +12,7 @@ import { InfoScreen } from "@/components/info-screen"
 import { BottomNav } from "@/components/bottom-nav"
 import { Toaster } from "@/components/ui/toaster"
 import { WalletIslandDock } from "@/components/wallet-island"
+import { PassiveBarPower } from "@/components/passive-bar-power"
 
 export default function RhinoLakePage() {
   const [activeTab, setActiveTab] = useState("home")
@@ -35,6 +36,7 @@ export default function RhinoLakePage() {
           <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
           <WalletIslandDock />
+          <PassiveBarPower />
           <Toaster />
         </div>
       </GameProvider>

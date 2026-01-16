@@ -95,7 +95,8 @@ export function SwapPanel({
 
   const [ethAmount, setEthAmount] = useState(DEFAULT_ETH_AMOUNT)
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_USDC_AMOUNT)
-  const [activeSwap, setActiveSwap] = useState<"eth-zen" | "usdc-zen" | "eth-bar" | "usdc-bar" | null>(null)
+  const [barAmount, setBarAmount] = useState("1000")
+  const [activeSwap, setActiveSwap] = useState<"eth-zen" | "usdc-zen" | "eth-bar" | "bar-eth" | null>(null)
 
   const usdcBalance = useErc20Balance({
     token: USDC_ADDRESS,
@@ -106,6 +107,13 @@ export function SwapPanel({
 
   const zenBalance = useErc20Balance({
     token: ZEN_TOKEN_ADDRESS,
+    address: address as `0x${string}` | null,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(isAuthenticated && address),
+  })
+
+  const barBalance = useErc20Balance({
+    token: BAR_TOKEN_ADDRESS,
     address: address as `0x${string}` | null,
     chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
@@ -131,6 +139,7 @@ export function SwapPanel({
 
   const zenBalanceDisplay = formatBalance(zenBalance.formatted, zenBalance.isLoading)
   const ethBalanceDisplay = formatBalance(ethBalance.formatted, ethBalance.isLoading)
+  const barBalanceDisplay = formatBalance(barBalance.formatted, barBalance.isLoading)
   const usdcBalanceDisplay = formatBalance(usdcBalance.formatted, usdcBalance.isLoading)
 
   const isSwapLoading = isTxPending || isSwitching || isConnecting
@@ -249,7 +258,7 @@ export function SwapPanel({
     decimals: number
     tokenIn: Address
     tokenOut: Address
-    swapKey: "eth-zen" | "usdc-zen" | "eth-bar" | "usdc-bar"
+    swapKey: "eth-zen" | "usdc-zen" | "eth-bar" | "bar-eth"
     balanceRaw: bigint
     balanceLoading: boolean
     balanceLabel: string
@@ -366,19 +375,22 @@ export function SwapPanel({
 
   useEffect(() => {
     if (!shouldLogBalances || !address) return
-    if (ethBalance.isLoading || usdcBalance.isLoading) return
+    if (ethBalance.isLoading || usdcBalance.isLoading || barBalance.isLoading) return
     console.info("[balances]", {
       address,
       chainId: BASE_MAINNET_CHAIN_ID,
       eth: ethBalance.formatted,
       usdc: usdcBalance.formatted,
       zen: zenBalance.formatted,
+      bar: barBalance.formatted,
     })
   }, [
     address,
     ethBalance.formatted,
     ethBalance.isLoading,
     shouldLogBalances,
+    barBalance.formatted,
+    barBalance.isLoading,
     usdcBalance.formatted,
     usdcBalance.isLoading,
     zenBalance.formatted,
@@ -394,6 +406,7 @@ export function SwapPanel({
           <p className="text-xs text-muted-foreground">Powered by CDP Trade API</p>
           <p className="text-xs text-muted-foreground">Base mainnet swaps only</p>
           <p className="text-xs text-muted-foreground">ZEN Balance: {zenBalanceDisplay}</p>
+          <p className="text-xs text-muted-foreground">BAR Balance: {barBalanceDisplay}</p>
         </div>
         <RefreshCcw className="w-4 h-4 text-muted-foreground" />
       </div>
@@ -527,36 +540,48 @@ export function SwapPanel({
                 </>
               )}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() =>
-                executeSwap({
-                  amount: usdcAmount,
-                  decimals: usdcDecimals,
-                  tokenIn: USDC_ADDRESS,
-                  tokenOut: BAR_TOKEN_ADDRESS,
-                  swapKey: "usdc-bar",
-                  balanceRaw: usdcBalance.raw,
-                  balanceLoading: usdcBalance.isLoading,
-                  balanceLabel: "USDC",
-                })
-              }
-              disabled={isSwapDisabled}
-            >
-              {activeSwap === "usdc-bar" ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Swapping USDC...
-                </>
-              ) : (
-                <>
-                  <ArrowLeftRight className="w-4 h-4 mr-2" />
-                  Swap USDC to BAR
-                </>
-              )}
-            </Button>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground">BAR Amount</label>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={barAmount}
+                onChange={(event) => setBarAmount(event.target.value)}
+                className="h-11"
+              />
+              <p className="text-xs text-muted-foreground">Balance: {barBalanceDisplay}</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() =>
+                  executeSwap({
+                    amount: barAmount,
+                    decimals: barBalance.decimals ?? 18,
+                    tokenIn: BAR_TOKEN_ADDRESS,
+                    tokenOut: NATIVE_ETH_ADDRESS,
+                    swapKey: "bar-eth",
+                    balanceRaw: barBalance.raw,
+                    balanceLoading: barBalance.isLoading,
+                    balanceLabel: "BAR",
+                  })
+                }
+                disabled={isSwapDisabled}
+              >
+                {activeSwap === "bar-eth" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Swapping BAR...
+                  </>
+                ) : (
+                  <>
+                    <ArrowLeftRight className="w-4 h-4 mr-2" />
+                    Swap BAR to ETH
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -22,6 +22,8 @@ import { ToastAction } from "@/components/ui/toast"
 import { ConnectionDebug } from "@/components/connection-debug"
 import { ManifestStatusPanel } from "@/components/manifest-status"
 
+const BAR_TOKEN_ADDRESS = "0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07"
+
 const formatBaseHandle = (name: string) => {
   const trimmed = name.startsWith("@") ? name.slice(1) : name
   const lowered = trimmed.toLowerCase()
@@ -77,6 +79,13 @@ export function HomeScreen() {
     enabled: Boolean(address),
   })
 
+  const barBalance = useErc20Balance({
+    token: BAR_TOKEN_ADDRESS,
+    address,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(address),
+  })
+
   const usdcBalance = useErc20Balance({
     token: USDC_ADDRESS,
     address,
@@ -99,10 +108,11 @@ export function HomeScreen() {
 
   const refetchBalances = useCallback(() => {
     zenBalance.refetch()
+    barBalance.refetch()
     usdcBalance.refetch()
     wethBalance.refetch()
     ethBalance.refetch()
-  }, [zenBalance.refetch, usdcBalance.refetch, wethBalance.refetch, ethBalance.refetch])
+  }, [barBalance.refetch, ethBalance.refetch, usdcBalance.refetch, wethBalance.refetch, zenBalance.refetch])
 
   const zenThresholdRaw = useMemo(() => {
     const decimals = zenBalance.decimals ?? 18
@@ -321,6 +331,13 @@ export function HomeScreen() {
       : isAuthenticated && Number.isFinite(zenBalanceValue)
         ? zenBalanceValue.toFixed(4)
         : "--"
+  const barBalanceValue = Number(barBalance.formatted)
+  const barBalanceDisplay =
+    isAuthenticated && barBalance.isLoading
+      ? "..."
+      : isAuthenticated && Number.isFinite(barBalanceValue)
+        ? barBalanceValue.toFixed(4)
+        : "--"
   const usdcBalanceValue = Number(usdcBalance.formatted)
   const usdcBalanceDisplay =
     isAuthenticated && usdcBalance.isLoading
@@ -400,6 +417,10 @@ export function HomeScreen() {
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">ZEN Balance</p>
             <p className="text-xl font-bold text-foreground">{zenBalanceDisplay}</p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <p className="text-xs text-muted-foreground mb-1">BAR Balance</p>
+            <p className="text-xl font-bold text-foreground">{barBalanceDisplay}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">ETH Balance</p>

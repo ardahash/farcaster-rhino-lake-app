@@ -16,6 +16,8 @@ import {
 import { useGame } from "@/lib/game-state"
 import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
 import { useSwitchChain } from "wagmi"
+import { useErc20Balance } from "@/lib/use-erc20-balance"
+import { BASE_MAINNET_CHAIN_ID } from "@/lib/zen-burn"
 import { base } from "wagmi/chains"
 
 const formatBaseHandle = (name: string) => {
@@ -32,11 +34,17 @@ const formatBaseHandle = (name: string) => {
 
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
-  const { state } = useGame()
+  const { state, claimPendingPower } = useGame()
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { data: resolvedName, isLoading: isNameLoading } = useName({ address, chain: base })
+  const barBalance = useErc20Balance({
+    token: "0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07",
+    address: address as `0x${string}` | null,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(isAuthenticated && address),
+  })
 
   const achievements = [
     { id: 1, name: "First Sacrifice", icon: Sparkles, unlocked: state.totalSacrifices >= 1 },
@@ -112,6 +120,23 @@ export function ProfileScreen() {
   const walletLabel = baseName ?? shortAddress
   const currentNetwork = getChainLabel(chainId)
   const isActionLoading = isAuthLoading || isConnecting || isSwitching
+  const barBalanceValue = Number(barBalance.formatted)
+  const barBalanceDisplay =
+    isAuthenticated && barBalance.isLoading
+      ? "..."
+      : isAuthenticated && Number.isFinite(barBalanceValue)
+        ? barBalanceValue.toFixed(4)
+        : "--"
+  const barDecimals = barBalance.decimals ?? 18
+  const barBadges = [
+    { label: "BAR Whale 1M+", threshold: 1_000_000 },
+    { label: "BAR Titan 10M+", threshold: 10_000_000 },
+    { label: "BAR Colossus 100M+", threshold: 100_000_000 },
+    { label: "BAR Monarch 1B+", threshold: 1_000_000_000 },
+  ].filter((badge) => {
+    const thresholdRaw = BigInt(badge.threshold) * 10n ** BigInt(barDecimals)
+    return barBalance.raw >= thresholdRaw
+  })
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
@@ -131,6 +156,7 @@ export function ProfileScreen() {
               <p className="text-muted-foreground">@{username}</p>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">{profileBio}</p>
               {isAuthenticated && <p className="text-xs text-muted-foreground mt-2">Wallet: {walletLabel}</p>}
+              {isAuthenticated && <p className="text-xs text-muted-foreground mt-1">BAR Balance: {barBalanceDisplay}</p>}
               {isAuthenticated && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Base Name: {isNameLoading ? "Loading..." : baseName ?? "Not set"}
@@ -141,9 +167,16 @@ export function ProfileScreen() {
               )}
             </div>
 
-            <Badge variant="outline" className="text-primary border-primary">
-              {profileTag}
-            </Badge>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Badge variant="outline" className="text-primary border-primary">
+                {profileTag}
+              </Badge>
+              {barBadges.map((badge) => (
+                <Badge key={badge.label} variant="secondary">
+                  {badge.label}
+                </Badge>
+              ))}
+            </div>
           </div>
 
           {/* Stats Grid */}
@@ -161,6 +194,10 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-foreground">{state.barPoints.toFixed(0)}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-1">Pending Power</p>
+              <p className="text-3xl font-bold text-foreground">{state.barPowerPending.toFixed(0)}</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground mb-1">Total Sacrifices</p>
               <p className="text-3xl font-bold text-foreground">{state.totalSacrifices}</p>
             </div>
@@ -169,6 +206,29 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-primary">{state.stakedZen}</p>
             </div>
           </div>
+        </Card>
+
+        <Card className="game-card p-6 space-y-4 mt-6">
+          <div className="space-y-2 text-center">
+            <h3 className="font-semibold text-lg text-foreground">BAR Power Claim</h3>
+            <p className="text-sm text-muted-foreground">
+              Hold 10,000,000 BAR to earn passive power. Claim it when you want.
+            </p>
+          </div>
+          <Button
+            onClick={() => {
+              claimPendingPower()
+              toast({
+                title: "Power Claimed",
+                description: "Your BAR power has been added to your total power.",
+              })
+            }}
+            disabled={!isAuthenticated || state.barPowerPending <= 0}
+            className="w-full h-12 text-lg font-semibold"
+            size="lg"
+          >
+            Claim {state.barPowerPending.toFixed(0)} Power
+          </Button>
         </Card>
 
         <Card className="game-card p-6 space-y-4 mt-6">

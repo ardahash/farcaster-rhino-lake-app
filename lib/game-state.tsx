@@ -5,6 +5,8 @@ import { createContext, useContext, type ReactNode, useEffect, useState } from "
 interface GameState {
   zenPower: number
   barPoints: number
+  barPowerPending: number
+  lastBarAccrualAt: number | null
   cityLevel: number
   totalSacrifices: number
   stakedZen: number
@@ -15,6 +17,10 @@ interface GameContextType {
   state: GameState
   sacrificeZen: (amount: number) => Promise<void>
   stakeZen: (amount: number) => Promise<void>
+  grantPower: (amount: number) => void
+  addPendingPower: (amount: number, accruedAt: number) => void
+  setLastBarAccrualAt: (value: number | null) => void
+  claimPendingPower: () => void
   completeOnboarding: () => void
 }
 
@@ -25,6 +31,8 @@ const STORAGE_KEY = "rhino-lake-game-state"
 const INITIAL_STATE: GameState = {
   zenPower: 100,
   barPoints: 0,
+  barPowerPending: 0,
+  lastBarAccrualAt: null,
   cityLevel: 1,
   totalSacrifices: 0,
   stakedZen: 0,
@@ -93,6 +101,9 @@ const loadInitialState = () => {
     const stakedZen = coerceNumber(parsed.stakedZen, INITIAL_STATE.stakedZen)
     const zenPower = coerceNumber(parsed.zenPower, INITIAL_STATE.zenPower)
     const barPoints = coerceNumber(parsed.barPoints, INITIAL_STATE.barPoints)
+    const barPowerPending = coerceNumber(parsed.barPowerPending, INITIAL_STATE.barPowerPending)
+    const lastBarAccrualAt =
+      typeof parsed.lastBarAccrualAt === "number" ? parsed.lastBarAccrualAt : INITIAL_STATE.lastBarAccrualAt
     const totalSacrifices = coerceNumber(parsed.totalSacrifices, INITIAL_STATE.totalSacrifices)
     const hasSeenOnboarding = coerceBoolean(parsed.hasSeenOnboarding, INITIAL_STATE.hasSeenOnboarding)
     const cityLevel = getLevelFromBurned(stakedZen)
@@ -100,6 +111,8 @@ const loadInitialState = () => {
     return {
       zenPower,
       barPoints,
+      barPowerPending,
+      lastBarAccrualAt,
       cityLevel,
       totalSacrifices,
       stakedZen,
@@ -143,12 +156,60 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }))
   }
 
+  const grantPower = (amount: number) => {
+    if (!Number.isFinite(amount) || amount <= 0) return
+    setState((prev) => ({
+      ...prev,
+      zenPower: prev.zenPower + amount,
+    }))
+  }
+
+  const addPendingPower = (amount: number, accruedAt: number) => {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setState((prev) => ({ ...prev, lastBarAccrualAt: accruedAt }))
+      return
+    }
+    setState((prev) => ({
+      ...prev,
+      barPowerPending: prev.barPowerPending + amount,
+      lastBarAccrualAt: accruedAt,
+    }))
+  }
+
+  const setLastBarAccrualAt = (value: number | null) => {
+    setState((prev) => ({ ...prev, lastBarAccrualAt: value }))
+  }
+
+  const claimPendingPower = () => {
+    setState((prev) => {
+      if (prev.barPowerPending <= 0) {
+        return prev
+      }
+      return {
+        ...prev,
+        zenPower: prev.zenPower + prev.barPowerPending,
+        barPowerPending: 0,
+      }
+    })
+  }
+
   const completeOnboarding = () => {
     setState((prev) => ({ ...prev, hasSeenOnboarding: true }))
   }
 
   return (
-    <GameContext.Provider value={{ state, sacrificeZen, stakeZen, completeOnboarding }}>
+    <GameContext.Provider
+      value={{
+        state,
+        sacrificeZen,
+        stakeZen,
+        grantPower,
+        addPendingPower,
+        setLastBarAccrualAt,
+        claimPendingPower,
+        completeOnboarding,
+      }}
+    >
       {children}
     </GameContext.Provider>
   )
