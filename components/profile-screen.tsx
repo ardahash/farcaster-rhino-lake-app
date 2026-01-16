@@ -272,28 +272,6 @@ export function ProfileScreen() {
             )}
           </Button>
           {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
-          {!isAuthenticated && (
-            <div className="grid gap-2">
-              <Button
-                onClick={() => handleConnect("coinbase")}
-                disabled={isActionLoading}
-                className="w-full h-12 text-lg font-semibold"
-                size="lg"
-                variant="outline"
-              >
-                Connect Base Wallet
-              </Button>
-              <Button
-                onClick={() => handleConnect("injected")}
-                disabled={isActionLoading}
-                className="w-full h-12 text-lg font-semibold"
-                size="lg"
-                variant="outline"
-              >
-                Connect MetaMask
-              </Button>
-            </div>
-          )}
         </Card>
 
         {/* Achievements */}

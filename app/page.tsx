@@ -13,6 +13,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { Toaster } from "@/components/ui/toaster"
 import { WalletIslandDock } from "@/components/wallet-island"
 import { PassiveBarPower } from "@/components/passive-bar-power"
+import { LoginDialog } from "@/components/login-dialog"
 
 export default function RhinoLakePage() {
   const [activeTab, setActiveTab] = useState("home")
@@ -22,6 +23,7 @@ export default function RhinoLakePage() {
       <GameProvider>
         <div className="min-h-screen flex flex-col bg-background">
           <OnboardingModal />
+          <LoginDialog />
 
           {/* Main Content Area */}
           <main className="flex-1 pb-20 overflow-y-auto">

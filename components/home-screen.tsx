@@ -472,26 +472,6 @@ export function HomeScreen() {
             ? "Sacrifice to gain power and grow your empire"
             : "Connect your Base account to enable onchain sacrifices"}
         </p>
-        {!isAuthenticated && (
-          <div className="grid gap-2">
-            <Button
-              onClick={() => handleConnect("coinbase")}
-              disabled={isPrimaryDisabled}
-              className="w-full"
-              variant="outline"
-            >
-              Connect Base Wallet
-            </Button>
-            <Button
-              onClick={() => handleConnect("injected")}
-              disabled={isPrimaryDisabled}
-              className="w-full"
-              variant="outline"
-            >
-              Connect MetaMask
-            </Button>
-          </div>
-        )}
         {shouldDisableBurn && (
           <p className="text-center text-xs text-muted-foreground">You need ZEN to burn. Swap first.</p>
         )}
