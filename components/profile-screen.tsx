@@ -53,10 +53,10 @@ export function ProfileScreen() {
     { id: 4, name: "Legendary Ruler", icon: Trophy, unlocked: state.cityLevel >= 10 },
   ]
 
-  const handleConnect = async () => {
+  const handleConnect = async (preferred?: "coinbase" | "injected") => {
     setIsAuthLoading(true)
     try {
-      await signIn()
+      await signIn(preferred)
       toast({
         title: "Base Account Connected",
         description: "Your Base account is now linked.",
@@ -239,7 +239,7 @@ export function ProfileScreen() {
             </p>
           </div>
           <Button
-            onClick={isAuthenticated ? handleDisconnect : handleConnect}
+            onClick={isAuthenticated ? handleDisconnect : () => handleConnect("coinbase")}
             disabled={isActionLoading}
             className="w-full h-12 text-lg font-semibold"
             size="lg"
@@ -272,6 +272,28 @@ export function ProfileScreen() {
             )}
           </Button>
           {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
+          {!isAuthenticated && (
+            <div className="grid gap-2">
+              <Button
+                onClick={() => handleConnect("coinbase")}
+                disabled={isActionLoading}
+                className="w-full h-12 text-lg font-semibold"
+                size="lg"
+                variant="outline"
+              >
+                Connect Base Wallet
+              </Button>
+              <Button
+                onClick={() => handleConnect("injected")}
+                disabled={isActionLoading}
+                className="w-full h-12 text-lg font-semibold"
+                size="lg"
+                variant="outline"
+              >
+                Connect MetaMask
+              </Button>
+            </div>
+          )}
         </Card>
 
         {/* Achievements */}

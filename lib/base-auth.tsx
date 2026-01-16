@@ -29,7 +29,7 @@ type BaseAuthContextValue = {
   session: BaseAuthSession | null
   error: string | null
   diagnostics: BaseAuthDiagnostics
-  signIn: () => Promise<void>
+  signIn: (preferred?: "coinbase" | "injected") => Promise<void>
   signOut: () => void
 }
 
@@ -72,11 +72,6 @@ const resolveWalletAddress = (account: unknown) => {
   return null
 }
 
-const isMobileUserAgent = () => {
-  if (typeof navigator === "undefined") return false
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-}
-
 function BaseAuthInner({ children }: { children: ReactNode }) {
   const { address, chainId, isConnected, isConnecting } = useAccount()
   const { connectAsync, connectors, error: connectError, isPending } = useConnect()
@@ -90,7 +85,7 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     type: string
   } | null>(null)
 
-  const signIn = useCallback(async () => {
+  const signIn = useCallback(async (preferred?: "coinbase" | "injected") => {
     setError(null)
     setLastAttemptAt(Date.now())
     if (isConnected) {
@@ -104,12 +99,12 @@ function BaseAuthInner({ children }: { children: ReactNode }) {
     }
 
     const injectedConnector = connectors.find((connector) => connector.id === "injected")
-    const coinbaseConnector = connectors.find((connector) => connector.name?.toLowerCase().includes("coinbase"))
-    const hasInjectedProvider =
-      typeof window !== "undefined" && Boolean((window as Window & { ethereum?: unknown }).ethereum)
-    const shouldPreferInjected = hasInjectedProvider && !isMobileUserAgent()
-    const targetConnector =
-      (shouldPreferInjected ? injectedConnector : coinbaseConnector) || injectedConnector || coinbaseConnector || connectors[0]
+    const coinbaseConnector = connectors.find((connector) =>
+      connector.name?.toLowerCase().includes("coinbase"),
+    )
+    const preferredConnector =
+      preferred === "injected" ? injectedConnector : preferred === "coinbase" ? coinbaseConnector : null
+    const targetConnector = preferredConnector || coinbaseConnector || injectedConnector || connectors[0]
 
     if (!targetConnector) {
       const noConnectorError = new Error("No supported wallet connector available.")

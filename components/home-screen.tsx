@@ -267,10 +267,10 @@ export function HomeScreen() {
     }
   }
 
-  const handleConnect = async () => {
+  const handleConnect = async (preferred?: "coinbase" | "injected") => {
     setIsAuthLoading(true)
     try {
-      await signIn()
+      await signIn(preferred)
       toast({
         title: "Base Account Connected",
         description: "You're ready to sacrifice ZEN onchain.",
@@ -439,12 +439,12 @@ export function HomeScreen() {
 
       {/* Primary Sacrifice Button */}
       <div className="w-full max-w-md space-y-3">
-        <Button
-          onClick={isAuthenticated ? handleSacrifice : handleConnect}
-          disabled={isPrimaryDisabled}
-          className="w-full h-14 text-lg font-bold"
-          size="lg"
-        >
+          <Button
+            onClick={isAuthenticated ? handleSacrifice : () => handleConnect("coinbase")}
+            disabled={isPrimaryDisabled}
+            className="w-full h-14 text-lg font-bold"
+            size="lg"
+          >
           {isSending || callId ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -472,6 +472,26 @@ export function HomeScreen() {
             ? "Sacrifice to gain power and grow your empire"
             : "Connect your Base account to enable onchain sacrifices"}
         </p>
+        {!isAuthenticated && (
+          <div className="grid gap-2">
+            <Button
+              onClick={() => handleConnect("coinbase")}
+              disabled={isPrimaryDisabled}
+              className="w-full"
+              variant="outline"
+            >
+              Connect Base Wallet
+            </Button>
+            <Button
+              onClick={() => handleConnect("injected")}
+              disabled={isPrimaryDisabled}
+              className="w-full"
+              variant="outline"
+            >
+              Connect MetaMask
+            </Button>
+          </div>
+        )}
         {shouldDisableBurn && (
           <p className="text-center text-xs text-muted-foreground">You need ZEN to burn. Swap first.</p>
         )}
