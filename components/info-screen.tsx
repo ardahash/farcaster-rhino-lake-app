@@ -68,6 +68,20 @@ export function InfoScreen() {
               </AccordionContent>
             </AccordionItem>
 
+            <AccordionItem value="bar-token">
+              <AccordionTrigger className="text-foreground">
+                <div className="flex items-center gap-2">
+                  <Coins className="w-5 h-5 text-primary" />
+                  <span>BAR Token Utility</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                BAR is the Rhino Lake token. Holding BAR unlocks passive Power accrual: 10M BAR earns 1 Power per minute,
+                100M BAR earns 5 Power per minute, and 1B BAR earns 10 Power per minute. Accrued Power can be claimed from
+                your profile at any time.
+              </AccordionContent>
+            </AccordionItem>
+
             <AccordionItem value="strategy">
               <AccordionTrigger className="text-foreground">
                 <div className="flex items-center gap-2">
