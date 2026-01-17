@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react"
 import { useName } from "@coinbase/onchainkit/identity"
 import { Card } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { PfpAvatar } from "@/components/pfp-avatar"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
@@ -196,7 +196,6 @@ export function ProfileScreen() {
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? (baseHandle ? `@${baseHandle}` : shortAddress) : "Rhino Lake Ruler"
   const username = isAuthenticated ? (baseName?.startsWith("@") ? baseName.slice(1) : baseName ?? shortAddress) : "rhino-lake"
-  const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
   const profileBio = "Builder of empires, master of BAR and RHINO"
   const profileTag = baseName ?? (isAuthenticated ? shortAddress : "Base Mini App")
@@ -227,10 +226,12 @@ export function ProfileScreen() {
 
         <Card className="game-card p-6 space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            <Avatar className="w-24 h-24 border-4 border-primary">
-              <AvatarImage src={avatarUrl} alt={displayName} />
-              <AvatarFallback className="text-2xl">{avatarFallback}</AvatarFallback>
-            </Avatar>
+            <PfpAvatar
+              displayName={displayName}
+              fallback={avatarFallback}
+              className="w-24 h-24 border-4 border-primary"
+              fallbackClassName="text-2xl"
+            />
 
             <div className="text-center">
               <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
