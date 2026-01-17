@@ -13,11 +13,12 @@ import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
-import { getNextBarThreshold, getTownAssetForLevel } from "@/lib/game-state"
+import { getNextBarThreshold } from "@/lib/game-state"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
 import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
 import { Progress } from "@/components/ui/progress"
+import { TownViewer } from "@/components/town-viewer"
 import { Coins, Loader2, Shield, Sparkles, Swords } from "lucide-react"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
 import { base } from "wagmi/chains"
@@ -354,7 +355,6 @@ export function HomeScreen() {
     barDecimals,
   )
   const displayLevel = cityLevel > 0 ? cityLevel : 1
-  const townAsset = getTownAssetForLevel(displayLevel)
 
   const powerDisplay = formatTokenValue(cityState.barLocked, barDecimals)
   const warPowerDisplay = formatTokenValue(cityState.rhinoLocked, rhinoBalance.decimals ?? 18)
@@ -389,16 +389,9 @@ export function HomeScreen() {
           </div>
         </div>
 
-        <div className="relative aspect-square w-full bg-gradient-to-b from-muted/50 to-muted rounded-lg overflow-hidden border-2 border-border">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src={townAsset.src}
-              alt={`Rhino Lake level ${townAsset.level} city`}
-              className="w-full h-full object-contain pixel-art"
-              loading="eager"
-            />
-          </div>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+        <div className="relative w-full">
+          <TownViewer level={displayLevel} />
+          <div className="absolute left-4 top-4">
             <div className="bg-card/90 backdrop-blur-sm px-4 py-2 rounded-full border border-border">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
