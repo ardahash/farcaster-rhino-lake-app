@@ -54,7 +54,12 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
     setOpen(false)
     setPendingTokenId(null)
     setPendingAction(null)
-  }, [address, chainId])
+    if (address && PROFILE_PIC_NFT_ADDRESS && USDC_ADDRESS) {
+      refetchOwned()
+      refetchActive()
+      refetchAllowance()
+    }
+  }, [address, chainId, refetchActive, refetchAllowance, refetchOwned])
 
   const ownedById = useMemo(() => {
     const map = new Map<number, boolean>()

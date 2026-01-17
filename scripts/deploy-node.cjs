@@ -5,6 +5,7 @@ import fs from "fs";
 const RPC = "https://mainnet.base.org";
 const ZEN_BASE = "0xf43eB8De897Fbc7F2502483B2Bef7Bb9EA179229";
 const BAR_BASE = "0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07";
+const PROFILE_PIC_TREASURY = "0x0F6A41a801E6B6490Da4e8FcC4394c70809deB9e";
 
 function loadArtifact(name) {
   // adjust path to your artifacts output
@@ -26,6 +27,7 @@ async function deployContract(wallet, artifact, args = []) {
 
 async function main() {
   if (!process.env.BASE_PRIVATE_KEY) throw new Error("Missing BASE_PRIVATE_KEY in .env");
+  if (!process.env.NEXT_PUBLIC_USDC_ADDRESS) throw new Error("Missing NEXT_PUBLIC_USDC_ADDRESS in .env");
 
   const provider = new ethers.JsonRpcProvider(RPC);
   const wallet = new ethers.Wallet(process.env.BASE_PRIVATE_KEY, provider);
@@ -38,6 +40,7 @@ async function main() {
   const CityNFT = loadArtifact("CityNFT");
   const RhinoLakeGame = loadArtifact("RhinoLakeGame");
   const ZenBurnToRhino = loadArtifact("ZenBurnToRhino");
+  const ProfilePicNFT = loadArtifact("ProfilePicNFT");
 
   const rhino = await deployContract(wallet, RhinoToken, [owner]);
   console.log("RHINO:", await rhino.getAddress());
@@ -86,6 +89,13 @@ async function main() {
     tierRates,
   ]);
   console.log("Burner:", await burner.getAddress());
+
+  const profilePic = await deployContract(wallet, ProfilePicNFT, [
+    owner,
+    process.env.NEXT_PUBLIC_USDC_ADDRESS,
+    PROFILE_PIC_TREASURY,
+  ]);
+  console.log("ProfilePicNFT:", await profilePic.getAddress());
 
   // set minter for burner
   await (await rhino.setMinter(await burner.getAddress(), true)).wait();

@@ -148,10 +148,11 @@ async function main() {
   const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
   const wallet = new ethers.Wallet(pk, provider);
 
-  const owner = wallet.address;    // owner = deployer
-  const treasury = wallet.address; // treasury = deployer
+  const owner = wallet.address;
+  const treasury = PROFILE_PIC_TREASURY;
 
-  console.log("Deployer/Owner/Treasury:", owner);
+  console.log("Deployer/Owner:", owner);
+  console.log("PFP Treasury:", treasury);
 
   const compiled = compileContracts();
 
@@ -265,7 +266,8 @@ async function main() {
   console.log("\n==============================");
   console.log("✅ DEPLOY COMPLETE (Base Mainnet)");
   console.log("==============================");
-  console.log("Owner/Treasury:", treasury);
+  console.log("Owner:", owner);
+  console.log("PFP Treasury:", treasury);
   console.log("ZEN:", ZEN_BASE);
   console.log("BAR:", BAR_BASE);
   console.log("RHINO:", rhinoAddr);
