@@ -262,9 +262,9 @@ function TownScene() {
       <div
         ref={viewportRef}
         onPointerDown={handlePointerDown}
-        className="w-full overflow-x-auto overflow-y-hidden touch-pan-x select-none"
+        className="w-full h-[calc(100dvh-5rem)] overflow-hidden touch-none select-none"
       >
-        <div ref={sceneRef} className="relative h-[441px] w-[1376px]">
+        <div ref={sceneRef} className="relative h-full w-[calc((100dvh-5rem)*1376/441)]">
           <img
             src="/rhinolakeTown.png"
             alt="Rhino Lake Town"
@@ -279,7 +279,7 @@ function TownScene() {
             alt="Monk"
             draggable={false}
             onLoad={updateMetrics}
-            className="absolute h-20 w-auto select-none pointer-events-none"
+            className="absolute h-60 w-auto select-none pointer-events-none"
             style={{ left: `${spritePosition.left}px`, top: `${spritePosition.top}px` }}
           />
         </div>
