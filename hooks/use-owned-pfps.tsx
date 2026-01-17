@@ -8,11 +8,13 @@ import { PROFILE_PIC_NFT_ABI } from "@/lib/contracts"
 import { PROFILE_PIC_NFT_ADDRESS } from "@/lib/pfp-config"
 import { PFP_TOKEN_IDS } from "@/lib/pfp-catalog"
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address
+
 export function useOwnedPfps(address?: Address | null) {
-  const contractAddress = PROFILE_PIC_NFT_ADDRESS
+  const contractAddress = PROFILE_PIC_NFT_ADDRESS ?? ZERO_ADDRESS
   const tokenIds = useMemo(() => PFP_TOKEN_IDS.map((id) => BigInt(id)), [])
   const accounts = useMemo(() => (address ? tokenIds.map(() => address) : []), [address, tokenIds])
-  const enabled = Boolean(address && contractAddress)
+  const enabled = Boolean(address && PROFILE_PIC_NFT_ADDRESS)
 
   const result = useReadContract({
     address: contractAddress,

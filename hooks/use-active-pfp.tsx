@@ -6,9 +6,11 @@ import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { PROFILE_PIC_NFT_ABI } from "@/lib/contracts"
 import { PROFILE_PIC_NFT_ADDRESS } from "@/lib/pfp-config"
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address
+
 export function useActivePfp(address?: Address | null) {
-  const contractAddress = PROFILE_PIC_NFT_ADDRESS
-  const enabled = Boolean(address && contractAddress)
+  const contractAddress = PROFILE_PIC_NFT_ADDRESS ?? ZERO_ADDRESS
+  const enabled = Boolean(address && PROFILE_PIC_NFT_ADDRESS)
 
   const result = useReadContract({
     address: contractAddress,

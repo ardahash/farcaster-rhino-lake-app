@@ -28,9 +28,10 @@ type PfpAvatarProps = {
   displayName: string
   fallback: string
   className?: string
+  fallbackClassName?: string
 }
 
-export function PfpAvatar({ displayName, fallback, className }: PfpAvatarProps) {
+export function PfpAvatar({ displayName, fallback, className, fallbackClassName }: PfpAvatarProps) {
   const { address, chainId, isAuthenticated, signIn } = useBaseAuth()
   const { toast } = useToast()
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
@@ -222,7 +223,7 @@ export function PfpAvatar({ displayName, fallback, className }: PfpAvatarProps) 
         <button type="button" aria-label="Open profile shop" className="rounded-full">
           <Avatar className={className}>
             <AvatarImage src={activeItem.src} alt={displayName} />
-            <AvatarFallback>{fallback}</AvatarFallback>
+            <AvatarFallback className={fallbackClassName}>{fallback}</AvatarFallback>
           </Avatar>
         </button>
       </DialogTrigger>

@@ -9,3 +9,10 @@
 1. Connect Wallet A, mint a city, and lock some BAR. Note the power/level.
 2. Disconnect and connect Wallet B. If Wallet B has no city, you should see the Mint City CTA and power should be 0.
 3. Mint a city for Wallet B and verify that Wallet A and Wallet B show independent power/level values.
+
+## Profile Picture Shop (PFP)
+1. Deploy the ProfilePicNFT contract with `node scripts/deploy-solc.mjs` after setting:
+   - `BASE_PRIVATE_KEY`
+   - `NEXT_PUBLIC_USDC_ADDRESS`
+2. Set `NEXT_PUBLIC_PROFILE_PIC_NFT_ADDRESS` in `.env` to the deployed address.
+3. Run the app and click the avatar to open the PFP shop, buy with USDC, and set active.
