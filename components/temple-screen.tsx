@@ -393,15 +393,17 @@ export function TempleScreen() {
               <>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-foreground">Burn ZEN Amount</label>
-                  <Input
-                    type="number"
-                    placeholder="Enter amount..."
-                    value={burnAmount}
-                    onChange={(e) => setBurnAmount(e.target.value)}
-                    className="h-10 text-sm bg-background/70"
-                    min="0"
-                    step="0.01"
-                  />
+                  <div className="flex justify-center">
+                    <Input
+                      type="number"
+                      placeholder="Enter amount..."
+                      value={burnAmount}
+                      onChange={(e) => setBurnAmount(e.target.value)}
+                      className="h-9 text-sm bg-background/70 w-full max-w-[200px]"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     ZEN Balance: {formatTokenValue(zenBalance.raw, zenBalance.decimals ?? 18)}
                   </p>
@@ -414,7 +416,7 @@ export function TempleScreen() {
                 <Button
                   onClick={isAuthenticated ? handleBurn : handleConnect}
                   disabled={isPrimaryLoading || !burnAmount || !isOnBase}
-                  className="w-full h-10 text-sm font-semibold bg-card/80 hover:bg-card"
+                  className="w-full h-10 text-sm font-semibold bg-card/80 hover:bg-card text-foreground"
                   variant="secondary"
                 >
                   {isBurning || isTxPending ? (
@@ -449,7 +451,7 @@ export function TempleScreen() {
                 <Button
                   onClick={handleMintCity}
                   disabled={isPrimaryLoading || !isOnBase}
-                  className="w-full h-10 text-sm font-semibold bg-card/80 hover:bg-card"
+                  className="w-full h-10 text-sm font-semibold bg-card/80 hover:bg-card text-foreground"
                   variant="secondary"
                 >
                   {isMinting ? (

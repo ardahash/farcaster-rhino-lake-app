@@ -1,47 +1,29 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { useBaseAuth } from "@/lib/base-auth"
-import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
-import { CONTRACTS, ERC20_ABI } from "@/lib/contracts"
-import { useCityId } from "@/hooks/use-city-id"
-import { useCityState } from "@/hooks/use-city-state"
-import { getProgressionState } from "@/lib/game-state"
 import { buildPathData, sampleAtS } from "@/lib/path/pathMath"
 import { RHINO_LAKE_IMAGE_SIZE, RHINO_LAKE_ROAD_PATH_PX } from "@/public/roadPath"
-import { formatUnits } from "viem"
-import { useReadContract } from "wagmi"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-
-const formatTokenValue = (raw: bigint, decimals: number, fallback = "--") => {
-  try {
-    const value = Number(formatUnits(raw, decimals))
-    if (!Number.isFinite(value)) return fallback
-    return value.toLocaleString(undefined, { maximumFractionDigits: 4 })
-  } catch {
-    return fallback
-  }
-}
-
-type TownScreenProps = {
-  onEnterTemple: () => void
-}
 
 const SCENE_WIDTH = RHINO_LAKE_IMAGE_SIZE.width
 const SCENE_HEIGHT = RHINO_LAKE_IMAGE_SIZE.height
 const WALK_SPEED = 240
 const FACING_EPSILON = 0.05
 
-function TownScene({ onEnterTemple }: TownScreenProps) {
+type Direction = -1 | 0 | 1
+
+function TownScene() {
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const sceneRef = useRef<HTMLDivElement | null>(null)
   const characterRef = useRef<HTMLImageElement | null>(null)
   const [s, setS] = useState(0)
-  const [direction, setDirection] = useState<-1 | 0 | 1>(0)
+  const [direction, setDirection] = useState<Direction>(0)
   const directionRef = useRef(0)
   const [facing, setFacing] = useState<"left" | "right">("right")
-  const [showDebug, setShowDebug] = useState(false)
+  const pointerActiveRef = useRef(false)
+  const pointerDirectionRef = useRef<Direction>(0)
+  const keyboardDirectionRef = useRef<Direction>(0)
+  const pressedKeysRef = useRef({ left: false, right: false })
+  const lastKeyRef = useRef<"left" | "right">("right")
   const [metrics, setMetrics] = useState({
     sceneWidth: SCENE_WIDTH,
     sceneHeight: SCENE_HEIGHT,
@@ -64,6 +46,11 @@ function TownScene({ onEnterTemple }: TownScreenProps) {
   useEffect(() => {
     metricsRef.current = metrics
   }, [metrics])
+
+  const syncDirection = useCallback(() => {
+    const nextDirection = pointerActiveRef.current ? pointerDirectionRef.current : keyboardDirectionRef.current
+    setDirection(nextDirection)
+  }, [])
 
   const updateMetrics = useCallback(() => {
     const viewport = viewportRef.current
@@ -99,16 +86,71 @@ function TownScene({ onEnterTemple }: TownScreenProps) {
   }, [updateMetrics])
 
   useEffect(() => {
-    const stop = () => setDirection(0)
-    window.addEventListener("pointerup", stop)
-    window.addEventListener("pointercancel", stop)
-    window.addEventListener("blur", stop)
-    return () => {
-      window.removeEventListener("pointerup", stop)
-      window.removeEventListener("pointercancel", stop)
-      window.removeEventListener("blur", stop)
+    const stopPointer = () => {
+      if (!pointerActiveRef.current) return
+      pointerActiveRef.current = false
+      pointerDirectionRef.current = 0
+      syncDirection()
     }
-  }, [])
+    window.addEventListener("pointerup", stopPointer)
+    window.addEventListener("pointercancel", stopPointer)
+    window.addEventListener("blur", stopPointer)
+    return () => {
+      window.removeEventListener("pointerup", stopPointer)
+      window.removeEventListener("pointercancel", stopPointer)
+      window.removeEventListener("blur", stopPointer)
+    }
+  }, [syncDirection])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault()
+        if (event.key === "ArrowLeft") {
+          pressedKeysRef.current.left = true
+          lastKeyRef.current = "left"
+        } else {
+          pressedKeysRef.current.right = true
+          lastKeyRef.current = "right"
+        }
+        if (pressedKeysRef.current.left && pressedKeysRef.current.right) {
+          keyboardDirectionRef.current = lastKeyRef.current === "left" ? -1 : 1
+        } else if (pressedKeysRef.current.left) {
+          keyboardDirectionRef.current = -1
+        } else if (pressedKeysRef.current.right) {
+          keyboardDirectionRef.current = 1
+        }
+        syncDirection()
+      }
+    }
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        if (event.key === "ArrowLeft") {
+          pressedKeysRef.current.left = false
+        } else {
+          pressedKeysRef.current.right = false
+        }
+        if (pressedKeysRef.current.left && pressedKeysRef.current.right) {
+          keyboardDirectionRef.current = lastKeyRef.current === "left" ? -1 : 1
+        } else if (pressedKeysRef.current.left) {
+          keyboardDirectionRef.current = -1
+        } else if (pressedKeysRef.current.right) {
+          keyboardDirectionRef.current = 1
+        } else {
+          keyboardDirectionRef.current = 0
+        }
+        syncDirection()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keyup", handleKeyUp)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+      window.removeEventListener("keyup", handleKeyUp)
+    }
+  }, [syncDirection])
 
   useEffect(() => {
     if (initializedRef.current || !pathData || pathData.totalLength <= 0) return
@@ -170,11 +212,6 @@ function TownScene({ onEnterTemple }: TownScreenProps) {
     return sampleAtS(pathData, s)
   }, [pathData, s])
 
-  const debugPolyline = useMemo(() => {
-    if (!pathData) return ""
-    return pathData.points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ")
-  }, [pathData])
-
   const spritePosition = useMemo(() => {
     const { sceneWidth, sceneHeight, characterWidth, characterHeight } = metrics
     if (!sceneWidth || !sceneHeight) {
@@ -205,47 +242,36 @@ function TownScene({ onEnterTemple }: TownScreenProps) {
   const spriteSrc =
     direction === 0 ? "/idleMonk.png" : facing === "left" ? "/leftfacingMonk.png" : "/rightfacingMonk.png"
 
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return
+      const viewport = viewportRef.current
+      if (!viewport) return
+      const rect = viewport.getBoundingClientRect()
+      if (!rect.width) return
+      const offsetX = event.clientX - rect.left
+      pointerActiveRef.current = true
+      pointerDirectionRef.current = offsetX < rect.width / 2 ? -1 : 1
+      syncDirection()
+    },
+    [syncDirection],
+  )
+
   return (
     <div className="relative w-full">
       <div
         ref={viewportRef}
-        className="w-full overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-muted/40 touch-pan-x"
+        onPointerDown={handlePointerDown}
+        className="w-full overflow-x-auto overflow-y-hidden touch-pan-x select-none"
       >
-        <div
-          ref={sceneRef}
-          className="relative h-[441px] w-[1376px]"
-        >
-          <img src="/rhinolakeTown.png" alt="Rhino Lake Town" className="absolute inset-0 h-full w-full object-cover" />
-
-          <div className="absolute right-3 top-3 z-10">
-            <Button
-              type="button"
-              size="sm"
-              variant={showDebug ? "secondary" : "outline"}
-              onClick={() => setShowDebug((prev) => !prev)}
-              className="h-8 px-3 text-xs"
-            >
-              {showDebug ? "Hide Path" : "Show Path"}
-            </Button>
-          </div>
-
-          {showDebug && pathData && (
-            <svg
-              className="absolute inset-0 pointer-events-none"
-              width={metrics.sceneWidth}
-              height={metrics.sceneHeight}
-              viewBox={`0 0 ${metrics.sceneWidth} ${metrics.sceneHeight}`}
-            >
-              <polyline points={debugPolyline} fill="none" stroke="rgba(255, 0, 0, 0.8)" strokeWidth="2" />
-              <circle cx={sample.pos.x} cy={sample.pos.y} r="6" fill="rgba(0, 148, 255, 0.85)" />
-            </svg>
-          )}
-
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Button onClick={onEnterTemple} size="lg" className="px-8 text-base font-semibold">
-              Enter Temple
-            </Button>
-          </div>
+        <div ref={sceneRef} className="relative h-[441px] w-[1376px]">
+          <img
+            src="/rhinolakeTown.png"
+            alt="Rhino Lake Town"
+            draggable={false}
+            style={{ WebkitTouchCallout: "none" }}
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none select-none"
+          />
 
           <img
             ref={characterRef}
@@ -253,95 +279,19 @@ function TownScene({ onEnterTemple }: TownScreenProps) {
             alt="Monk"
             draggable={false}
             onLoad={updateMetrics}
-            className="absolute h-20 w-auto select-none"
+            className="absolute h-20 w-auto select-none pointer-events-none"
             style={{ left: `${spritePosition.left}px`, top: `${spritePosition.top}px` }}
           />
         </div>
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-4 bottom-4 flex items-center justify-between">
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          aria-label="Move left"
-          onPointerDown={() => setDirection(-1)}
-          onPointerUp={() => setDirection(0)}
-          onPointerLeave={() => setDirection(0)}
-          onPointerCancel={() => setDirection(0)}
-          className="pointer-events-auto h-11 w-11 rounded-full"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          aria-label="Move right"
-          onPointerDown={() => setDirection(1)}
-          onPointerUp={() => setDirection(0)}
-          onPointerLeave={() => setDirection(0)}
-          onPointerCancel={() => setDirection(0)}
-          className="pointer-events-auto h-11 w-11 rounded-full"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
       </div>
     </div>
   )
 }
 
-export function TownScreen({ onEnterTemple }: TownScreenProps) {
-  const { address } = useBaseAuth()
-  const { cityId } = useCityId(address)
-  const { cityState, isLoading: isCityLoading } = useCityState(cityId, address)
-
-  const { data: barDecimals } = useReadContract({
-    address: CONTRACTS.BAR,
-    abi: ERC20_ABI,
-    functionName: "decimals",
-    chainId: BASE_MAINNET_CHAIN_ID,
-    query: {
-      enabled: Boolean(address),
-    },
-  })
-
-  const resolvedBarDecimals = Number(barDecimals ?? 18)
-  const { level: cityLevel, isStarter } = getProgressionState(
-    cityState.barLocked,
-    resolvedBarDecimals,
-    cityId > 0n,
-  )
-  const powerDisplay = useMemo(
-    () => formatTokenValue(cityState.barLocked, resolvedBarDecimals),
-    [cityState.barLocked, resolvedBarDecimals],
-  )
-
+export function TownScreen() {
   return (
-    <div className="flex-1 p-4 space-y-6 max-w-3xl mx-auto">
-      <div className="pt-4 text-center space-y-2">
-        <h1 className="text-3xl font-bold text-primary gold-glow">Your Town</h1>
-        <p className="text-muted-foreground">Explore the town and head to the temple.</p>
-      </div>
-
-      <div className="space-y-4">
-        <TownScene onEnterTemple={onEnterTemple} />
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">City Level</p>
-            <p className="text-2xl font-bold text-primary">
-              {isCityLoading ? "--" : isStarter ? "Level 1 (Starter)" : cityLevel}
-            </p>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">City Power</p>
-            <p className="text-2xl font-bold text-foreground">{powerDisplay}</p>
-          </div>
-        </div>
-        <p className="text-center text-xs text-muted-foreground">
-          Drag to scroll the town, or hold the arrows to walk.
-        </p>
-      </div>
+    <div className="flex-1">
+      <TownScene />
     </div>
   )
 }

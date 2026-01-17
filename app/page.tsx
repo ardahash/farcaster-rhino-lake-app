@@ -37,7 +37,7 @@ function RhinoLakeShell() {
       {/* Main Content Area */}
       <main className="flex-1 pb-20 overflow-y-auto">
         {activeTab === "home" && <HomeScreen />}
-        {activeTab === "town" && hasCity && <TownScreen onEnterTemple={() => setActiveTab("temple")} />}
+        {activeTab === "town" && hasCity && <TownScreen />}
         {activeTab === "temple" && <TempleScreen />}
         {activeTab === "social" && <SocialScreen />}
         {activeTab === "profile" && <ProfileScreen />}
