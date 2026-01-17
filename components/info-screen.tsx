@@ -60,8 +60,8 @@ export function InfoScreen() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                City power comes from BAR locked inside the Game contract. Levels unlock at 25M, 50M, and 200M BAR
-                locked. Lock BAR to grow, and lock RHINO to build war strength.
+                City power comes from BAR locked inside the Game contract. Levels unlock at 5M, 10M, 20M, 40M, and 80M
+                BAR locked, then keep doubling. Lock BAR to grow, and lock RHINO to build war strength.
               </AccordionContent>
             </AccordionItem>
 

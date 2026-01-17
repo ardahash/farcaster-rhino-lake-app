@@ -7,7 +7,7 @@ import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI } from "@/lib/contracts"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
-import { getLevelFromBarLocked } from "@/lib/game-state"
+import { getProgressionState } from "@/lib/game-state"
 import { buildPathData, sampleAtS } from "@/lib/path/pathMath"
 import { RHINO_LAKE_IMAGE_SIZE, RHINO_LAKE_ROAD_PATH_PX } from "@/public/roadPath"
 import { formatUnits } from "viem"
@@ -31,7 +31,7 @@ type TownScreenProps = {
 const SCENE_WIDTH = RHINO_LAKE_IMAGE_SIZE.width
 const SCENE_HEIGHT = RHINO_LAKE_IMAGE_SIZE.height
 const WALK_SPEED = 240
-const FACING_EPSILON = 0.12
+const FACING_EPSILON = 0.05
 
 function TownScene({ onEnterTemple }: TownScreenProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null)
@@ -186,11 +186,12 @@ function TownScene({ onEnterTemple }: TownScreenProps) {
   }, [metrics, sample.pos.x, sample.pos.y])
 
   useEffect(() => {
-    const x = sample.tangent.x
-    if (Math.abs(x) < FACING_EPSILON) return
-    const nextFacing = x < 0 ? "left" : "right"
+    if (direction === 0) return
+    const movementX = sample.tangent.x * direction
+    if (Math.abs(movementX) < FACING_EPSILON) return
+    const nextFacing = movementX < 0 ? "left" : "right"
     setFacing((prev) => (prev === nextFacing ? prev : nextFacing))
-  }, [sample.tangent.x])
+  }, [direction, sample.tangent.x])
 
   useEffect(() => {
     const viewport = viewportRef.current
@@ -306,7 +307,11 @@ export function TownScreen({ onEnterTemple }: TownScreenProps) {
   })
 
   const resolvedBarDecimals = Number(barDecimals ?? 18)
-  const cityLevel = getLevelFromBarLocked(cityState.barLocked, resolvedBarDecimals)
+  const { level: cityLevel, isStarter } = getProgressionState(
+    cityState.barLocked,
+    resolvedBarDecimals,
+    cityId > 0n,
+  )
   const powerDisplay = useMemo(
     () => formatTokenValue(cityState.barLocked, resolvedBarDecimals),
     [cityState.barLocked, resolvedBarDecimals],
@@ -324,7 +329,9 @@ export function TownScreen({ onEnterTemple }: TownScreenProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">City Level</p>
-            <p className="text-2xl font-bold text-primary">{isCityLoading ? "--" : cityLevel}</p>
+            <p className="text-2xl font-bold text-primary">
+              {isCityLoading ? "--" : isStarter ? "Level 1 (Starter)" : cityLevel}
+            </p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">City Power</p>

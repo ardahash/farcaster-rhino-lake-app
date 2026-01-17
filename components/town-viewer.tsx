@@ -1,11 +1,8 @@
 "use client"
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { Canvas } from "@react-three/fiber"
 import { Bounds, OrbitControls, useBounds, useGLTF } from "@react-three/drei"
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { getTownModelForLevel } from "@/lib/game-state"
 
 function TownModel({ src }: { src: string }) {
@@ -25,19 +22,11 @@ function FitBounds({ refreshKey }: { refreshKey: string }) {
 
 export function TownViewer({ level }: { level: number }) {
   const [isMounted, setIsMounted] = useState(false)
-  const controlsRef = useRef<OrbitControlsImpl | null>(null)
   const model = useMemo(() => getTownModelForLevel(level), [level])
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
-
-  const rotateBy = (delta: number) => {
-    const controls = controlsRef.current
-    if (!controls) return
-    controls.rotateLeft(delta)
-    controls.update()
-  }
 
   return (
     <div className="relative w-full aspect-[4/3] rounded-lg border border-border bg-gradient-to-b from-muted/20 to-muted/70 overflow-hidden">
@@ -60,7 +49,6 @@ export function TownViewer({ level }: { level: number }) {
             </Bounds>
           </Suspense>
           <OrbitControls
-            ref={controlsRef}
             makeDefault
             enablePan={false}
             enableZoom={false}
@@ -69,30 +57,6 @@ export function TownViewer({ level }: { level: number }) {
           />
         </Canvas>
       )}
-
-      <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-3">
-        <Button
-          size="icon"
-          variant="secondary"
-          aria-label="Rotate town left"
-          onClick={() => rotateBy(Math.PI / 8)}
-          className="h-9 w-9 rounded-full"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <div className="rounded-full border border-border bg-card/80 px-4 py-1 text-xs font-semibold text-foreground backdrop-blur">
-          Town View
-        </div>
-        <Button
-          size="icon"
-          variant="secondary"
-          aria-label="Rotate town right"
-          onClick={() => rotateBy(-Math.PI / 8)}
-          className="h-9 w-9 rounded-full"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
     </div>
   )
 }

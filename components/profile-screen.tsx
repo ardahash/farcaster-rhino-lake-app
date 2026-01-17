@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
 import { CONTRACTS, GAME_ABI } from "@/lib/contracts"
-import { getLevelFromBarLocked } from "@/lib/game-state"
+import { getProgressionState } from "@/lib/game-state"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
 import { useErc20Balance } from "@/lib/use-erc20-balance"
@@ -69,7 +69,7 @@ export function ProfileScreen() {
   })
 
   const barDecimals = barBalance.decimals ?? 18
-  const level = getLevelFromBarLocked(cityState.barLocked, barDecimals)
+  const { level, isStarter } = getProgressionState(cityState.barLocked, barDecimals, cityId > 0n)
 
   const achievements = [
     { id: 1, name: "First City", icon: Sparkles, unlocked: cityId > 0n },
@@ -263,7 +263,9 @@ export function ProfileScreen() {
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground mb-1">City Level</p>
-              <p className="text-3xl font-bold text-primary">{level}</p>
+              <p className="text-3xl font-bold text-primary">
+                {cityId > 0n ? (isStarter ? "Level 1 (Starter)" : level) : "--"}
+              </p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground mb-1">City Power</p>

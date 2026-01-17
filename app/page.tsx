@@ -24,7 +24,7 @@ function RhinoLakeShell() {
 
   useEffect(() => {
     if (isCityIdLoading) return
-    if (!hasCity && (activeTab === "town" || activeTab === "temple")) {
+    if (!hasCity && activeTab === "town") {
       setActiveTab("home")
     }
   }, [activeTab, hasCity, isCityIdLoading])

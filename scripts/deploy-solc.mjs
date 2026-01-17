@@ -13,6 +13,7 @@ const CHAIN_ID = 8453;
 
 const ZEN_BASE = "0xf43eB8De897Fbc7F2502483B2Bef7Bb9EA179229";
 const BAR_BASE = "0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07";
+const PROFILE_PIC_TREASURY = "0x0F6A41a801E6B6490Da4e8FcC4394c70809deB9e";
 
 // -----------------------------
 // Paths / compile allowlist
@@ -26,6 +27,7 @@ const CONTRACT_FILES = [
   "CityNFT.sol",
   "RhinoLakeGame.sol",
   "ZenBurnToRhino.sol",
+  "ProfilePicNFT.sol",
 ];
 
 
@@ -115,7 +117,7 @@ function compileContracts() {
     }
   }
 
-  const required = ["RhinoToken", "CityNFT", "RhinoLakeGame", "ZenBurnToRhino"];
+  const required = ["RhinoToken", "CityNFT", "RhinoLakeGame", "ZenBurnToRhino", "ProfilePicNFT"];
   for (const r of required) {
     if (!compiled[r]) {
       console.log("Compiled contracts:", Object.keys(compiled));
@@ -142,6 +144,7 @@ async function main() {
   const resume = args.has("--resume");
 
   const pk = mustEnv("BASE_PRIVATE_KEY");
+  const usdc = mustEnv("NEXT_PUBLIC_USDC_ADDRESS");
   const provider = new ethers.JsonRpcProvider(RPC, CHAIN_ID);
   const wallet = new ethers.Wallet(pk, provider);
 
@@ -156,6 +159,7 @@ async function main() {
   let cityAddr;
   let gameAddr;
   let burnerAddr;
+  let profilePicAddr;
   let rhino;
   let city;
   let game;
@@ -165,6 +169,7 @@ async function main() {
     cityAddr = mustEnv("CITY_ADDR");
     gameAddr = mustEnv("GAME_ADDR");
     burnerAddr = mustEnv("BURNER_ADDR");
+    profilePicAddr = process.env.NEXT_PUBLIC_PROFILE_PIC_NFT_ADDRESS;
     rhino = new ethers.Contract(rhinoAddr, compiled.RhinoToken.abi, wallet);
     city = new ethers.Contract(cityAddr, compiled.CityNFT.abi, wallet);
     game = new ethers.Contract(gameAddr, compiled.RhinoLakeGame.abi, wallet);
@@ -173,6 +178,9 @@ async function main() {
     console.log("CityNFT:", cityAddr);
     console.log("Game:", gameAddr);
     console.log("Burner:", burnerAddr);
+    if (profilePicAddr) {
+      console.log("ProfilePicNFT:", profilePicAddr);
+    }
   } else {
     console.log("\nDeploying RhinoToken...");
     rhino = await deploy(wallet, compiled, "RhinoToken", [owner]);
@@ -222,6 +230,13 @@ async function main() {
     console.log("Burner:", burnerAddr);
   }
 
+  console.log("\nDeploying ProfilePicNFT...");
+  if (!profilePicAddr) {
+    const profilePic = await deploy(wallet, compiled, "ProfilePicNFT", [owner, usdc, PROFILE_PIC_TREASURY]);
+    profilePicAddr = await profilePic.getAddress();
+    console.log("ProfilePicNFT:", profilePicAddr);
+  }
+
   console.log("\nSetting RHINO minter = burner...");
   const isMinter = await rhino.minters(burnerAddr);
   if (!isMinter) {
@@ -257,6 +272,7 @@ async function main() {
   console.log("CityNFT:", cityAddr);
   console.log("Game:", gameAddr);
   console.log("Burner:", burnerAddr);
+  console.log("ProfilePicNFT:", profilePicAddr);
 }
 
 main().catch((e) => {

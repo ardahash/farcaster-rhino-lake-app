@@ -19,7 +19,18 @@ const INITIAL_STATE: GameState = {
   hasSeenOnboarding: false,
 }
 
-const LEVEL_BAR_THRESHOLDS = [25_000_000, 50_000_000, 200_000_000] as const
+const LEVEL_BAR_THRESHOLDS = [
+  5_000_000,
+  10_000_000,
+  20_000_000,
+  40_000_000,
+  80_000_000,
+  160_000_000,
+  320_000_000,
+  640_000_000,
+  1_280_000_000,
+  2_560_000_000,
+] as const
 
 const toBaseUnits = (tokens: number, decimals: number) => {
   const scale = BigInt(decimals)
@@ -40,20 +51,27 @@ export const getLevelFromBarLocked = (barLockedRaw: bigint, decimals: number) =>
   return level
 }
 
-export const getNextBarThreshold = (barLockedRaw: bigint, decimals: number) => {
-  const level = getLevelFromBarLocked(barLockedRaw, decimals)
-  if (level >= LEVEL_BAR_THRESHOLDS.length) {
+export const getProgressionState = (barLockedRaw: bigint, decimals: number, hasCity: boolean) => {
+  const rawLevel = getLevelFromBarLocked(barLockedRaw, decimals)
+  const level = hasCity ? Math.max(1, rawLevel) : 0
+  const isStarter = hasCity && rawLevel === 0
+  if (!hasCity || rawLevel >= LEVEL_BAR_THRESHOLDS.length) {
     return {
+      rawLevel,
       level,
+      isStarter,
       nextThresholdTokens: null,
       nextThresholdRaw: null,
     }
   }
-  const nextThresholdTokens = LEVEL_BAR_THRESHOLDS[level]
+  const nextIndex = Math.max(1, rawLevel)
+  const nextThresholdTokens = LEVEL_BAR_THRESHOLDS[nextIndex] ?? null
   return {
+    rawLevel,
     level,
+    isStarter,
     nextThresholdTokens,
-    nextThresholdRaw: toBaseUnits(nextThresholdTokens, decimals),
+    nextThresholdRaw: nextThresholdTokens ? toBaseUnits(nextThresholdTokens, decimals) : null,
   }
 }
 

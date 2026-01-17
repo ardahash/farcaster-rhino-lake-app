@@ -2,18 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useName } from "@coinbase/onchainkit/identity"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ConnectionDebug } from "@/components/connection-debug"
-import { ManifestStatusPanel } from "@/components/manifest-status"
+import { PfpAvatar } from "@/components/pfp-avatar"
 import { SwapPanel } from "@/components/swap-panel"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
-import { getNextBarThreshold } from "@/lib/game-state"
+import { getProgressionState } from "@/lib/game-state"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
 import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
@@ -341,7 +340,6 @@ export function HomeScreen() {
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "guest"
   const displayName = isAuthenticated ? (baseHandle ? `@${baseHandle}` : shortAddress) : "Rhino Lake Ruler"
   const username = isAuthenticated ? (baseName?.startsWith("@") ? baseName.slice(1) : baseName ?? shortAddress) : "rhino-lake"
-  const avatarUrl = "/rhino-avatar-purple.jpg"
   const avatarFallback = displayName[0] ?? "?"
 
   const isPrimaryLoading = isTxPending || isConnecting || isSwitching || isCityIdLoading || isCityLoading
@@ -350,11 +348,12 @@ export function HomeScreen() {
   const isCityReady = !isCityIdLoading
   const hasCity = isCityReady && cityId > 0n
   const barDecimals = barBalance.decimals ?? 18
-  const { level: cityLevel, nextThresholdTokens, nextThresholdRaw } = getNextBarThreshold(
+  const { level: cityLevel, isStarter, nextThresholdTokens, nextThresholdRaw } = getProgressionState(
     cityState.barLocked,
     barDecimals,
+    hasCity,
   )
-  const displayLevel = cityLevel > 0 ? cityLevel : 1
+  const displayLevel = hasCity ? cityLevel : 1
 
   const powerDisplay = formatTokenValue(cityState.barLocked, barDecimals)
   const warPowerDisplay = formatTokenValue(cityState.rhinoLocked, rhinoBalance.decimals ?? 18)
@@ -374,10 +373,11 @@ export function HomeScreen() {
       <Card className="game-card w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12 border-2 border-primary">
-              <AvatarImage src={avatarUrl} alt={displayName} />
-              <AvatarFallback>{avatarFallback}</AvatarFallback>
-            </Avatar>
+            <PfpAvatar
+              displayName={displayName}
+              fallback={avatarFallback}
+              className="w-12 h-12 border-2 border-primary"
+            />
             <div>
               <p className="font-semibold text-foreground">{displayName}</p>
               <p className="text-sm text-muted-foreground">@{username}</p>
@@ -385,7 +385,9 @@ export function HomeScreen() {
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">City Level</p>
-            <p className="text-2xl font-bold text-primary">{hasCity ? cityLevel : "--"}</p>
+            <p className="text-2xl font-bold text-primary">
+              {hasCity ? (isStarter ? "Level 1 (Starter)" : cityLevel) : "--"}
+            </p>
           </div>
         </div>
 
@@ -462,7 +464,7 @@ export function HomeScreen() {
         )}
         {!hasCity && isCityReady && (
           <div className="rounded-lg border border-border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
-            Mint a Town NFT to unlock the Town tab and enter the Temple.
+            Mint a City NFT to unlock the Town tab and start leveling up.
           </div>
         )}
 
@@ -586,7 +588,6 @@ export function HomeScreen() {
 
         {authError && !isAuthenticated && <p className="text-center text-xs text-muted-foreground">{authError}</p>}
         <ConnectionDebug />
-        <ManifestStatusPanel />
       </div>
 
       <div className="w-full max-w-md">
