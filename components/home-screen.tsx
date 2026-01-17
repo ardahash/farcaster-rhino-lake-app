@@ -460,6 +460,11 @@ export function HomeScreen() {
         {!isOnBase && isAuthenticated && (
           <p className="text-center text-xs text-amber-500">Switch to Base mainnet to manage your city.</p>
         )}
+        {!hasCity && isCityReady && (
+          <div className="rounded-lg border border-border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
+            Mint a Town NFT to unlock the Town tab and enter the Temple.
+          </div>
+        )}
 
         {!isAuthenticated ? (
           <Button
