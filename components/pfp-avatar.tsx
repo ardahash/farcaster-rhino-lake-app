@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react"
 import type { Address } from "viem"
-import { encodeFunctionData, maxUint256 } from "viem"
+import { encodeFunctionData } from "viem"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { useBaseAuth } from "@/lib/base-auth"
 import { PROFILE_PIC_NFT_ABI, ERC20_ABI } from "@/lib/contracts"
 import { PROFILE_PIC_NFT_ADDRESS, USDC_ADDRESS } from "@/lib/pfp-config"
-import { PFP_ITEMS } from "@/lib/pfp-catalog"
+import { PFP_ITEMS, USDC_DECIMALS } from "@/lib/pfp-catalog"
 import { useOwnedPfps } from "@/hooks/use-owned-pfps"
 import { useActivePfp } from "@/hooks/use-active-pfp"
 import { useUsdcAllowance } from "@/hooks/use-usdc-allowance"
@@ -16,13 +16,24 @@ import { useToast } from "@/hooks/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 const rarityStyles: Record<string, string> = {
   Regular: "bg-muted text-foreground",
   Epic: "bg-blue-500/20 text-blue-200",
   Legendary: "bg-amber-500/20 text-amber-200",
 }
+
+const EXTRA_USDC_ALLOWANCE = 10n ** BigInt(USDC_DECIMALS)
 
 type PfpAvatarProps = {
   displayName: string
@@ -124,7 +135,8 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
       }
 
       const currentAllowance = allowance ?? 0n
-      if (currentAllowance < item.priceRaw) {
+      const approvalAmount = item.priceRaw + EXTRA_USDC_ALLOWANCE
+      if (currentAllowance < approvalAmount) {
         const approvalHash = await sendTransactionAsync({
           chainId: BASE_MAINNET_CHAIN_ID,
           account: address,
@@ -132,7 +144,7 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
           data: encodeFunctionData({
             abi: ERC20_ABI,
             functionName: "approve",
-            args: [PROFILE_PIC_NFT_ADDRESS, maxUint256],
+            args: [PROFILE_PIC_NFT_ADDRESS, approvalAmount],
           }),
         })
         await publicClient.waitForTransactionReceipt({ hash: approvalHash })
@@ -232,7 +244,7 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
           </Avatar>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Profile Picture Shop</DialogTitle>
           <DialogDescription>Buy with USDC and set your active avatar.</DialogDescription>
@@ -295,6 +307,14 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
         {!isAuthenticated && (
           <p className="text-xs text-muted-foreground text-center">Connect your Base account to buy or set active.</p>
         )}
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary" className="w-full sm:w-auto">
+              Close
+            </Button>
+          </DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

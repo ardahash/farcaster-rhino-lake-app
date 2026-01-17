@@ -19,8 +19,6 @@ export const PFP_ITEMS: readonly PfpItem[] = [
   { id: 4, src: "/PPnft4.png", rarity: "Epic", priceUsdc: 10, priceRaw: toRaw(10) },
   { id: 5, src: "/PPnft5.png", rarity: "Legendary", priceUsdc: 15, priceRaw: toRaw(15) },
   { id: 6, src: "/PPnft6.png", rarity: "Legendary", priceUsdc: 15, priceRaw: toRaw(15) },
-  { id: 7, src: "/PPnft7.png", rarity: "Legendary", priceUsdc: 15, priceRaw: toRaw(15) },
-  { id: 8, src: "/PPnft8.png", rarity: "Legendary", priceUsdc: 15, priceRaw: toRaw(15) },
 ] as const
 
 export const PFP_TOKEN_IDS = PFP_ITEMS.map((item) => item.id) as readonly number[]
