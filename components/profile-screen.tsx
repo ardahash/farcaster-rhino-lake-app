@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
 import { CONTRACTS, GAME_ABI } from "@/lib/contracts"
+import { getLevelFromBarLocked } from "@/lib/game-state"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
 import { useErc20Balance } from "@/lib/use-erc20-balance"
@@ -51,7 +52,7 @@ export function ProfileScreen() {
 
   const { data: resolvedName, isLoading: isNameLoading } = useName({ address, chain: base })
   const { cityId } = useCityId(address)
-  const { cityState, level, ethClaimable, refetch: refetchCityState } = useCityState(cityId)
+  const { cityState, ethClaimable, refetch: refetchCityState } = useCityState(cityId, address)
 
   const barBalance = useErc20Balance({
     token: CONTRACTS.BAR,
@@ -66,6 +67,9 @@ export function ProfileScreen() {
     chainId: DEFAULT_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
   })
+
+  const barDecimals = barBalance.decimals ?? 18
+  const level = getLevelFromBarLocked(cityState.barLocked, barDecimals)
 
   const achievements = [
     { id: 1, name: "First City", icon: Sparkles, unlocked: cityId > 0n },
@@ -206,7 +210,6 @@ export function ProfileScreen() {
   const rhinoLockedDisplay = formatTokenValue(cityState.rhinoLocked, rhinoBalance.decimals ?? 18)
   const ethClaimableDisplay = useMemo(() => formatTokenValue(ethClaimable, 18), [ethClaimable])
 
-  const barDecimals = barBalance.decimals ?? 18
   const barBadges = [
     { label: "BAR Whale 1M+", threshold: 1_000_000 },
     { label: "BAR Titan 10M+", threshold: 10_000_000 },
@@ -263,7 +266,7 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-primary">{level}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Power (BAR Locked)</p>
+              <p className="text-sm text-muted-foreground mb-1">City Power</p>
               <p className="text-3xl font-bold text-foreground">{powerDisplay}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">

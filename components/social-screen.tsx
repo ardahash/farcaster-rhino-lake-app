@@ -8,7 +8,7 @@ import { useBaseAuth } from "@/lib/base-auth"
 import { resolveBaseName } from "@/lib/base-names"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, CITY_NFT_ABI, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
-import { getTownAssetForLevel } from "@/lib/game-state"
+import { getLevelFromBarLocked, getTownAssetForLevel } from "@/lib/game-state"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
 import { useErc20Balance } from "@/lib/use-erc20-balance"
@@ -73,7 +73,7 @@ export function SocialScreen() {
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
 
   const { cityId } = useCityId(address)
-  const { cityState, refetch: refetchCityState } = useCityState(cityId)
+  const { cityState, refetch: refetchCityState } = useCityState(cityId, address)
   const [towns, setTowns] = useState<TownEntry[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -180,12 +180,6 @@ export function SocialScreen() {
             functionName: "cities" as const,
             args: [id],
           },
-          {
-            address: CONTRACTS.GAME,
-            abi: GAME_ABI,
-            functionName: "levelOf" as const,
-            args: [id],
-          },
         ])
 
         const results = await publicClient.multicall({
@@ -194,9 +188,8 @@ export function SocialScreen() {
         })
 
         for (let index = 0; index < chunkIds.length; index += 1) {
-          const ownerResult = results[index * 3]
-          const cityResult = results[index * 3 + 1]
-          const levelResult = results[index * 3 + 2]
+          const ownerResult = results[index * 2]
+          const cityResult = results[index * 2 + 1]
 
           if (ownerResult.status !== "success" || !ownerResult.result) continue
 
@@ -206,7 +199,7 @@ export function SocialScreen() {
           const cityState = normalizeCityState(
             cityResult.status === "success" ? (cityResult.result as any) : null,
           )
-          const level = levelResult.status === "success" ? Number(levelResult.result ?? 0) : 0
+          const level = getLevelFromBarLocked(cityState.barLocked ?? 0n, resolvedBarDecimals)
 
           entries.push({
             cityId: chunkIds[index],
@@ -237,7 +230,7 @@ export function SocialScreen() {
     } finally {
       setIsLoading(false)
     }
-  }, [publicClient, resolveTownNames])
+  }, [publicClient, resolveTownNames, resolvedBarDecimals])
 
   useEffect(() => {
     fetchTowns()

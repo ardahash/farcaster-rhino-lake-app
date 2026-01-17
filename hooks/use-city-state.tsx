@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { usePublicClient } from "wagmi"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
+import type { Address } from "viem"
 import { CONTRACTS, GAME_ABI } from "@/lib/contracts"
 
 type RawCityState =
@@ -45,64 +46,55 @@ const normalizeCityState = (value: RawCityState | undefined | null) => {
   }
 }
 
-export function useCityState(cityId: bigint) {
+export function useCityState(cityId: bigint, address?: Address | null) {
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
-  const enabled = Boolean(publicClient && cityId && cityId > 0n)
+  const enabled = Boolean(publicClient && address && cityId && cityId > 0n)
 
   const query = useQuery({
-    queryKey: ["city-state", BASE_MAINNET_CHAIN_ID, cityId.toString()],
+    queryKey: ["city-state", BASE_MAINNET_CHAIN_ID, address ?? "anon", cityId.toString()],
     enabled,
     refetchInterval: 15000,
     queryFn: async () => {
       if (!publicClient) {
         throw new Error("RPC not ready.")
       }
-      const [cityResult, levelResult, claimableResult, cooldownResult, costResult] =
-        await publicClient.multicall({
-          contracts: [
-            {
-              address: CONTRACTS.GAME,
-              abi: GAME_ABI,
-              functionName: "cities",
-              args: [cityId],
-            },
-            {
-              address: CONTRACTS.GAME,
-              abi: GAME_ABI,
-              functionName: "levelOf",
-              args: [cityId],
-            },
-            {
-              address: CONTRACTS.GAME,
-              abi: GAME_ABI,
-              functionName: "ethClaimable",
-              args: [cityId],
-            },
-            {
-              address: CONTRACTS.GAME,
-              abi: GAME_ABI,
-              functionName: "attackCooldown",
-            },
-            {
-              address: CONTRACTS.GAME,
-              abi: GAME_ABI,
-              functionName: "attackCostRhino",
-            },
-          ],
-          allowFailure: true,
-        })
+      const [cityResult, claimableResult, cooldownResult, costResult] = await publicClient.multicall({
+        contracts: [
+          {
+            address: CONTRACTS.GAME,
+            abi: GAME_ABI,
+            functionName: "cities",
+            args: [cityId],
+          },
+          {
+            address: CONTRACTS.GAME,
+            abi: GAME_ABI,
+            functionName: "ethClaimable",
+            args: [cityId],
+          },
+          {
+            address: CONTRACTS.GAME,
+            abi: GAME_ABI,
+            functionName: "attackCooldown",
+          },
+          {
+            address: CONTRACTS.GAME,
+            abi: GAME_ABI,
+            functionName: "attackCostRhino",
+          },
+        ],
+        allowFailure: true,
+      })
 
       const cityState = normalizeCityState(
         cityResult.status === "success" ? (cityResult.result as RawCityState) : null,
       )
-      const level = levelResult.status === "success" ? Number(levelResult.result ?? 0) : 0
       const ethClaimable = claimableResult.status === "success" ? (claimableResult.result as bigint) : 0n
       const attackCooldown = cooldownResult.status === "success" ? Number(cooldownResult.result ?? 0) : 0
       const attackCostRhino = costResult.status === "success" ? (costResult.result as bigint) : 0n
 
       return {
         cityState,
-        level,
         ethClaimable,
         attackCooldown,
         attackCostRhino,
@@ -111,22 +103,34 @@ export function useCityState(cityId: bigint) {
   })
 
   return useMemo(
-    () => ({
-      cityState: query.data?.cityState ?? normalizeCityState(null),
-      level: query.data?.level ?? 0,
-      ethClaimable: query.data?.ethClaimable ?? 0n,
-      attackCooldown: query.data?.attackCooldown ?? 0,
-      attackCostRhino: query.data?.attackCostRhino ?? 0n,
-      isLoading: query.isLoading,
-      error: query.error ?? null,
-      refetch: query.refetch,
-    }),
+    () => {
+      if (!enabled) {
+        return {
+          cityState: normalizeCityState(null),
+          ethClaimable: 0n,
+          attackCooldown: 0,
+          attackCostRhino: 0n,
+          isLoading: false,
+          error: null,
+          refetch: query.refetch,
+        }
+      }
+      return {
+        cityState: query.data?.cityState ?? normalizeCityState(null),
+        ethClaimable: query.data?.ethClaimable ?? 0n,
+        attackCooldown: query.data?.attackCooldown ?? 0,
+        attackCostRhino: query.data?.attackCostRhino ?? 0n,
+        isLoading: query.isLoading,
+        error: query.error ?? null,
+        refetch: query.refetch,
+      }
+    },
     [
+      enabled,
       query.data?.attackCooldown,
       query.data?.attackCostRhino,
       query.data?.cityState,
       query.data?.ethClaimable,
-      query.data?.level,
       query.error,
       query.isLoading,
       query.refetch,

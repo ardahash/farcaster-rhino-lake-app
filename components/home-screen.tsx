@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useName } from "@coinbase/onchainkit/identity"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -13,10 +13,11 @@ import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
-import { getTownAssetForLevel } from "@/lib/game-state"
+import { getNextBarThreshold, getTownAssetForLevel } from "@/lib/game-state"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
 import { useErc20Balance, useNativeBalance } from "@/lib/use-erc20-balance"
+import { Progress } from "@/components/ui/progress"
 import { Coins, Loader2, Shield, Sparkles, Swords } from "lucide-react"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
 import { base } from "wagmi/chains"
@@ -53,13 +54,10 @@ export function HomeScreen() {
 
   const { data: resolvedName } = useName({ address, chain: base })
   const { cityId, isLoading: isCityIdLoading, refetch: refetchCityId } = useCityId(address)
-  const {
-    cityState,
-    level,
-    ethClaimable,
-    isLoading: isCityLoading,
-    refetch: refetchCityState,
-  } = useCityState(cityId)
+  const { cityState, ethClaimable, isLoading: isCityLoading, refetch: refetchCityState } = useCityState(
+    cityId,
+    address,
+  )
 
   const zenBalance = useErc20Balance({
     token: CONTRACTS.ZEN,
@@ -107,6 +105,13 @@ export function HomeScreen() {
     rhinoBalance.refetch,
     zenBalance.refetch,
   ])
+
+  useEffect(() => {
+    setBarLockAmount("")
+    setRhinoLockAmount("")
+    setActiveAction(null)
+    refetchAll()
+  }, [address, chainId, refetchAll])
 
   const ensureBaseNetwork = async () => {
     const activeChainId = chainId ?? BASE_MAINNET_CHAIN_ID
@@ -343,10 +348,15 @@ export function HomeScreen() {
   const isActionDisabled = isPrimaryLoading || !isAuthenticated || !isOnBase
   const isCityReady = !isCityIdLoading
   const hasCity = isCityReady && cityId > 0n
-  const displayLevel = level > 0 ? level : 1
+  const barDecimals = barBalance.decimals ?? 18
+  const { level: cityLevel, nextThresholdTokens, nextThresholdRaw } = getNextBarThreshold(
+    cityState.barLocked,
+    barDecimals,
+  )
+  const displayLevel = cityLevel > 0 ? cityLevel : 1
   const townAsset = getTownAssetForLevel(displayLevel)
 
-  const powerDisplay = formatTokenValue(cityState.barLocked, barBalance.decimals ?? 18)
+  const powerDisplay = formatTokenValue(cityState.barLocked, barDecimals)
   const warPowerDisplay = formatTokenValue(cityState.rhinoLocked, rhinoBalance.decimals ?? 18)
 
   const zenBalanceDisplay = formatTokenValue(zenBalance.raw, zenBalance.decimals ?? 18)
@@ -355,6 +365,9 @@ export function HomeScreen() {
   const ethBalanceDisplay = formatTokenValue(ethBalance.raw, 18)
 
   const highlightSwap = isAuthenticated && !barBalance.isLoading && barBalance.raw === 0n
+  const progressValue = nextThresholdRaw
+    ? Math.min(Number((cityState.barLocked * 10000n) / nextThresholdRaw) / 100, 100)
+    : 100
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
@@ -372,7 +385,7 @@ export function HomeScreen() {
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">City Level</p>
-            <p className="text-2xl font-bold text-primary">{level}</p>
+            <p className="text-2xl font-bold text-primary">{hasCity ? cityLevel : "--"}</p>
           </div>
         </div>
 
@@ -389,15 +402,29 @@ export function HomeScreen() {
             <div className="bg-card/90 backdrop-blur-sm px-4 py-2 rounded-full border border-border">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span className="font-mono font-semibold text-foreground">{powerDisplay} Power</span>
+                <span className="font-mono font-semibold text-foreground">{powerDisplay} City Power</span>
               </div>
             </div>
           </div>
         </div>
 
+        {hasCity && (
+          <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>BAR Locked</span>
+              <span>
+                {nextThresholdTokens
+                  ? `BAR Locked: ${powerDisplay} / ${nextThresholdTokens.toLocaleString()} BAR`
+                  : "Max Level"}
+              </span>
+            </div>
+            <Progress value={progressValue} />
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Power (BAR Locked)</p>
+            <p className="text-xs text-muted-foreground mb-1">City Power</p>
             <p className="text-xl font-bold text-foreground">{powerDisplay}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">

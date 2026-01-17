@@ -19,31 +19,50 @@ const INITIAL_STATE: GameState = {
   hasSeenOnboarding: false,
 }
 
-const LEVEL_BAR_THRESHOLDS = [
-  1_000_000,
-  10_000_000,
-  20_000_000,
-  40_000_000,
-  80_000_000,
-  120_000_000,
-  200_000_000,
-  400_000_000,
-  700_000_000,
-  1_000_000_000,
-  10_000_000_000,
-] as const
+const LEVEL_BAR_THRESHOLDS = [25_000_000, 50_000_000, 200_000_000] as const
 
-export const getLevelFromBarLocked = (barLockedTokens: number) => {
-  if (!Number.isFinite(barLockedTokens) || barLockedTokens <= 0) {
+const toBaseUnits = (tokens: number, decimals: number) => {
+  const scale = BigInt(decimals)
+  return BigInt(tokens) * 10n ** scale
+}
+
+export const getLevelFromBarLocked = (barLockedRaw: bigint, decimals: number) => {
+  if (!barLockedRaw || barLockedRaw <= 0n) {
     return 0
   }
   let level = 0
   for (let i = 0; i < LEVEL_BAR_THRESHOLDS.length; i += 1) {
-    if (barLockedTokens >= LEVEL_BAR_THRESHOLDS[i]) {
+    const thresholdRaw = toBaseUnits(LEVEL_BAR_THRESHOLDS[i], decimals)
+    if (barLockedRaw >= thresholdRaw) {
       level = i + 1
     }
   }
   return level
+}
+
+export const getNextBarThreshold = (barLockedRaw: bigint, decimals: number) => {
+  const level = getLevelFromBarLocked(barLockedRaw, decimals)
+  if (level >= LEVEL_BAR_THRESHOLDS.length) {
+    return {
+      level,
+      nextThresholdTokens: null,
+      nextThresholdRaw: null,
+    }
+  }
+  const nextThresholdTokens = LEVEL_BAR_THRESHOLDS[level]
+  return {
+    level,
+    nextThresholdTokens,
+    nextThresholdRaw: toBaseUnits(nextThresholdTokens, decimals),
+  }
+}
+
+export const getTownModelForLevel = (level: number) => {
+  const clampedLevel = Math.min(Math.max(level, 1), 10)
+  return {
+    level: clampedLevel,
+    src: `/3d/lvl${clampedLevel}.glb`,
+  }
 }
 
 export const getTownAssetForLevel = (level: number) => {
