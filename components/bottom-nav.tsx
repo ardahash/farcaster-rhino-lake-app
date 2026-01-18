@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Castle, Church, User, BookOpen, Users } from "lucide-react"
+import { Home, Castle, Church, Store, User, BookOpen, Users } from "lucide-react"
 
 interface BottomNavProps {
   activeTab: string
@@ -13,6 +13,7 @@ export function BottomNav({ activeTab, onTabChange, showTown = true }: BottomNav
     { id: "home", label: "Home", icon: Home },
     { id: "town", label: "Town", icon: Castle },
     { id: "temple", label: "Temple", icon: Church },
+    { id: "market", label: "Market", icon: Store },
     { id: "social", label: "Social", icon: Users },
     { id: "profile", label: "Profile", icon: User },
     { id: "info", label: "Info", icon: BookOpen },

@@ -7,6 +7,7 @@ import { OnboardingModal } from "@/components/onboarding-modal"
 import { HomeScreen } from "@/components/home-screen"
 import { TempleScreen } from "@/components/temple-screen"
 import { TownScreen } from "@/components/town-screen"
+import { MarketScreen } from "@/components/market-screen"
 import { SocialScreen } from "@/components/social-screen"
 import { ProfileScreen } from "@/components/profile-screen"
 import { InfoScreen } from "@/components/info-screen"
@@ -39,6 +40,7 @@ function RhinoLakeShell() {
         {activeTab === "home" && <HomeScreen />}
         {activeTab === "town" && hasCity && <TownScreen />}
         {activeTab === "temple" && <TempleScreen />}
+        {activeTab === "market" && <MarketScreen />}
         {activeTab === "social" && <SocialScreen />}
         {activeTab === "profile" && <ProfileScreen />}
         {activeTab === "info" && <InfoScreen />}

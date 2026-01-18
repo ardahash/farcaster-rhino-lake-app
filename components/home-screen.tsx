@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useName } from "@coinbase/onchainkit/identity"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { GuideCard } from "@/components/guide-card"
 import {
   Dialog,
   DialogClose,
@@ -390,6 +391,12 @@ export function HomeScreen() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
+      <GuideCard
+        title="Monarch's Orders"
+        description="Mint your city, lock BAR to grow power, and lock RHINO to boost war strength. Check balances and keep your empire alive."
+        modelSrc="/3d/Monarch.glb"
+      />
+
       <Dialog open={isCtaOpen} onOpenChange={setIsCtaOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -632,7 +639,12 @@ export function HomeScreen() {
       </div>
 
       <div id="swap-panel" className="w-full max-w-md">
-        <SwapPanel highlightSwap={highlightSwap} onSwapSuccess={refetchAll} />
+        <SwapPanel
+          highlightSwap={highlightSwap}
+          onSwapSuccess={refetchAll}
+          showZenSwaps={false}
+          showBarSwaps
+        />
       </div>
     </div>
   )

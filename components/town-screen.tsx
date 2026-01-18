@@ -1,6 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { buildPathData, sampleAtS } from "@/lib/path/pathMath"
 import { RHINO_LAKE_IMAGE_SIZE, RHINO_LAKE_ROAD_PATH_PX } from "@/public/roadPath"
 
@@ -8,12 +10,25 @@ const SCENE_WIDTH = RHINO_LAKE_IMAGE_SIZE.width
 const SCENE_HEIGHT = RHINO_LAKE_IMAGE_SIZE.height
 const WALK_SPEED = 240
 const FACING_EPSILON = 0.05
+const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
+
+const DEFAULT_TOWN_LAYOUT = {
+  templePanel: { x: 0.5, y: 0.22 },
+  marketPanel: { x: 0.794, y: 0.273 },
+  homePanel: { x: 0.151, y: 0.397 },
+} as const
 
 type Direction = -1 | 0 | 1
 
-function TownScene() {
+type TownSceneProps = {
+  navPanels?: ReactNode
+  sceneRef?: RefObject<HTMLDivElement>
+}
+
+function TownScene({ navPanels, sceneRef: externalSceneRef }: TownSceneProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null)
-  const sceneRef = useRef<HTMLDivElement | null>(null)
+  const internalSceneRef = useRef<HTMLDivElement | null>(null)
+  const sceneRef = externalSceneRef ?? internalSceneRef
   const characterRef = useRef<HTMLImageElement | null>(null)
   const [s, setS] = useState(0)
   const [direction, setDirection] = useState<Direction>(0)
@@ -273,13 +288,15 @@ function TownScene() {
             className="absolute inset-0 h-full w-full object-cover pointer-events-none select-none"
           />
 
+          {navPanels}
+
           <img
             ref={characterRef}
             src={spriteSrc}
             alt="Monk"
             draggable={false}
             onLoad={updateMetrics}
-            className="absolute h-60 w-auto select-none pointer-events-none"
+            className="absolute h-[7.5rem] w-auto select-none pointer-events-none"
             style={{ left: `${spritePosition.left}px`, top: `${spritePosition.top}px` }}
           />
         </div>
@@ -289,9 +306,135 @@ function TownScene() {
 }
 
 export function TownScreen() {
+  const [layout, setLayout] = useState(() => DEFAULT_TOWN_LAYOUT)
+  const [isEditing, setIsEditing] = useState(false)
+  const sceneRef = useRef<HTMLDivElement | null>(null)
+  const dragOffsetRef = useRef({ x: 0, y: 0 })
+  const isDraggingRef = useRef(false)
+  const dragTargetRef = useRef<"templePanel" | "marketPanel" | "homePanel" | null>(null)
+  const isDev = process.env.NODE_ENV === "development"
+
+  const activeLayout = isDev ? layout : DEFAULT_TOWN_LAYOUT
+  const navItems = [
+    { key: "templePanel", label: "Temple", disabled: false },
+    { key: "marketPanel", label: "Market", disabled: false },
+    { key: "homePanel", label: "Home", disabled: false },
+  ] as const
+
+  useEffect(() => {
+    if (!isDev) return
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === "e") {
+        setIsEditing((prev) => !prev)
+      }
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [isDev])
+
+  const handleDragStart =
+    (target: "templePanel" | "marketPanel" | "homePanel") =>
+    (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDev || !isEditing) return
+    const rect = sceneRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const targetLayout = activeLayout[target]
+    const currentX = rect.left + targetLayout.x * rect.width
+    const currentY = rect.top + targetLayout.y * rect.height
+    dragOffsetRef.current = {
+      x: event.clientX - currentX,
+      y: event.clientY - currentY,
+    }
+    isDraggingRef.current = true
+    dragTargetRef.current = target
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const handleDragMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDev || !isEditing || !isDraggingRef.current) return
+    const target = dragTargetRef.current
+    if (!target) return
+    const rect = sceneRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const x = clamp01((event.clientX - rect.left - dragOffsetRef.current.x) / rect.width)
+    const y = clamp01((event.clientY - rect.top - dragOffsetRef.current.y) / rect.height)
+    setLayout((prev) => ({ ...prev, [target]: { x, y } }))
+  }
+
+  const handleDragEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDev || !isEditing) return
+    isDraggingRef.current = false
+    dragTargetRef.current = null
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    } catch {
+      // Ignore release errors.
+    }
+  }
+
+  const panelInteraction = isEditing ? "pointer-events-auto cursor-grab" : "pointer-events-none"
+
+  const navPanels = navItems.map((item) => {
+    const panel = activeLayout[item.key]
+    const panelStyle = {
+      left: `${panel.x * 100}%`,
+      top: `${panel.y * 100}%`,
+    }
+    return (
+      <div
+        key={item.key}
+        className={`absolute -translate-x-1/2 -translate-y-1/2 ${panelInteraction}`}
+        style={panelStyle}
+        onPointerDown={handleDragStart(item.key)}
+        onPointerMove={handleDragMove}
+        onPointerUp={handleDragEnd}
+        onPointerCancel={handleDragEnd}
+      >
+        <Card className="game-card w-[min(70vw,140px)] p-2 bg-card/80 backdrop-blur border-border/60">
+          <Button
+            size="sm"
+            variant={item.disabled ? "outline" : "secondary"}
+            className="w-full"
+            disabled={item.disabled}
+          >
+            {item.label}
+          </Button>
+        </Card>
+      </div>
+    )
+  })
+
   return (
-    <div className="flex-1">
-      <TownScene />
+    <div className="flex-1 relative">
+      <TownScene sceneRef={sceneRef} navPanels={navPanels} />
+      {isDev && (
+        <div className="absolute right-4 top-4 flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={isEditing ? "secondary" : "outline"}
+            onClick={() => setIsEditing((prev) => !prev)}
+            className="h-8 px-3 text-xs"
+          >
+            {isEditing ? "Editing" : "Edit Layout"}
+          </Button>
+        </div>
+      )}
+
+      {isDev && isEditing && (
+        <div className="absolute left-4 top-4 rounded-md border border-border/60 bg-card/70 px-3 py-2 text-xs backdrop-blur">
+          <p className="font-semibold text-foreground">Layout</p>
+          <p className="text-muted-foreground">
+            templePanel: {activeLayout.templePanel.x.toFixed(3)}, {activeLayout.templePanel.y.toFixed(3)}
+          </p>
+          <p className="text-muted-foreground">
+            marketPanel: {activeLayout.marketPanel.x.toFixed(3)}, {activeLayout.marketPanel.y.toFixed(3)}
+          </p>
+          <p className="text-muted-foreground">
+            homePanel: {activeLayout.homePanel.x.toFixed(3)}, {activeLayout.homePanel.y.toFixed(3)}
+          </p>
+          <p className="text-muted-foreground">Press "E" to toggle edit.</p>
+        </div>
+      )}
     </div>
   )
 }

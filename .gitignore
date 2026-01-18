@@ -18,6 +18,11 @@ yarn-error.log*
 
 # env files
 .env*
+.env
+
+
+
+.paymaster-allowlist.txt
 
 #   vercel
 .vercel
@@ -29,3 +34,4 @@ next-env.d.ts
 # login workflow from my working dapp lol
 ./BarGatcha/
 /BarGatcha
+

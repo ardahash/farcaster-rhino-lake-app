@@ -81,11 +81,15 @@ const toBigInt = (value?: string) => {
 }
 
 export function SwapPanel({
-  highlightSwap,
+  highlightSwap = false,
   onSwapSuccess,
+  showZenSwaps = true,
+  showBarSwaps = true,
 }: {
-  highlightSwap: boolean
+  highlightSwap?: boolean
   onSwapSuccess?: () => void
+  showZenSwaps?: boolean
+  showBarSwaps?: boolean
 }) {
   const { address, chainId, isAuthenticated, isConnecting, signIn } = useBaseAuth()
   const { toast } = useToast()
@@ -98,6 +102,49 @@ export function SwapPanel({
   const [usdcAmount, setUsdcAmount] = useState(DEFAULT_USDC_AMOUNT)
   const [barAmount, setBarAmount] = useState("1000")
   const [activeSwap, setActiveSwap] = useState<"eth-zen" | "usdc-zen" | "eth-bar" | "bar-eth" | null>(null)
+
+  const shiftDecimal = (value: string, direction: "up" | "down") => {
+    const raw = value.trim()
+    if (!raw || raw === ".") return "0"
+    let negative = false
+    let normalized = raw
+    if (normalized.startsWith("-")) {
+      negative = true
+      normalized = normalized.slice(1)
+    }
+    if (normalized.startsWith(".")) {
+      normalized = `0${normalized}`
+    }
+    const [intPart = "0", fracPart = ""] = normalized.split(".")
+    const digits = `${intPart}${fracPart}`.replace(/^0+(?=\d)/, "") || "0"
+    const scale = fracPart.length
+    const nextScale = direction === "up" ? scale - 1 : scale + 1
+
+    const formatDecimal = (nextDigits: string, nextScaleValue: number) => {
+      let integer = nextDigits
+      let fraction = ""
+      if (nextScaleValue > 0) {
+        if (nextDigits.length > nextScaleValue) {
+          const splitAt = nextDigits.length - nextScaleValue
+          integer = nextDigits.slice(0, splitAt)
+          fraction = nextDigits.slice(splitAt)
+        } else {
+          integer = "0"
+          fraction = `${"0".repeat(nextScaleValue - nextDigits.length)}${nextDigits}`
+        }
+      } else if (nextScaleValue < 0) {
+        integer = `${nextDigits}${"0".repeat(Math.abs(nextScaleValue))}`
+      }
+      const assembled = fraction ? `${integer}.${fraction}` : integer
+      const trimmed = assembled.replace(/\.?0+$/, "")
+      const result = trimmed === "" ? "0" : trimmed
+      return negative && result !== "0" ? `-${result}` : result
+    }
+
+    return formatDecimal(digits, nextScale)
+  }
+
+  const heading = showZenSwaps && !showBarSwaps ? "Swap to ZEN" : showBarSwaps && !showZenSwaps ? "Swap BAR" : "Swap"
 
   const usdcBalance = useErc20Balance({
     token: USDC_ADDRESS,
@@ -403,11 +450,11 @@ export function SwapPanel({
     <Card className="game-card w-full max-w-md p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-lg text-foreground">Swap to ZEN</h3>
+          <h3 className="font-semibold text-lg text-foreground">{heading}</h3>
           <p className="text-xs text-muted-foreground">Powered by CDP Trade API</p>
           <p className="text-xs text-muted-foreground">Base mainnet swaps only</p>
-          <p className="text-xs text-muted-foreground">ZEN Balance: {zenBalanceDisplay}</p>
-          <p className="text-xs text-muted-foreground">BAR Balance: {barBalanceDisplay}</p>
+          {showZenSwaps && <p className="text-xs text-muted-foreground">ZEN Balance: {zenBalanceDisplay}</p>}
+          {showBarSwaps && <p className="text-xs text-muted-foreground">BAR Balance: {barBalanceDisplay}</p>}
         </div>
         <RefreshCcw className="w-4 h-4 text-muted-foreground" />
       </div>
@@ -417,130 +464,38 @@ export function SwapPanel({
       )}
 
       <div className="space-y-3">
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground">ETH Amount</label>
-          <Input
-            type="number"
-            min="0"
-            step="0.0001"
-            value={ethAmount}
-            onChange={(event) => setEthAmount(event.target.value)}
-            className="h-11"
-          />
-          <p className="text-xs text-muted-foreground">Balance: {ethBalanceDisplay}</p>
-          <Button
-            onClick={() =>
-              executeSwap({
-                amount: ethAmount,
-                decimals: 18,
-                tokenIn: NATIVE_ETH_ADDRESS,
-                tokenOut: CONTRACTS.ZEN,
-                swapKey: "eth-zen",
-                balanceRaw: ethBalance.raw,
-                balanceLoading: ethBalance.isLoading,
-                balanceLabel: "ETH",
-              })
-            }
-            disabled={isSwapDisabled}
-            className="w-full h-12 text-base font-semibold"
-            size="lg"
-            variant={highlightSwap ? "default" : "outline"}
-          >
-            {activeSwap === "eth-zen" ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Swapping ETH...
-              </>
-            ) : (
-              <>
-                <ArrowLeftRight className="w-4 h-4 mr-2" />
-                Swap ETH to ZEN
-              </>
-            )}
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground">USDC Amount</label>
-          <Input
-            type="number"
-            min="0"
-            step="0.1"
-            value={usdcAmount}
-            onChange={(event) => setUsdcAmount(event.target.value)}
-            className="h-11"
-          />
-          <p className="text-xs text-muted-foreground">Balance: {usdcBalanceDisplay}</p>
-          <Button
-            onClick={() =>
-              executeSwap({
-                amount: usdcAmount,
-                decimals: usdcDecimals,
-                tokenIn: USDC_ADDRESS,
-                tokenOut: CONTRACTS.ZEN,
-                swapKey: "usdc-zen",
-                balanceRaw: usdcBalance.raw,
-                balanceLoading: usdcBalance.isLoading,
-                balanceLabel: "USDC",
-              })
-            }
-            disabled={isSwapDisabled}
-            className="w-full h-12 text-base font-semibold"
-            size="lg"
-            variant={highlightSwap ? "default" : "outline"}
-          >
-            {activeSwap === "usdc-zen" ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Swapping USDC...
-              </>
-            ) : (
-              <>
-                <ArrowLeftRight className="w-4 h-4 mr-2" />
-                Swap USDC to ZEN
-              </>
-            )}
-          </Button>
-        </div>
-        <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-          <p>ETH Balance: {ethBalanceDisplay}</p>
-          <p>Swaps route through the best available Base liquidity.</p>
-        </div>
-
-        <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-2">
-          <p className="font-semibold text-foreground">Get $BAR</p>
-          <p>Swap in-app to keep gas sponsorship options open.</p>
-          <div className="grid grid-cols-1 gap-2">
+        {showZenSwaps && (
+          <>
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground">ETH Amount</label>
               <Input
                 type="number"
                 min="0"
                 step="0.0001"
-                value={ethBarAmount}
-                onChange={(event) => setEthBarAmount(event.target.value)}
+                value={ethAmount}
+                onChange={(event) => setEthAmount(event.target.value)}
                 className="h-11"
               />
               <p className="text-xs text-muted-foreground">Balance: {ethBalanceDisplay}</p>
               <Button
-                type="button"
-                variant="outline"
-                className="w-full"
                 onClick={() =>
                   executeSwap({
-                    amount: ethBarAmount,
+                    amount: ethAmount,
                     decimals: 18,
                     tokenIn: NATIVE_ETH_ADDRESS,
-                    tokenOut: CONTRACTS.BAR,
-                    swapKey: "eth-bar",
+                    tokenOut: CONTRACTS.ZEN,
+                    swapKey: "eth-zen",
                     balanceRaw: ethBalance.raw,
                     balanceLoading: ethBalance.isLoading,
                     balanceLabel: "ETH",
                   })
                 }
                 disabled={isSwapDisabled}
+                className="w-full h-12 text-base font-semibold"
+                size="lg"
+                variant={highlightSwap ? "default" : "outline"}
               >
-                {activeSwap === "eth-bar" ? (
+                {activeSwap === "eth-zen" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Swapping ETH...
@@ -548,55 +503,193 @@ export function SwapPanel({
                 ) : (
                   <>
                     <ArrowLeftRight className="w-4 h-4 mr-2" />
-                    Swap ETH to BAR
+                    Swap ETH to ZEN
                   </>
                 )}
               </Button>
             </div>
+
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted-foreground">BAR Amount</label>
+              <label className="text-xs font-semibold text-muted-foreground">USDC Amount</label>
               <Input
                 type="number"
                 min="0"
-                step="1"
-                value={barAmount}
-                onChange={(event) => setBarAmount(event.target.value)}
+                step="0.1"
+                value={usdcAmount}
+                onChange={(event) => setUsdcAmount(event.target.value)}
                 className="h-11"
               />
-              <p className="text-xs text-muted-foreground">Balance: {barBalanceDisplay}</p>
+              <p className="text-xs text-muted-foreground">Balance: {usdcBalanceDisplay}</p>
               <Button
-                type="button"
-                variant="outline"
-                className="w-full"
                 onClick={() =>
                   executeSwap({
-                    amount: barAmount,
-                    decimals: barBalance.decimals ?? 18,
-                    tokenIn: CONTRACTS.BAR,
-                    tokenOut: NATIVE_ETH_ADDRESS,
-                    swapKey: "bar-eth",
-                    balanceRaw: barBalance.raw,
-                    balanceLoading: barBalance.isLoading,
-                    balanceLabel: "BAR",
+                    amount: usdcAmount,
+                    decimals: usdcDecimals,
+                    tokenIn: USDC_ADDRESS,
+                    tokenOut: CONTRACTS.ZEN,
+                    swapKey: "usdc-zen",
+                    balanceRaw: usdcBalance.raw,
+                    balanceLoading: usdcBalance.isLoading,
+                    balanceLabel: "USDC",
                   })
                 }
                 disabled={isSwapDisabled}
+                className="w-full h-12 text-base font-semibold"
+                size="lg"
+                variant={highlightSwap ? "default" : "outline"}
               >
-                {activeSwap === "bar-eth" ? (
+                {activeSwap === "usdc-zen" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Swapping BAR...
+                    Swapping USDC...
                   </>
                 ) : (
                   <>
                     <ArrowLeftRight className="w-4 h-4 mr-2" />
-                    Swap BAR to ETH
+                    Swap USDC to ZEN
                   </>
                 )}
               </Button>
             </div>
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <p>ETH Balance: {ethBalanceDisplay}</p>
+              <p>Swaps route through the best available Base liquidity.</p>
+            </div>
+          </>
+        )}
+
+        {showBarSwaps && (
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-2">
+            <p className="font-semibold text-foreground">Get $BAR</p>
+            <p>Swap in-app to keep gas sponsorship options open.</p>
+            <div className="grid grid-cols-1 gap-2">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground">ETH Amount</label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setEthBarAmount((prev) => shiftDecimal(prev, "down"))}
+                    aria-label="Decrease ETH amount"
+                  >
+                    -
+                  </Button>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.0001"
+                    value={ethBarAmount}
+                    onChange={(event) => setEthBarAmount(event.target.value)}
+                    className="h-11 flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setEthBarAmount((prev) => shiftDecimal(prev, "up"))}
+                    aria-label="Increase ETH amount"
+                  >
+                    +
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Balance: {ethBalanceDisplay}</p>
+                <Button
+                  type="button"
+                  variant={highlightSwap ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() =>
+                    executeSwap({
+                      amount: ethBarAmount,
+                      decimals: 18,
+                      tokenIn: NATIVE_ETH_ADDRESS,
+                      tokenOut: CONTRACTS.BAR,
+                      swapKey: "eth-bar",
+                      balanceRaw: ethBalance.raw,
+                      balanceLoading: ethBalance.isLoading,
+                      balanceLabel: "ETH",
+                    })
+                  }
+                  disabled={isSwapDisabled}
+                >
+                  {activeSwap === "eth-bar" ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Swapping ETH...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowLeftRight className="w-4 h-4 mr-2" />
+                      Swap ETH to BAR
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground">BAR Amount</label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setBarAmount((prev) => shiftDecimal(prev, "down"))}
+                    aria-label="Decrease BAR amount"
+                  >
+                    -
+                  </Button>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={barAmount}
+                    onChange={(event) => setBarAmount(event.target.value)}
+                    className="h-11 flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setBarAmount((prev) => shiftDecimal(prev, "up"))}
+                    aria-label="Increase BAR amount"
+                  >
+                    +
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Balance: {barBalanceDisplay}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() =>
+                    executeSwap({
+                      amount: barAmount,
+                      decimals: barBalance.decimals ?? 18,
+                      tokenIn: CONTRACTS.BAR,
+                      tokenOut: NATIVE_ETH_ADDRESS,
+                      swapKey: "bar-eth",
+                      balanceRaw: barBalance.raw,
+                      balanceLoading: barBalance.isLoading,
+                      balanceLabel: "BAR",
+                    })
+                  }
+                  disabled={isSwapDisabled}
+                >
+                  {activeSwap === "bar-eth" ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Swapping BAR...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowLeftRight className="w-4 h-4 mr-2" />
+                      Swap BAR to ETH
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Card>
   )

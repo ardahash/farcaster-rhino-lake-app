@@ -5,6 +5,7 @@ import type { PointerEvent as ReactPointerEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { GuideCard } from "@/components/guide-card"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { BURNER_ABI, CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
@@ -18,7 +19,7 @@ import { ConnectionDebug } from "@/components/connection-debug"
 
 // Dev layout: press "E" or click "Edit Layout", then copy JSON and paste it here.
 const DEFAULT_TEMPLE_LAYOUT = {
-  actionPanel: { x: 0.5, y: 0.68 },
+  actionPanel: { x: 0.480, y: 0.874 },
 } as const
 
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
@@ -39,6 +40,7 @@ export function TempleScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const dragOffsetRef = useRef({ x: 0, y: 0 })
   const isDraggingRef = useRef(false)
+  const defaultLayoutRef = useRef(JSON.stringify(DEFAULT_TEMPLE_LAYOUT))
   const isDev = process.env.NODE_ENV === "development"
 
   const zenBalance = useErc20Balance({
@@ -246,10 +248,19 @@ export function TempleScreen() {
   const isCityReady = !isCityIdLoading
   const hasCity = isCityReady && cityId > 0n
   const activeLayout = isDev ? layout : DEFAULT_TEMPLE_LAYOUT
-  const layoutStyle = {
+  const actionPanelStyle = {
     left: `${activeLayout.actionPanel.x * 100}%`,
     top: `${activeLayout.actionPanel.y * 100}%`,
   }
+
+  const defaultLayoutKey = JSON.stringify(DEFAULT_TEMPLE_LAYOUT)
+
+  useEffect(() => {
+    if (defaultLayoutRef.current !== defaultLayoutKey) {
+      defaultLayoutRef.current = defaultLayoutKey
+      setLayout(DEFAULT_TEMPLE_LAYOUT)
+    }
+  }, [defaultLayoutKey])
 
   useEffect(() => {
     if (!isDev) return
@@ -330,6 +341,14 @@ export function TempleScreen() {
           <p className="text-muted-foreground">Burn ZEN to mint RHINO on Base mainnet</p>
         </div>
 
+        <div className="mt-6">
+          <GuideCard
+            title="Monk's Guidance"
+            description="Burn ZEN here to mint RHINO. Enter an amount, connect your Base wallet, and confirm the burn."
+            modelSrc="/3d/monk.glb"
+          />
+        </div>
+
         {isDev && (
           <div className="absolute right-4 top-4 flex items-center gap-2">
             <Button
@@ -377,7 +396,7 @@ export function TempleScreen() {
 
         <div
           className={`absolute -translate-x-1/2 -translate-y-1/2 ${isEditing ? "cursor-grab" : ""}`}
-          style={layoutStyle}
+          style={actionPanelStyle}
           onPointerDown={handleDragStart}
           onPointerMove={handleDragMove}
           onPointerUp={handleDragEnd}
@@ -475,7 +494,7 @@ export function TempleScreen() {
           </Card>
         </div>
 
-        <div className="mt-[520px]">
+        <div className="mt-[520px] space-y-6">
           <ConnectionDebug />
         </div>
       </div>
