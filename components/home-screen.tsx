@@ -4,6 +4,15 @@ import { useCallback, useEffect, useState } from "react"
 import { useName } from "@coinbase/onchainkit/identity"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { ConnectionDebug } from "@/components/connection-debug"
 import { PfpAvatar } from "@/components/pfp-avatar"
@@ -89,6 +98,7 @@ export function HomeScreen() {
   const [barLockAmount, setBarLockAmount] = useState("")
   const [rhinoLockAmount, setRhinoLockAmount] = useState("")
   const [activeAction, setActiveAction] = useState<"create" | "lock-bar" | "lock-rhino" | null>(null)
+  const [isCtaOpen, setIsCtaOpen] = useState(false)
 
   const refetchAll = useCallback(() => {
     zenBalance.refetch()
@@ -112,6 +122,16 @@ export function HomeScreen() {
     setActiveAction(null)
     refetchAll()
   }, [address, chainId, refetchAll])
+
+  useEffect(() => {
+    setIsCtaOpen(true)
+  }, [])
+
+  const handleSwapCtaClick = () => {
+    setIsCtaOpen(false)
+    const swapPanel = document.getElementById("swap-panel")
+    swapPanel?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   const ensureBaseNetwork = async () => {
     const activeChainId = chainId ?? BASE_MAINNET_CHAIN_ID
@@ -370,6 +390,27 @@ export function HomeScreen() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
+      <Dialog open={isCtaOpen} onOpenChange={setIsCtaOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Swap ETH to BAR</DialogTitle>
+            <DialogDescription>
+              First 100 BAR holders above 10M will have the first ETH airdrop.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-start">
+            <Button onClick={handleSwapCtaClick} className="w-full sm:w-auto">
+              Swap ETH to BAR
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" className="w-full sm:w-auto">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card className="game-card w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -590,7 +631,7 @@ export function HomeScreen() {
         <ConnectionDebug />
       </div>
 
-      <div className="w-full max-w-md">
+      <div id="swap-panel" className="w-full max-w-md">
         <SwapPanel highlightSwap={highlightSwap} onSwapSuccess={refetchAll} />
       </div>
     </div>

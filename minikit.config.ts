@@ -25,10 +25,11 @@ export const minikitConfig = {
   miniapp: {
     version: "1",
     name: "Rhino Lake",
+    devname: "rhinolake",
     subtitle: "Sacrifice ZEN to grow empire",
     description: "Sacrifice ZEN to grow your ancient empire on Base.",
     screenshotUrls: [`${ROOT_URL}/image.png`],
-    iconUrl: `${ROOT_URL}/icon.png`,
+    iconUrl: `${ROOT_URL}/rhinolakeTownManifest.png`,
     splashImageUrl: `${ROOT_URL}/logo.png`,
     splashBackgroundColor: "#2e2a25",
     homeUrl: ROOT_URL,
@@ -39,7 +40,7 @@ export const minikitConfig = {
     tagline: "Grow your empire with ZEN",
     ogTitle: "Rhino Lake",
     ogDescription: "Sacrifice ZEN to grow your ancient empire on Base.",
-    ogImageUrl: `${ROOT_URL}/image.png`,
+    ogImageUrl: `${ROOT_URL}/manifestOgImageUrl.png`,
     noindex: false,
   },
 } as const
