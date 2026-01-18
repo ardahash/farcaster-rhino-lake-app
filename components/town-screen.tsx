@@ -305,7 +305,11 @@ function TownScene({ navPanels, sceneRef: externalSceneRef }: TownSceneProps) {
   )
 }
 
-export function TownScreen() {
+type TownScreenProps = {
+  onNavigate?: (tab: "home" | "temple" | "market") => void
+}
+
+export function TownScreen({ onNavigate }: TownScreenProps) {
   const [layout, setLayout] = useState(() => DEFAULT_TOWN_LAYOUT)
   const [isEditing, setIsEditing] = useState(false)
   const sceneRef = useRef<HTMLDivElement | null>(null)
@@ -316,9 +320,9 @@ export function TownScreen() {
 
   const activeLayout = isDev ? layout : DEFAULT_TOWN_LAYOUT
   const navItems = [
-    { key: "templePanel", label: "Temple", disabled: false },
-    { key: "marketPanel", label: "Market", disabled: false },
-    { key: "homePanel", label: "Home", disabled: false },
+    { key: "templePanel", label: "Temple", tab: "temple", disabled: false },
+    { key: "marketPanel", label: "Marketplace", tab: "market", disabled: false },
+    { key: "homePanel", label: "Home", tab: "home", disabled: false },
   ] as const
 
   useEffect(() => {
@@ -335,6 +339,7 @@ export function TownScreen() {
   const handleDragStart =
     (target: "templePanel" | "marketPanel" | "homePanel") =>
     (event: React.PointerEvent<HTMLDivElement>) => {
+    event.stopPropagation()
     if (!isDev || !isEditing) return
     const rect = sceneRef.current?.getBoundingClientRect()
     if (!rect) return
@@ -372,7 +377,7 @@ export function TownScreen() {
     }
   }
 
-  const panelInteraction = isEditing ? "pointer-events-auto cursor-grab" : "pointer-events-none"
+  const panelInteraction = isEditing ? "pointer-events-auto cursor-grab" : "pointer-events-auto"
 
   const navPanels = navItems.map((item) => {
     const panel = activeLayout[item.key]
@@ -393,9 +398,10 @@ export function TownScreen() {
         <Card className="game-card w-[min(70vw,140px)] p-2 bg-card/80 backdrop-blur border-border/60">
           <Button
             size="sm"
-            variant={item.disabled ? "outline" : "secondary"}
+            variant={item.disabled || isEditing ? "outline" : "secondary"}
             className="w-full"
-            disabled={item.disabled}
+            disabled={item.disabled || isEditing}
+            onClick={() => onNavigate?.(item.tab)}
           >
             {item.label}
           </Button>

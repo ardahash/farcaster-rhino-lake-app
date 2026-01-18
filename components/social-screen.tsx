@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { resolveBaseName } from "@/lib/base-names"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
-import { CITY_NFT_ABI, CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
+import { CONTRACTS, ERC20_ABI } from "@/lib/contracts"
 import { formatUnits, zeroAddress } from "viem"
 import { usePublicClient, useReadContract } from "wagmi"
 import { Loader2, RefreshCcw, Users } from "lucide-react"
@@ -19,13 +19,19 @@ const resolveLookbackBlocks = () => {
 const LOOKBACK_BLOCKS = resolveLookbackBlocks()
 const MAX_LOG_BLOCK_RANGE = 1000n
 const MAX_ENTRIES = 20
-const TRANSFER_EVENT =
-  CITY_NFT_ABI.find((item) => item.type === "event" && item.name === "Transfer") ?? CITY_NFT_ABI[2]
+const ERC20_TRANSFER_EVENT = {
+  type: "event",
+  name: "Transfer",
+  inputs: [
+    { name: "from", type: "address", indexed: true },
+    { name: "to", type: "address", indexed: true },
+    { name: "value", type: "uint256", indexed: false },
+  ],
+} as const
 
 type LeaderEntry = {
-  cityId: bigint
   owner: `0x${string}`
-  barLocked: bigint
+  barBalance: bigint
   baseName?: string | null
 }
 
@@ -85,71 +91,52 @@ export function SocialScreen() {
       for (let startBlock = fromBlock; startBlock <= latestBlock; startBlock += MAX_LOG_BLOCK_RANGE) {
         const endBlock = startBlock + MAX_LOG_BLOCK_RANGE - 1n
         const chunk = await publicClient.getLogs({
-          address: CONTRACTS.CITY_NFT,
-          event: TRANSFER_EVENT,
+          address: CONTRACTS.BAR,
+          event: ERC20_TRANSFER_EVENT,
           fromBlock: startBlock,
           toBlock: endBlock > latestBlock ? latestBlock : endBlock,
         })
         logs.push(...chunk)
       }
 
-      const cityIds = new Set<bigint>()
+      const holders = new Set<`0x${string}`>()
       for (const log of logs) {
-        if (!log.args || typeof log.args.tokenId === "undefined") continue
-        cityIds.add(log.args.tokenId as bigint)
+        if (!log.args) continue
+        const { from, to } = log.args as { from: `0x${string}`; to: `0x${string}` }
+        if (from && from !== zeroAddress) holders.add(from)
+        if (to && to !== zeroAddress) holders.add(to)
       }
 
-      const ids = Array.from(cityIds)
+      const addresses = Array.from(holders)
       const items: LeaderEntry[] = []
-      for (let i = 0; i < ids.length; i += 6) {
-        const chunkIds = ids.slice(i, i + 6)
-        const contracts = chunkIds.flatMap((id) => [
-          {
-            address: CONTRACTS.CITY_NFT,
-            abi: CITY_NFT_ABI,
-            functionName: "ownerOf" as const,
-            args: [id],
-          },
-          {
-            address: CONTRACTS.GAME,
-            abi: GAME_ABI,
-            functionName: "cities" as const,
-            args: [id],
-          },
-        ])
-
+      const chunkSize = 24
+      for (let i = 0; i < addresses.length; i += chunkSize) {
+        const chunk = addresses.slice(i, i + chunkSize)
         const results = await publicClient.multicall({
-          contracts,
+          contracts: chunk.map((account) => ({
+            address: CONTRACTS.BAR,
+            abi: ERC20_ABI,
+            functionName: "balanceOf" as const,
+            args: [account],
+          })),
           allowFailure: true,
         })
 
-        for (let index = 0; index < chunkIds.length; index += 1) {
-          const ownerResult = results[index * 2]
-          const cityResult = results[index * 2 + 1]
-          if (ownerResult.status !== "success" || !ownerResult.result) continue
-
-          const owner = ownerResult.result as `0x${string}`
-          if (!owner || owner === zeroAddress) continue
-
-          let barLocked = 0n
-          if (cityResult.status === "success" && cityResult.result) {
-            const state = cityResult.result as
-              | readonly [bigint, bigint, number, boolean, bigint]
-              | { barLocked: bigint }
-            barLocked = Array.isArray(state) ? state[0] : state.barLocked
-          }
-
+        for (let index = 0; index < chunk.length; index += 1) {
+          const result = results[index]
+          if (result.status !== "success" || !result.result) continue
+          const barBalance = result.result as bigint
+          if (barBalance <= 0n) continue
           items.push({
-            cityId: chunkIds[index],
-            owner,
-            barLocked,
+            owner: chunk[index],
+            barBalance,
             baseName: undefined,
           })
         }
       }
 
       const sorted = items
-        .sort((a, b) => (a.barLocked > b.barLocked ? -1 : a.barLocked < b.barLocked ? 1 : 0))
+        .sort((a, b) => (a.barBalance > b.barBalance ? -1 : a.barBalance < b.barBalance ? 1 : 0))
         .slice(0, MAX_ENTRIES)
 
       setEntries(sorted)
@@ -171,7 +158,7 @@ export function SocialScreen() {
   }, [fetchLeaderboard])
 
   const heading = useMemo(() => {
-    return `Showing activity from the last ${LOOKBACK_BLOCKS.toLocaleString()} blocks.`
+    return `Showing BAR holders active in the last ${LOOKBACK_BLOCKS.toLocaleString()} blocks.`
   }, [])
 
   return (
@@ -182,14 +169,14 @@ export function SocialScreen() {
             <Users className="w-8 h-8 text-primary" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-primary gold-glow">City Power Leaderboard</h1>
-        <p className="text-muted-foreground">Top cities ranked by BAR locked.</p>
+        <h1 className="text-3xl font-bold text-primary gold-glow">BAR Holder Leaderboard</h1>
+        <p className="text-muted-foreground">Top wallets ranked by BAR balance.</p>
       </div>
 
       <Card className="game-card p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="font-semibold text-lg text-foreground">Top Cities by BAR Locked</h3>
+            <h3 className="font-semibold text-lg text-foreground">Top Wallets by BAR Balance</h3>
             <p className="text-xs text-muted-foreground">{heading}</p>
           </div>
           <Button onClick={fetchLeaderboard} disabled={isLoading} variant="outline" className="h-10 px-4">
@@ -207,7 +194,7 @@ export function SocialScreen() {
         )}
 
         {!isLoading && entries.length === 0 && !error && (
-          <p className="text-sm text-muted-foreground text-center py-6">No cities found yet. Mint the first!</p>
+          <p className="text-sm text-muted-foreground text-center py-6">No BAR holders found yet.</p>
         )}
 
         <div className="space-y-3">
@@ -215,12 +202,12 @@ export function SocialScreen() {
             const shortAddress = `${entry.owner.slice(0, 6)}...${entry.owner.slice(-4)}`
             return (
               <div
-                key={`${entry.owner}-${entry.cityId}`}
+                key={entry.owner}
                 className="flex items-center gap-4 rounded-lg border border-border p-3"
               >
                 <div className="text-lg font-semibold text-foreground w-8 text-center">#{index + 1}</div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">City {entry.cityId.toString()}</p>
+                  <p className="text-sm font-semibold text-foreground">Wallet</p>
                   {entry.baseName ? (
                     <>
                       <p className="text-xs text-muted-foreground">{entry.baseName}</p>
@@ -232,9 +219,9 @@ export function SocialScreen() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-primary">
-                    {formatTokenValue(entry.barLocked, resolvedBarDecimals)} BAR
+                    {formatTokenValue(entry.barBalance, resolvedBarDecimals)} BAR
                   </p>
-                  <p className="text-xs text-muted-foreground">City Power</p>
+                  <p className="text-xs text-muted-foreground">BAR Balance</p>
                 </div>
               </div>
             )
