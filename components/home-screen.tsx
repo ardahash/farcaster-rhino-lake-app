@@ -125,8 +125,10 @@ export function HomeScreen() {
   }, [address, chainId, refetchAll])
 
   useEffect(() => {
-    setIsCtaOpen(true)
-  }, [])
+    if (isAuthenticated) {
+      setIsCtaOpen(true)
+    }
+  }, [isAuthenticated])
 
   const handleSwapCtaClick = () => {
     setIsCtaOpen(false)

@@ -29,8 +29,8 @@ import {
 
 const rarityStyles: Record<string, string> = {
   Regular: "bg-muted text-foreground",
-  Epic: "bg-blue-500/20 text-blue-200",
-  Legendary: "bg-amber-500/20 text-amber-200",
+  Epic: "bg-blue-500/20 text-blue-900 font-bold",
+  Legendary: "bg-amber-500/20 text-amber-900 font-bold",
 }
 
 const EXTRA_USDC_ALLOWANCE = 10n ** BigInt(USDC_DECIMALS)
@@ -244,7 +244,7 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
           </Avatar>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Profile Picture Shop</DialogTitle>
           <DialogDescription>Buy with USDC and set your active avatar.</DialogDescription>
@@ -254,7 +254,7 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
           <p className="text-sm text-amber-500">Profile shop is not configured yet.</p>
         )}
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {PFP_ITEMS.map((item) => {
             const isOwned = ownedById.get(item.id) ?? false
             const isActive = isOwned && Number(activeId) === item.id
@@ -281,7 +281,6 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
                 </div>
                 {isOwned ? (
                   <Button
-                    size="sm"
                     className="w-full"
                     onClick={() => handleSetActive(item.id)}
                     disabled={isBusy || isActive || isPendingItem}
@@ -291,7 +290,6 @@ export function PfpAvatar({ displayName, fallback, className, fallbackClassName 
                   </Button>
                 ) : (
                   <Button
-                    size="sm"
                     className="w-full"
                     onClick={() => handleBuy(item.id)}
                     disabled={isBusy || isPendingItem || !isConfigured}
