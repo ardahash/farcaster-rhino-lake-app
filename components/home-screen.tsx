@@ -20,6 +20,7 @@ import { PfpAvatar } from "@/components/pfp-avatar"
 import { SwapPanel } from "@/components/swap-panel"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
+import { formatSpinCooldown, getSpinStorageKey, SPIN_REWARDS, SPIN_WINDOW_MS } from "@/lib/bar-spin"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
 import { getProgressionState } from "@/lib/game-state"
@@ -100,6 +101,10 @@ export function HomeScreen() {
   const [rhinoLockAmount, setRhinoLockAmount] = useState("")
   const [activeAction, setActiveAction] = useState<"create" | "lock-bar" | "lock-rhino" | null>(null)
   const [isCtaOpen, setIsCtaOpen] = useState(false)
+  const [spinOpen, setSpinOpen] = useState(false)
+  const [spinResult, setSpinResult] = useState<string | null>(null)
+  const [isSpinning, setIsSpinning] = useState(false)
+  const [lastSpinAt, setLastSpinAt] = useState<number | null>(null)
 
   const refetchAll = useCallback(() => {
     zenBalance.refetch()
@@ -130,10 +135,91 @@ export function HomeScreen() {
     }
   }, [isAuthenticated])
 
+  useEffect(() => {
+    if (!address || typeof window === "undefined") {
+      setLastSpinAt(null)
+      return
+    }
+    const stored = window.localStorage.getItem(getSpinStorageKey(address))
+    const parsed = stored ? Number(stored) : NaN
+    setLastSpinAt(Number.isFinite(parsed) ? parsed : null)
+    setSpinResult(null)
+  }, [address])
+
   const handleSwapCtaClick = () => {
     setIsCtaOpen(false)
     const swapPanel = document.getElementById("swap-panel")
     swapPanel?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
+  const handleSpin = async () => {
+    if (!isAuthenticated || !address) {
+      await handleConnect()
+      return
+    }
+
+    if (!hasCity) {
+      toast({
+        title: "Spin unavailable",
+        description: "Mint a city to unlock the daily spin.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const now = Date.now()
+    if (lastSpinAt && now - lastSpinAt < SPIN_WINDOW_MS) {
+      toast({
+        title: "Spin on cooldown",
+        description: `Next spin in ${formatSpinCooldown(SPIN_WINDOW_MS - (now - lastSpinAt))}.`,
+      })
+      return
+    }
+
+    setIsSpinning(true)
+    setSpinResult(null)
+    try {
+      const response = await fetch("/api/bar-spin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, cityId: cityId.toString() }),
+      })
+      const data = (await response.json()) as { amount?: string; txHash?: string; error?: string }
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Spin failed.")
+      }
+
+      const rewardAmount = data.amount ?? "0"
+      setSpinResult(rewardAmount)
+      setBarLockAmount(rewardAmount)
+      setLastSpinAt(now)
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(getSpinStorageKey(address), now.toString())
+      }
+      refetchAll()
+      toast({
+        title: "Spin complete",
+        description: `You won ${rewardAmount} BAR.`,
+      })
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Spin failed."
+      toast({
+        title: "Spin failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsSpinning(false)
+    }
+  }
+
+  const handleSpinLockCta = () => {
+    if (spinResult) {
+      setBarLockAmount(spinResult)
+    }
+    setSpinOpen(false)
+    const lockPanel = document.getElementById("lock-bar-panel")
+    lockPanel?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
   const ensureBaseNetwork = async () => {
@@ -370,6 +456,12 @@ export function HomeScreen() {
   const isActionDisabled = isPrimaryLoading || !isAuthenticated || !isOnBase
   const isCityReady = !isCityIdLoading
   const hasCity = isCityReady && cityId > 0n
+  const spinEligible = isAuthenticated && hasCity
+  const now = Date.now()
+  const nextSpinAt = lastSpinAt ? lastSpinAt + SPIN_WINDOW_MS : null
+  const spinRemainingMs = nextSpinAt ? Math.max(nextSpinAt - now, 0) : 0
+  const canSpin = spinEligible && spinRemainingMs === 0
+  const spinCooldownLabel = spinRemainingMs > 0 ? formatSpinCooldown(spinRemainingMs) : "Ready to spin"
   const barDecimals = barBalance.decimals ?? 18
   const { level: cityLevel, isStarter, nextThresholdTokens, nextThresholdRaw } = getProgressionState(
     cityState.barLocked,
@@ -567,7 +659,7 @@ export function HomeScreen() {
           </Button>
         ) : (
           <div className="grid gap-3">
-            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+            <div id="lock-bar-panel" className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Shield className="h-4 w-4 text-primary" />
                 Grow City (Lock BAR)
@@ -630,6 +722,39 @@ export function HomeScreen() {
           </div>
         )}
 
+        {hasCity && (
+          <Card className="game-card p-4 space-y-3">
+            <div className="space-y-1 text-center">
+              <h3 className="text-sm font-semibold text-foreground">Daily BAR Spin</h3>
+              <p className="text-xs text-muted-foreground">
+                Spin once per day for BAR rewards and lock them into your city.
+              </p>
+            </div>
+            {!canSpin && (
+              <p className="text-xs text-muted-foreground text-center">
+                Next spin available in {spinCooldownLabel}.
+              </p>
+            )}
+            <Button
+              onClick={() => {
+                setSpinResult(null)
+                setSpinOpen(true)
+              }}
+              disabled={!canSpin || isSpinning}
+              className="w-full"
+            >
+              {isSpinning ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Spinning...
+                </>
+              ) : (
+                "Open Spin Wheel"
+              )}
+            </Button>
+          </Card>
+        )}
+
         {hasCity && ethClaimable > 0n && (
           <p className="text-center text-xs text-muted-foreground">
             Unclaimed ETH rewards available in your Profile.
@@ -638,6 +763,50 @@ export function HomeScreen() {
 
         {authError && !isAuthenticated && <p className="text-center text-xs text-muted-foreground">{authError}</p>}
         <ConnectionDebug />
+
+        <Dialog open={spinOpen} onOpenChange={setSpinOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Daily BAR Spin</DialogTitle>
+              <DialogDescription>
+                Spin once per day to earn BAR rewards. Rewards: {SPIN_REWARDS.join(", ")} BAR.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-32 w-32 rounded-full border-4 border-primary/40 bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary">
+                {spinResult ? `${spinResult} BAR` : "Spin"}
+              </div>
+              {!canSpin && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Next spin available in {spinCooldownLabel}.
+                </p>
+              )}
+            </div>
+            <DialogFooter className="gap-2">
+              {spinResult ? (
+                <Button onClick={handleSpinLockCta} className="w-full">
+                  Lock BAR
+                </Button>
+              ) : (
+                <Button onClick={handleSpin} disabled={!canSpin || isSpinning} className="w-full">
+                  {isSpinning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Spinning...
+                    </>
+                  ) : (
+                    "Spin Now"
+                  )}
+                </Button>
+              )}
+              <DialogClose asChild>
+                <Button type="button" variant="secondary" className="w-full">
+                  Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div id="swap-panel" className="w-full max-w-md">

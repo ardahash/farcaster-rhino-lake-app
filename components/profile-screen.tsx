@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
+import { formatSpinCooldown, getSpinStorageKey, SPIN_REWARDS, SPIN_WINDOW_MS } from "@/lib/bar-spin"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
 import { getProgressionState } from "@/lib/game-state"
@@ -51,19 +52,6 @@ const formatTokenValue = (raw: bigint, decimals: number, fallback = "--") => {
   }
 }
 
-const SPIN_REWARDS = ["0.5", "1", "10", "20", "50", "100", "1000"] as const
-const SPIN_WINDOW_MS = 24 * 60 * 60 * 1000
-
-const formatSpinCooldown = (ms: number) => {
-  const totalMinutes = Math.ceil(ms / 60000)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  if (hours <= 0) {
-    return `${minutes}m`
-  }
-  return `${hours}h ${minutes}m`
-}
-
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { toast } = useToast()
@@ -89,8 +77,7 @@ export function ProfileScreen() {
       setLastSpinAt(null)
       return
     }
-    const storageKey = `rhino-lake:bar-spin:${address.toLowerCase()}`
-    const stored = window.localStorage.getItem(storageKey)
+    const stored = window.localStorage.getItem(getSpinStorageKey(address))
     const parsed = stored ? Number(stored) : NaN
     setLastSpinAt(Number.isFinite(parsed) ? parsed : null)
     setSpinResult(null)
@@ -303,8 +290,7 @@ export function ProfileScreen() {
       setLockBarAmount(rewardAmount)
       setLastSpinAt(now)
       if (typeof window !== "undefined") {
-        const storageKey = `rhino-lake:bar-spin:${address.toLowerCase()}`
-        window.localStorage.setItem(storageKey, now.toString())
+        window.localStorage.setItem(getSpinStorageKey(address), now.toString())
       }
       barBalance.refetch()
       toast({

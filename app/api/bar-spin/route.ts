@@ -2,12 +2,11 @@ import { NextResponse } from "next/server"
 import { createPublicClient, createWalletClient, http, parseUnits } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
+import { SPIN_REWARDS, SPIN_WINDOW_MS } from "@/lib/bar-spin"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
 
 export const runtime = "nodejs"
 
-const SPIN_REWARDS = ["0.5", "1", "10", "20", "50", "100", "1000"] as const
-const SPIN_WINDOW_MS = 24 * 60 * 60 * 1000
 const lastSpinByAddress = new Map<string, number>()
 
 const ERC20_READ_ABI = [
