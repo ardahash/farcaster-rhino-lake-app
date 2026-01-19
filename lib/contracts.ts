@@ -1,22 +1,10 @@
 "use client"
 
-import type { Address } from "viem"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
+import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
 
 export const CHAIN_ID = BASE_MAINNET_CHAIN_ID
-
-const BAR_TOKEN_ADDRESS =
-  (process.env.NEXT_PUBLIC_BAR_TOKEN_ADDRESS as Address | undefined) ??
-  ("0x1637b8c1Fba28E99776229DF6a7D9f5213E20b07" as Address)
-
-export const CONTRACTS = {
-  ZEN: "0xf43eB8De897Fbc7F2502483B2Bef7Bb9EA179229" as Address,
-  BAR: BAR_TOKEN_ADDRESS,
-  RHINO: "0x8A3A0883f94080E9a983c1979ee428b982ECDB7a" as Address,
-  CITY_NFT: "0x4f0eE5e1ce5D9EC05AfE5c87C1B2893C5364b103" as Address,
-  GAME: "0x0c9f0bc1eE767a1bA5a7d30458Ae8e7cc82F3352" as Address,
-  BURNER: "0xeE7373cC1799A81bf4fdE1110EB17865C0d21Dd0" as Address,
-} as const
+export const CONTRACTS = CONTRACT_ADDRESSES
 
 export const ERC20_ABI = [
   {

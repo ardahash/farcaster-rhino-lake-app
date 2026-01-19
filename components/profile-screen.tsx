@@ -1,15 +1,25 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useName } from "@coinbase/onchainkit/identity"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { PfpAvatar } from "@/components/pfp-avatar"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_CHAINS, DEFAULT_CHAIN_ID, getChainLabel } from "@/lib/base-config"
-import { CONTRACTS, GAME_ABI } from "@/lib/contracts"
+import { CONTRACTS, ERC20_ABI, GAME_ABI } from "@/lib/contracts"
 import { getProgressionState } from "@/lib/game-state"
 import { useCityId } from "@/hooks/use-city-id"
 import { useCityState } from "@/hooks/use-city-state"
@@ -17,7 +27,7 @@ import { useErc20Balance } from "@/lib/use-erc20-balance"
 import { Crown, Trophy, Sparkles, TrendingUp, Loader2 } from "lucide-react"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
 import { base } from "wagmi/chains"
-import { encodeFunctionData, formatUnits } from "viem"
+import { encodeFunctionData, formatUnits, parseUnits } from "viem"
 
 const formatBaseHandle = (name: string) => {
   const trimmed = name.startsWith("@") ? name.slice(1) : name
@@ -41,11 +51,31 @@ const formatTokenValue = (raw: bigint, decimals: number, fallback = "--") => {
   }
 }
 
+const SPIN_REWARDS = ["0.5", "1", "10", "20", "50", "100", "1000"] as const
+const SPIN_WINDOW_MS = 24 * 60 * 60 * 1000
+
+const formatSpinCooldown = (ms: number) => {
+  const totalMinutes = Math.ceil(ms / 60000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  if (hours <= 0) {
+    return `${minutes}m`
+  }
+  return `${hours}h ${minutes}m`
+}
+
 export function ProfileScreen() {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [isClaiming, setIsClaiming] = useState(false)
+  const [spinOpen, setSpinOpen] = useState(false)
+  const [lockOpen, setLockOpen] = useState(false)
+  const [spinResult, setSpinResult] = useState<string | null>(null)
+  const [isSpinning, setIsSpinning] = useState(false)
+  const [lastSpinAt, setLastSpinAt] = useState<number | null>(null)
+  const [lockBarAmount, setLockBarAmount] = useState("")
+  const [isLockingBar, setIsLockingBar] = useState(false)
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const publicClient = usePublicClient({ chainId: DEFAULT_CHAIN_ID })
   const { sendTransactionAsync } = useSendTransaction()
@@ -53,6 +83,19 @@ export function ProfileScreen() {
   const { data: resolvedName, isLoading: isNameLoading } = useName({ address, chain: base })
   const { cityId } = useCityId(address)
   const { cityState, ethClaimable, refetch: refetchCityState } = useCityState(cityId, address)
+
+  useEffect(() => {
+    if (!address || typeof window === "undefined") {
+      setLastSpinAt(null)
+      return
+    }
+    const storageKey = `rhino-lake:bar-spin:${address.toLowerCase()}`
+    const stored = window.localStorage.getItem(storageKey)
+    const parsed = stored ? Number(stored) : NaN
+    setLastSpinAt(Number.isFinite(parsed) ? parsed : null)
+    setSpinResult(null)
+    setLockBarAmount("")
+  }, [address])
 
   const barBalance = useErc20Balance({
     token: CONTRACTS.BAR,
@@ -137,6 +180,34 @@ export function ProfileScreen() {
     return DEFAULT_CHAIN_ID
   }
 
+  const ensureBarAllowance = async (amount: bigint) => {
+    if (!publicClient || !address) {
+      throw new Error("RPC not ready.")
+    }
+    const allowance = (await publicClient.readContract({
+      address: CONTRACTS.BAR,
+      abi: ERC20_ABI,
+      functionName: "allowance",
+      args: [address, CONTRACTS.GAME],
+    })) as bigint
+
+    if (allowance >= amount) {
+      return
+    }
+
+    const approvalHash = await sendTransactionAsync({
+      chainId: DEFAULT_CHAIN_ID,
+      account: address,
+      to: CONTRACTS.BAR,
+      data: encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [CONTRACTS.GAME, amount],
+      }),
+    })
+    await publicClient.waitForTransactionReceipt({ hash: approvalHash })
+  }
+
   const handleClaimEth = async () => {
     setIsClaiming(true)
     try {
@@ -174,6 +245,10 @@ export function ProfileScreen() {
         description: "ETH rewards sent to your wallet.",
       })
       refetchCityState()
+      if (cityId > 0n) {
+        setSpinResult(null)
+        setSpinOpen(true)
+      }
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Unable to claim rewards."
       toast({
@@ -183,6 +258,130 @@ export function ProfileScreen() {
       })
     } finally {
       setIsClaiming(false)
+    }
+  }
+
+  const handleSpin = async () => {
+    if (!isAuthenticated || !address) {
+      await handleConnect("coinbase")
+      return
+    }
+
+    if (cityId <= 0n) {
+      toast({
+        title: "Spin unavailable",
+        description: "Mint a city to unlock the daily spin.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const now = Date.now()
+    if (lastSpinAt && now - lastSpinAt < SPIN_WINDOW_MS) {
+      toast({
+        title: "Spin on cooldown",
+        description: `Next spin in ${formatSpinCooldown(SPIN_WINDOW_MS - (now - lastSpinAt))}.`,
+      })
+      return
+    }
+
+    setIsSpinning(true)
+    setSpinResult(null)
+    try {
+      const response = await fetch("/api/bar-spin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, cityId: cityId.toString() }),
+      })
+      const data = (await response.json()) as { amount?: string; txHash?: string; error?: string }
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Spin failed.")
+      }
+
+      const rewardAmount = data.amount ?? "0"
+      setSpinResult(rewardAmount)
+      setLockBarAmount(rewardAmount)
+      setLastSpinAt(now)
+      if (typeof window !== "undefined") {
+        const storageKey = `rhino-lake:bar-spin:${address.toLowerCase()}`
+        window.localStorage.setItem(storageKey, now.toString())
+      }
+      barBalance.refetch()
+      toast({
+        title: "Spin complete",
+        description: `You won ${rewardAmount} BAR.`,
+      })
+      setSpinOpen(false)
+      setLockOpen(true)
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Spin failed."
+      toast({
+        title: "Spin failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsSpinning(false)
+    }
+  }
+
+  const handleLockBarReward = async () => {
+    setIsLockingBar(true)
+    try {
+      if (!isAuthenticated || !address) {
+        await handleConnect("coinbase")
+        return
+      }
+
+      if (cityId <= 0n) {
+        throw new Error("Mint a city to lock BAR.")
+      }
+
+      const amountValue = Number.parseFloat(lockBarAmount)
+      if (!amountValue || amountValue <= 0) {
+        throw new Error("Enter a BAR amount to lock.")
+      }
+
+      const decimals = barBalance.decimals ?? 18
+      const amountRaw = parseUnits(lockBarAmount, decimals)
+
+      if (barBalance.raw < amountRaw) {
+        throw new Error("Insufficient BAR balance.")
+      }
+
+      await ensureBaseNetwork()
+      await ensureBarAllowance(amountRaw)
+
+      const txHash = await sendTransactionAsync({
+        chainId: DEFAULT_CHAIN_ID,
+        account: address,
+        to: CONTRACTS.GAME,
+        data: encodeFunctionData({
+          abi: GAME_ABI,
+          functionName: "lockBAR",
+          args: [cityId, amountRaw],
+        }),
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: txHash })
+      }
+
+      toast({
+        title: "BAR Locked",
+        description: "Your city power has increased.",
+      })
+      setLockOpen(false)
+      refetchCityState()
+      barBalance.refetch()
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Unable to lock BAR."
+      toast({
+        title: "Lock failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLockingBar(false)
     }
   }
 
@@ -203,6 +402,12 @@ export function ProfileScreen() {
   const currentNetwork = getChainLabel(chainId)
   const isActionLoading = isAuthLoading || isConnecting || isSwitching
   const isOnBase = !chainId || chainId === DEFAULT_CHAIN_ID
+  const spinEligible = isAuthenticated && cityId > 0n
+  const now = Date.now()
+  const nextSpinAt = lastSpinAt ? lastSpinAt + SPIN_WINDOW_MS : null
+  const spinRemainingMs = nextSpinAt ? Math.max(nextSpinAt - now, 0) : 0
+  const canSpin = spinEligible && spinRemainingMs === 0
+  const spinCooldownLabel = spinRemainingMs > 0 ? formatSpinCooldown(spinRemainingMs) : "Ready to spin"
 
   const barBalanceDisplay = formatTokenValue(barBalance.raw, barBalance.decimals ?? 18)
   const powerDisplay = formatTokenValue(cityState.barLocked, barBalance.decimals ?? 18)
@@ -322,6 +527,39 @@ export function ProfileScreen() {
 
         <Card className="game-card p-6 space-y-4 mt-6">
           <div className="space-y-2 text-center">
+            <h3 className="font-semibold text-lg text-foreground">Daily BAR Spin</h3>
+            <p className="text-sm text-muted-foreground">
+              Spin once per day to earn BAR rewards. You&apos;ll be prompted after claiming ETH rewards.
+            </p>
+          </div>
+          {!spinEligible && (
+            <p className="text-xs text-muted-foreground text-center">Mint a city to unlock the daily spin.</p>
+          )}
+          {spinEligible && !canSpin && (
+            <p className="text-xs text-muted-foreground text-center">Next spin available in {spinCooldownLabel}.</p>
+          )}
+          <Button
+            onClick={() => {
+              setSpinResult(null)
+              setSpinOpen(true)
+            }}
+            disabled={!spinEligible || isSpinning}
+            className="w-full h-12 text-lg font-semibold"
+            size="lg"
+          >
+            {isSpinning ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Spinning...
+              </>
+            ) : (
+              "Open Spin Wheel"
+            )}
+          </Button>
+        </Card>
+
+        <Card className="game-card p-6 space-y-4 mt-6">
+          <div className="space-y-2 text-center">
             <h3 className="font-semibold text-lg text-foreground">Base Account</h3>
             <p className="text-sm text-muted-foreground">
               Connect your Base account to enable onchain actions and rewards.
@@ -384,6 +622,93 @@ export function ProfileScreen() {
             })}
           </div>
         </Card>
+
+        <Dialog open={spinOpen} onOpenChange={setSpinOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Daily BAR Spin</DialogTitle>
+              <DialogDescription>
+                Spin once per day to earn BAR rewards. Rewards: {SPIN_REWARDS.join(", ")} BAR.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-32 w-32 rounded-full border-4 border-primary/40 bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary">
+                {spinResult ? `${spinResult} BAR` : "Spin"}
+              </div>
+              {spinEligible && !canSpin && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Next spin available in {spinCooldownLabel}.
+                </p>
+              )}
+            </div>
+            <DialogFooter className="gap-2">
+              <Button onClick={handleSpin} disabled={!spinEligible || !canSpin || isSpinning} className="w-full">
+                {isSpinning ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Spinning...
+                  </>
+                ) : (
+                  "Spin Now"
+                )}
+              </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary" className="w-full">
+                  Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={lockOpen} onOpenChange={setLockOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Lock BAR Rewards</DialogTitle>
+              <DialogDescription>
+                Lock your rewarded BAR into the Game contract to grow your city power.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {spinResult && (
+                <p className="text-sm text-foreground text-center">You won {spinResult} BAR.</p>
+              )}
+              <Input
+                type="number"
+                value={lockBarAmount}
+                onChange={(event) => setLockBarAmount(event.target.value)}
+                placeholder="BAR amount"
+                min="0"
+                step="0.1"
+              />
+              {!isOnBase && (
+                <p className="text-xs text-amber-500 text-center">Switch to Base mainnet to lock BAR.</p>
+              )}
+              <p className="text-xs text-muted-foreground text-center">Confirm to lock BAR on Base mainnet.</p>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                onClick={handleLockBarReward}
+                disabled={isLockingBar || !lockBarAmount || !isOnBase}
+                className="w-full"
+              >
+                {isLockingBar ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Locking...
+                  </>
+                ) : (
+                  "Lock BAR"
+                )}
+              </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary" className="w-full">
+                  Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
