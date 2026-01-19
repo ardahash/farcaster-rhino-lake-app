@@ -1,10 +1,15 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { BookOpen, Coins, Castle, Crown } from "lucide-react"
+import { BookOpen, Coins, Castle, Crown, Map, Users } from "lucide-react"
 
-export function InfoScreen() {
+type InfoScreenProps = {
+  onNavigate?: (tab: "docs") => void
+}
+
+export function InfoScreen({ onNavigate }: InfoScreenProps) {
   return (
     <div className="flex-1 p-4 space-y-6 max-w-2xl mx-auto">
       <div className="pt-4">
@@ -14,7 +19,7 @@ export function InfoScreen() {
           </div>
         </div>
         <h1 className="text-3xl font-bold text-center text-primary gold-glow mb-2">The Legend</h1>
-        <p className="text-center text-muted-foreground mb-6">Discover the ancient lore of Rhino Lake</p>
+        <p className="text-center text-muted-foreground mb-6">Lore, systems, and the latest features of Rhino Lake</p>
 
         {/* Lore Card */}
         <Card className="game-card p-6 space-y-4 mb-6">
@@ -61,7 +66,34 @@ export function InfoScreen() {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
                 City power comes from BAR locked inside the Game contract. Levels unlock at 5M, 10M, 20M, 40M, and 80M
-                BAR locked, then keep doubling. Lock BAR to grow, and lock RHINO to build war strength.
+                BAR locked, then keep doubling. Locking means depositing tokens into the onchain game contract so they
+                count toward your city power and rewards.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="town-explore">
+              <AccordionTrigger className="text-foreground">
+                <div className="flex items-center gap-2">
+                  <Map className="w-5 h-5 text-primary" />
+                  <span>Explore the Town</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                Visit the Town map to jump between the Temple, Home, and Marketplace. Use the on-map panels to navigate
+                quickly to the actions you need.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="social-leaderboard">
+              <AccordionTrigger className="text-foreground">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  <span>Social Leaderboard</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed">
+                The Social tab ranks wallets by BAR balance based on recent onchain activity, and resolves Base Names
+                when available.
               </AccordionContent>
             </AccordionItem>
 
@@ -74,7 +106,7 @@ export function InfoScreen() {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
                 BAR is the Rhino Lake growth token. Locking BAR directly increases your city power and determines your
-                level. More BAR locked means stronger cities and higher rewards.
+                level. Holding BAR also powers the Social leaderboard and reward distribution.
               </AccordionContent>
             </AccordionItem>
 
@@ -87,7 +119,7 @@ export function InfoScreen() {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
                 Balance between burning ZEN for RHINO, locking BAR for growth, and using RHINO for war. Strong cities
-                accumulate ETH rewards based on their total locked weight.
+                accumulate ETH rewards based on their total locked weight, which you can claim from the Profile tab.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -110,6 +142,9 @@ export function InfoScreen() {
               Mobile First
             </span>
           </div>
+          <Button onClick={() => onNavigate?.("docs")} className="w-full h-11 text-sm font-semibold">
+            Read the Docs
+          </Button>
         </Card>
       </div>
     </div>

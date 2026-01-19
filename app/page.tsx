@@ -11,6 +11,7 @@ import { MarketScreen } from "@/components/market-screen"
 import { SocialScreen } from "@/components/social-screen"
 import { ProfileScreen } from "@/components/profile-screen"
 import { InfoScreen } from "@/components/info-screen"
+import { DocsScreen } from "@/components/docs-screen"
 import { BottomNav } from "@/components/bottom-nav"
 import { Toaster } from "@/components/ui/toaster"
 import { WalletIslandDock } from "@/components/wallet-island"
@@ -43,7 +44,8 @@ function RhinoLakeShell() {
         {activeTab === "market" && <MarketScreen />}
         {activeTab === "social" && <SocialScreen />}
         {activeTab === "profile" && <ProfileScreen />}
-        {activeTab === "info" && <InfoScreen />}
+        {activeTab === "docs" && <DocsScreen />}
+        {activeTab === "info" && <InfoScreen onNavigate={setActiveTab} />}
       </main>
 
       {/* Bottom Navigation */}
