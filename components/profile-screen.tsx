@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PfpAvatar } from "@/components/pfp-avatar"
+import { SpinWheel } from "@/components/spin-wheel"
 import {
   Dialog,
   DialogClose,
@@ -618,16 +619,14 @@ export function ProfileScreen() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4">
-              <div className="h-32 w-32 rounded-full border-4 border-primary/40 bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary">
-                {spinResult ? `${spinResult} BAR` : "Spin"}
-              </div>
+              <SpinWheel rewards={SPIN_REWARDS} result={spinResult} isSpinning={isSpinning} />
               {spinEligible && !canSpin && (
                 <p className="text-xs text-muted-foreground text-center">
                   Next spin available in {spinCooldownLabel}.
                 </p>
               )}
             </div>
-            <DialogFooter className="gap-2">
+            <DialogFooter className="flex-col gap-2 sm:flex-col sm:justify-start">
               <Button onClick={handleSpin} disabled={!spinEligible || !canSpin || isSpinning} className="w-full">
                 {isSpinning ? (
                   <>

@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { ConnectionDebug } from "@/components/connection-debug"
 import { PfpAvatar } from "@/components/pfp-avatar"
+import { SpinWheel } from "@/components/spin-wheel"
 import { SwapPanel } from "@/components/swap-panel"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
@@ -773,16 +774,14 @@ export function HomeScreen() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4">
-              <div className="h-32 w-32 rounded-full border-4 border-primary/40 bg-primary/10 flex items-center justify-center text-lg font-semibold text-primary">
-                {spinResult ? `${spinResult} BAR` : "Spin"}
-              </div>
+              <SpinWheel rewards={SPIN_REWARDS} result={spinResult} isSpinning={isSpinning} />
               {!canSpin && (
                 <p className="text-xs text-muted-foreground text-center">
                   Next spin available in {spinCooldownLabel}.
                 </p>
               )}
             </div>
-            <DialogFooter className="gap-2">
+            <DialogFooter className="flex-col gap-2 sm:flex-col sm:justify-start">
               {spinResult ? (
                 <Button onClick={handleSpinLockCta} className="w-full">
                   Lock BAR
