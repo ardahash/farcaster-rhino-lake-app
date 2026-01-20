@@ -101,7 +101,6 @@ export function HomeScreen() {
   const [barLockAmount, setBarLockAmount] = useState("")
   const [rhinoLockAmount, setRhinoLockAmount] = useState("")
   const [activeAction, setActiveAction] = useState<"create" | "lock-bar" | "lock-rhino" | null>(null)
-  const [isCtaOpen, setIsCtaOpen] = useState(false)
   const [spinOpen, setSpinOpen] = useState(false)
   const [spinResult, setSpinResult] = useState<string | null>(null)
   const [isSpinning, setIsSpinning] = useState(false)
@@ -131,12 +130,6 @@ export function HomeScreen() {
   }, [address, chainId, refetchAll])
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setIsCtaOpen(true)
-    }
-  }, [isAuthenticated])
-
-  useEffect(() => {
     if (!address || typeof window === "undefined") {
       setLastSpinAt(null)
       return
@@ -146,12 +139,6 @@ export function HomeScreen() {
     setLastSpinAt(Number.isFinite(parsed) ? parsed : null)
     setSpinResult(null)
   }, [address])
-
-  const handleSwapCtaClick = () => {
-    setIsCtaOpen(false)
-    const swapPanel = document.getElementById("swap-panel")
-    swapPanel?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }
 
   const handleSpin = async () => {
     if (!isAuthenticated || !address) {
@@ -491,27 +478,6 @@ export function HomeScreen() {
         description="Mint your city, lock BAR to grow power, and lock RHINO to boost war strength. Check balances and keep your empire alive."
         modelSrc="/3d/Monarch.glb"
       />
-
-      <Dialog open={isCtaOpen} onOpenChange={setIsCtaOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Swap ETH to BAR</DialogTitle>
-            <DialogDescription>
-              First 100 BAR holders above 10M will have the first ETH airdrop.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="sm:justify-start">
-            <Button onClick={handleSwapCtaClick} className="w-full sm:w-auto">
-              Swap ETH to BAR
-            </Button>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary" className="w-full sm:w-auto">
-                Close
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Card className="game-card w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
