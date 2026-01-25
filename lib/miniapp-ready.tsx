@@ -36,11 +36,8 @@ export function MiniAppReady() {
         return
       }
 
-      if (clientFid && !isBaseApp) {
-        if (debugEnabled) {
-          console.info("[miniapp] non-Base host detected", { clientFid })
-        }
-        return
+      if (clientFid && !isBaseApp && debugEnabled) {
+        console.info("[miniapp] non-Base host detected", { clientFid })
       }
 
       didCallReady.current = true
