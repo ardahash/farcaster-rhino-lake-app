@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { BaseAuthProvider, useBaseAuth } from "@/lib/base-auth"
+import { MiniAppReady } from "@/lib/miniapp-ready"
 import { GameProvider } from "@/lib/game-state"
 import { OnboardingModal } from "@/components/onboarding-modal"
 import { HomeScreen } from "@/components/home-screen"
@@ -60,6 +61,7 @@ function RhinoLakeShell() {
 export default function RhinoLakePage() {
   return (
     <BaseAuthProvider>
+      <MiniAppReady />
       <GameProvider>
         <RhinoLakeShell />
       </GameProvider>
