@@ -38,8 +38,7 @@ const MINIAPP_EMBED = {
 
 export const metadata: Metadata = {
   title: "Rhino Lake - Build Your Empire",
-  description:
-    "Build your city, grow stronger, attack & defend! Rhino Lake is a fun, early alpha testing on mainnet, we iterate very fast so please join our Discord for any suggestions!",
+  description: "Build your city grow stronger and battle in Rhino Lake on Base",
   other: {
     "base:app_id": "6963ea39b8395f034ac224dc",
     "fc:miniapp": JSON.stringify(MINIAPP_EMBED),

@@ -9,8 +9,8 @@
     "splashImageUrl": "https://rhinolake.com/rhinolakeTown.png",
     "splashBackgroundColor": "#2e2a25",
     "webhookUrl": "https://rhinolake.com/api/webhook",
-    "subtitle": "Strategy city building game on Base!",
-    "description": "Build your city, grow stronger, attack & defend! Rhino Lake is a fun, early alpha testing on mainnet, we iterate very fast so please join our Discord for any suggestions!",
+    "subtitle": "Strategy city builder",
+    "description": "Build your city grow stronger and battle in Rhino Lake on Base",
     "primaryCategory": "games",
     "tags": [
       "gaming",
@@ -23,9 +23,9 @@
       "https://rhinolake.com/rhinolakeTown.png"
     ],
     "heroImageUrl": "https://rhinolake.com/rhinolakeTown.png",
-    "ogDescription": "Build your city, grow stronger, attack & defend! Rhino Lake is a fun, early alpha testing on mainnet, we iterate very fast so please join our Discord for any suggestions!",
+    "ogDescription": "Build your city grow stronger and battle in Rhino Lake on Base",
     "ogImageUrl": "https://rhinolake.com/rhinolakeTown.png",
-    "castShareUrl": "https://farcaster.xyz/hashwizard/0x8ee5b527"
+    "castShareUrl": "https://rhinolake.com"
   },
   "accountAssociation": {
     "header": "eyJmaWQiOjE4Mzc3MjksInR5cGUiOiJhdXRoIiwia2V5IjoiMHgzOTlGNGFlRDZEMTVlMmNFNjlhMjA3Zjg3ZjcwRjVGRUIyOTY0ODdiIn0",

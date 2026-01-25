@@ -27,9 +27,9 @@ export const minikitConfig = {
     version: "1",
     name: "Rhino Lake",
     devname: "rhinolake",
-    subtitle: "Strategy city building game on Base!",
+    subtitle: "Strategy city builder",
     description:
-      "Build your city, grow stronger, attack & defend! Rhino Lake is a fun, early alpha testing on mainnet, we iterate very fast so please join our Discord for any suggestions!",
+      "Build your city grow stronger and battle in Rhino Lake on Base",
     imageUrl: `${ROOT_URL}/rhinolakeTown.png`,
     screenshotUrls: [`${ROOT_URL}/rhinolakeTown.png`],
     iconUrl: `${ROOT_URL}/rhinolakeTownManifest.png`,
@@ -43,10 +43,9 @@ export const minikitConfig = {
     heroImageUrl: `${ROOT_URL}/rhinolakeTown.png`,
     tagline: "Web3 Strategy game on Base!",
     ogTitle: "Rhino Lake",
-    ogDescription:
-      "Build your city, grow stronger, attack & defend! Rhino Lake is a fun, early alpha testing on mainnet, we iterate very fast so please join our Discord for any suggestions!",
+    ogDescription: "Build your city grow stronger and battle in Rhino Lake on Base",
     ogImageUrl: `${ROOT_URL}/rhinolakeTown.png`,
-    castShareUrl: "https://farcaster.xyz/hashwizard/0x8ee5b527",
+    castShareUrl: ROOT_URL,
     noindex: false,
   },
 } as const
