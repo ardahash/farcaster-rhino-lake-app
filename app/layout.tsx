@@ -25,7 +25,7 @@ const ROOT_URL = resolveRootUrl()
 
 const MINIAPP_EMBED = {
   version: "next",
-  imageUrl: `${ROOT_URL}/image.png`,
+  imageUrl: `${ROOT_URL}/rhinolakeTown.png`,
   button: {
     title: "Open Rhino Lake",
     action: {
@@ -38,7 +38,8 @@ const MINIAPP_EMBED = {
 
 export const metadata: Metadata = {
   title: "Rhino Lake - Build Your Empire",
-  description: "Sacrifice ZEN to grow your ancient empire on Base.",
+  description:
+    "Build your city, grow stronger, attack & defend! Rhino Lake is a fun, early alpha testing on mainnet, we iterate very fast so please join our Discord for any suggestions!",
   other: {
     "base:app_id": "6963ea39b8395f034ac224dc",
     "fc:miniapp": JSON.stringify(MINIAPP_EMBED),
