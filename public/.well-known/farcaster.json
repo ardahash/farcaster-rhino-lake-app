@@ -12,7 +12,11 @@
     "subtitle": "Strategy city building game on Base!",
     "description": "Build your city, grow stronger, attack & defend! Rhino Lake is a fun, early alpha testing on mainnet, we iterate very fast so please join our Discord for any suggestions!",
     "primaryCategory": "games",
-    "tags": ["gaming", "community", "social"],
+    "tags": [
+      "gaming",
+      "community",
+      "social"
+    ],
     "tagline": "Web3 Strategy game on Base!",
     "ogTitle": "Rhino Lake, Strategy on Base",
     "screenshotUrls": [
