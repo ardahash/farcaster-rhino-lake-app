@@ -21,6 +21,16 @@ export function InfoScreen({ onNavigate }: InfoScreenProps) {
         <h1 className="text-3xl font-bold text-center text-primary gold-glow mb-2">The Legend</h1>
         <p className="text-center text-muted-foreground mb-6">Lore, systems, and the latest features of Rhino Lake</p>
 
+        {/* First Steps */}
+        <Card className="game-card p-6 space-y-4 mb-6">
+          <h3 className="font-semibold text-lg text-foreground">First steps</h3>
+          <ol className="list-decimal pl-5 space-y-2 text-muted-foreground leading-relaxed">
+            <li>Mint your free City NFT to claim your starting land.</li>
+            <li>Swap ETH to $BAR and upgrade your city or use the daily free $BAR spin to get some $BAR.</li>
+            <li>Burn ZEN in the Temple to get RHINO (war power), then attack other cities.</li>
+          </ol>
+        </Card>
+
         {/* Lore Card */}
         <Card className="game-card p-6 space-y-4 mb-6">
           <h3 className="font-semibold text-lg text-foreground">The Origin Story</h3>

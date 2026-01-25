@@ -20,7 +20,7 @@ import { LoginDialog } from "@/components/login-dialog"
 import { useCityId } from "@/hooks/use-city-id"
 
 function RhinoLakeShell() {
-  const [activeTab, setActiveTab] = useState("home")
+  const [activeTab, setActiveTab] = useState("info")
   const { address } = useBaseAuth()
   const { cityId, isLoading: isCityIdLoading } = useCityId(address)
   const hasCity = !isCityIdLoading && cityId > 0n
