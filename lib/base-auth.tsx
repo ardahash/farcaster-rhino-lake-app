@@ -208,7 +208,7 @@ export function BaseAuthProvider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <OnchainKitProvider apiKey={apiKey ?? ""} chain={base}>
+        <OnchainKitProvider apiKey={apiKey ?? ""} chain={base} miniKit={{ enabled: true }}>
           <BaseAuthInner>{children}</BaseAuthInner>
         </OnchainKitProvider>
       </QueryClientProvider>
