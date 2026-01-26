@@ -22,7 +22,6 @@ type MiningStatusResponse = {
   error?: string
 }
 
-type MiningCountResponse = { count?: number; maxClicks?: number; rewardPerClick?: number; tier?: PickaxeTier; error?: string }
 type MiningClaimResponse = {
   clicks?: number
   amount?: string
@@ -64,8 +63,11 @@ export function MiningScreen() {
   const [claimNotice, setClaimNotice] = useState<string | null>(null)
   const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
   const noticeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const miningTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
+
+  const getMiningStorageKey = (wallet: string) => `rhino-lake:mining-clicks:${wallet.toLowerCase()}`
 
   useEffect(() => {
     if (!address || !isAuthenticated) {
@@ -76,6 +78,14 @@ export function MiningScreen() {
       setTreasuryBalance("0")
       setOwnedTokenIds([])
       return
+    }
+
+    const stored = typeof window !== "undefined" ? window.localStorage.getItem(getMiningStorageKey(address)) : null
+    const parsed = stored ? Number.parseInt(stored, 10) : NaN
+    if (Number.isFinite(parsed)) {
+      setClicks(parsed)
+    } else {
+      setClicks(0)
     }
 
     const loadStatus = async () => {
@@ -108,6 +118,16 @@ export function MiningScreen() {
     loadStatus()
   }, [address, isAuthenticated, toast])
 
+  useEffect(() => {
+    if (!address || maxClicks === null) return
+    if (clicks > maxClicks) {
+      setClicks(maxClicks)
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(getMiningStorageKey(address), maxClicks.toString())
+      }
+    }
+  }, [address, clicks, maxClicks])
+
   const handleConnect = async () => {
     try {
       await signIn("coinbase")
@@ -131,39 +151,18 @@ export function MiningScreen() {
       return
     }
 
-    const optimistic = clicks + 1
-    setClicks(optimistic)
-    setIsMining(true)
-    try {
-      const response = await fetch("/api/mining-click", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-      })
-      const data = (await response.json()) as MiningCountResponse
-      if (!response.ok) {
-        throw new Error(data?.error ?? "Mining failed.")
-      }
-      setClicks(data.count ?? optimistic)
-      if (typeof data.maxClicks === "number") {
-        setMaxClicks(data.maxClicks)
-      }
-      if (typeof data.rewardPerClick === "number") {
-        setRewardPerClick(data.rewardPerClick)
-      }
-      if (data.tier) {
-        setTier(data.tier)
-      }
-    } catch (error) {
-      setClicks((prev) => Math.max(prev - 1, 0))
-      toast({
-        title: "Mining failed",
-        description: error instanceof Error ? error.message : "Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsMining(false)
+    const nextClicks = clicks + 1
+    setClicks(nextClicks)
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(getMiningStorageKey(address), nextClicks.toString())
     }
+    setIsMining(true)
+    if (miningTimeoutRef.current) {
+      clearTimeout(miningTimeoutRef.current)
+    }
+    miningTimeoutRef.current = setTimeout(() => {
+      setIsMining(false)
+    }, 180)
   }
 
   const handleClaim = async () => {
@@ -193,6 +192,9 @@ export function MiningScreen() {
       }
 
       setClicks(0)
+      if (typeof window !== "undefined" && address) {
+        window.localStorage.setItem(getMiningStorageKey(address), "0")
+      }
       if (data.rewardPerClick) {
         setRewardPerClick(data.rewardPerClick)
       }
@@ -349,6 +351,9 @@ export function MiningScreen() {
     return () => {
       if (noticeTimeoutRef.current) {
         clearTimeout(noticeTimeoutRef.current)
+      }
+      if (miningTimeoutRef.current) {
+        clearTimeout(miningTimeoutRef.current)
       }
     }
   }, [])
