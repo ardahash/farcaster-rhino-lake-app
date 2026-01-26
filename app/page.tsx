@@ -6,7 +6,7 @@ import { MiniAppReady } from "@/lib/miniapp-ready"
 import { GameProvider } from "@/lib/game-state"
 import { OnboardingModal } from "@/components/onboarding-modal"
 import { HomeScreen } from "@/components/home-screen"
-import { TempleScreen } from "@/components/temple-screen"
+import { ArmyScreen } from "@/components/army-screen"
 import { TownScreen } from "@/components/town-screen"
 import { MarketScreen } from "@/components/market-screen"
 import { SocialScreen } from "@/components/social-screen"
@@ -42,11 +42,11 @@ function RhinoLakeShell() {
       <main className="flex-1 pb-20 overflow-y-auto">
         {activeTab === "home" && <HomeScreen onNavigate={setActiveTab} />}
         {activeTab === "town" && hasCity && <TownScreen onNavigate={setActiveTab} />}
-        {activeTab === "temple" && <TempleScreen />}
+        {activeTab === "army" && <ArmyScreen />}
         {activeTab === "market" && <MarketScreen />}
         {activeTab === "mining" && <MiningScreen />}
         {activeTab === "social" && <SocialScreen />}
-        {activeTab === "profile" && <ProfileScreen />}
+        {activeTab === "profile" && <ProfileScreen onNavigate={setActiveTab} />}
         {activeTab === "docs" && <DocsScreen />}
         {activeTab === "info" && <InfoScreen onNavigate={setActiveTab} />}
       </main>

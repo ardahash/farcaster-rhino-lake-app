@@ -1,0 +1,411 @@
+"use client"
+
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
+import { useBaseAuth } from "@/lib/base-auth"
+import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
+import { CONTRACTS, ERC20_ABI, BANDA_NFT_ABI } from "@/lib/contracts"
+import { BANDA_TIERS, getBandaTier, type BandaTier } from "@/lib/army-tiers"
+import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
+import { encodeFunctionData, parseUnits } from "viem"
+import { ConnectionDebug } from "@/components/connection-debug"
+import { Loader2, Swords } from "lucide-react"
+
+type BandaStatusResponse = {
+  tier?: BandaTier
+  ratePerSecond?: number
+  ownedTokenIds?: number[]
+  treasuryBalance?: string
+  maxSeconds?: number
+  error?: string
+}
+
+type BandaClaimResponse = {
+  amount?: string
+  txHash?: string
+  tier?: BandaTier
+  ratePerSecond?: number
+  treasuryBalance?: string
+  error?: string
+}
+
+const USDC_DECIMALS = 6
+
+export function ArmyScreen() {
+  const { address, chainId, isAuthenticated, isConnecting, signIn } = useBaseAuth()
+  const { toast } = useToast()
+  const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+  const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
+
+  const [isClaiming, setIsClaiming] = useState(false)
+  const [isUpgrading, setIsUpgrading] = useState(false)
+  const [tier, setTier] = useState<BandaTier>("starter")
+  const [ownedTokenIds, setOwnedTokenIds] = useState<number[]>([])
+  const [ratePerSecond, setRatePerSecond] = useState(1)
+  const [treasuryBalance, setTreasuryBalance] = useState("0")
+  const [maxSeconds, setMaxSeconds] = useState<number | null>(null)
+  const [lastClaimAt, setLastClaimAt] = useState<number | null>(null)
+  const [now, setNow] = useState(Date.now())
+
+  const tickerRef = useRef<NodeJS.Timeout | null>(null)
+  const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
+  const storageKey = address ? `rhino-lake:banda-claim:${address.toLowerCase()}` : null
+
+  useEffect(() => {
+    if (!address || !isAuthenticated) {
+      setLastClaimAt(null)
+      setRatePerSecond(1)
+      setTier("starter")
+      setTreasuryBalance("0")
+      setOwnedTokenIds([])
+      setMaxSeconds(null)
+      return
+    }
+
+    const stored = typeof window !== "undefined" && storageKey ? window.localStorage.getItem(storageKey) : null
+    const parsed = stored ? Number.parseInt(stored, 10) : NaN
+    const nextLast = Number.isFinite(parsed) ? parsed : Date.now()
+    setLastClaimAt(nextLast)
+    if (typeof window !== "undefined" && storageKey && !stored) {
+      window.localStorage.setItem(storageKey, nextLast.toString())
+    }
+
+    const loadStatus = async () => {
+      try {
+        const response = await fetch("/api/banda-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address }),
+        })
+        const data = (await response.json()) as BandaStatusResponse
+        if (!response.ok) {
+          throw new Error(data?.error ?? "Unable to load Army status.")
+        }
+        setTier(data.tier ?? "starter")
+        setRatePerSecond(data.ratePerSecond ?? 1)
+        setOwnedTokenIds(data.ownedTokenIds ?? [])
+        setTreasuryBalance(data.treasuryBalance ?? "0")
+        setMaxSeconds(typeof data.maxSeconds === "number" ? data.maxSeconds : null)
+      } catch (error) {
+        toast({
+          title: "Army sync failed",
+          description: error instanceof Error ? error.message : "Please try again.",
+          variant: "destructive",
+        })
+      }
+    }
+
+    loadStatus()
+  }, [address, isAuthenticated, storageKey, toast])
+
+  useEffect(() => {
+    if (tickerRef.current) {
+      clearInterval(tickerRef.current)
+    }
+    tickerRef.current = setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+    return () => {
+      if (tickerRef.current) {
+        clearInterval(tickerRef.current)
+      }
+    }
+  }, [])
+
+  const handleConnect = async () => {
+    try {
+      await signIn("coinbase")
+    } catch {
+      // errors handled by auth UI
+    }
+  }
+
+  const ensureBaseNetwork = async () => {
+    const activeChainId = chainId ?? BASE_MAINNET_CHAIN_ID
+    if (activeChainId !== BASE_MAINNET_CHAIN_ID) {
+      await switchChainAsync({ chainId: BASE_MAINNET_CHAIN_ID })
+    }
+    return BASE_MAINNET_CHAIN_ID
+  }
+
+  const ensureUsdcAllowance = async (amountRaw: bigint) => {
+    if (!publicClient || !address || !usdcAddress || !CONTRACTS.BANDA_NFT) {
+      throw new Error("USDC not configured.")
+    }
+    const allowance = (await publicClient.readContract({
+      address: usdcAddress,
+      abi: ERC20_ABI,
+      functionName: "allowance",
+      args: [address, CONTRACTS.BANDA_NFT as `0x${string}`],
+    })) as bigint
+
+    if (allowance >= amountRaw) {
+      return
+    }
+
+    const approveHash = await sendTransactionAsync({
+      chainId: BASE_MAINNET_CHAIN_ID,
+      account: address,
+      to: usdcAddress,
+      data: encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [CONTRACTS.BANDA_NFT as `0x${string}`, amountRaw],
+      }),
+    })
+    await publicClient.waitForTransactionReceipt({ hash: approveHash })
+  }
+
+  const handleUpgrade = async (targetTier: BandaTier) => {
+    if (!isAuthenticated || !address) {
+      await handleConnect()
+      return
+    }
+
+    const tierConfig = getBandaTier(targetTier)
+    if (tierConfig.costUsdc <= 0) {
+      return
+    }
+
+    if (!usdcAddress) {
+      toast({
+        title: "Upgrade unavailable",
+        description: "USDC address is not configured.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!CONTRACTS.BANDA_NFT) {
+      toast({
+        title: "Upgrade unavailable",
+        description: "BANDA NFT contract not configured.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUpgrading(true)
+    try {
+      await ensureBaseNetwork()
+      const priceRaw = parseUnits(tierConfig.costUsdc.toString(), USDC_DECIMALS)
+      await ensureUsdcAllowance(priceRaw)
+
+      const buyHash = await sendTransactionAsync({
+        chainId: BASE_MAINNET_CHAIN_ID,
+        account: address,
+        to: CONTRACTS.BANDA_NFT as `0x${string}`,
+        data: encodeFunctionData({
+          abi: BANDA_NFT_ABI,
+          functionName: "buy",
+          args: [BigInt(tierConfig.tokenId)],
+        }),
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: buyHash })
+      }
+
+      const response = await fetch("/api/banda-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      })
+      const data = (await response.json()) as BandaStatusResponse
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Upgrade failed.")
+      }
+
+      setTier(data.tier ?? targetTier)
+      setRatePerSecond(data.ratePerSecond ?? tierConfig.ratePerSecond)
+      setOwnedTokenIds(data.ownedTokenIds ?? ownedTokenIds)
+      setTreasuryBalance(data.treasuryBalance ?? treasuryBalance)
+      setMaxSeconds(typeof data.maxSeconds === "number" ? data.maxSeconds : maxSeconds)
+      toast({
+        title: "Army upgraded",
+        description: `${tierConfig.label} unlocked.`,
+      })
+    } catch (error) {
+      toast({
+        title: "Upgrade failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpgrading(false)
+    }
+  }
+
+  const handleClaim = async () => {
+    if (!isAuthenticated || !address) {
+      await handleConnect()
+      return
+    }
+
+    if (!lastClaimAt) {
+      return
+    }
+
+    if (claimable <= 0) {
+      toast({
+        title: "Nothing to claim",
+        description: "Let your army power accumulate first.",
+      })
+      return
+    }
+
+    setIsClaiming(true)
+    try {
+      const response = await fetch("/api/banda-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, seconds: elapsedSeconds }),
+      })
+      const data = (await response.json()) as BandaClaimResponse
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Claim failed.")
+      }
+
+      const nextLast = Date.now()
+      setLastClaimAt(nextLast)
+      if (typeof window !== "undefined" && storageKey) {
+        window.localStorage.setItem(storageKey, nextLast.toString())
+      }
+
+      if (data.tier) {
+        setTier(data.tier)
+      }
+      if (typeof data.ratePerSecond === "number") {
+        setRatePerSecond(data.ratePerSecond)
+      }
+      if (data.treasuryBalance) {
+        setTreasuryBalance(data.treasuryBalance)
+      }
+
+      toast({
+        title: "Army claim complete",
+        description: `Claimed ${data.amount ?? 0} $BANDA.`,
+      })
+    } catch (error) {
+      toast({
+        title: "Claim failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsClaiming(false)
+    }
+  }
+
+  const isActionLoading = isConnecting || isSwitching || isTxPending
+  const currentTier = useMemo(() => getBandaTier(tier), [tier])
+  const bandaConfigured = Boolean(CONTRACTS.BANDA_NFT)
+  const treasuryBalanceNumber = Number(treasuryBalance)
+  const treasuryBalanceDisplay = Number.isFinite(treasuryBalanceNumber)
+    ? treasuryBalanceNumber.toLocaleString(undefined, { maximumFractionDigits: 4 })
+    : treasuryBalance
+  const elapsedSeconds = lastClaimAt ? Math.max(Math.floor((now - lastClaimAt) / 1000), 0) : 0
+  const cappedSeconds = maxSeconds !== null ? Math.min(elapsedSeconds, maxSeconds) : elapsedSeconds
+  const accrued = cappedSeconds * ratePerSecond
+  const claimable = Math.max(accrued, 0)
+
+  return (
+    <div className="flex-1 relative overflow-hidden">
+      <div
+        className="absolute inset-0 bg-center bg-cover"
+        style={{ backgroundImage: "url(/ZenTemple.png)" }}
+      />
+      <div className="absolute inset-0 bg-black/40" />
+
+      <div className="relative z-10 mx-auto w-full max-w-3xl px-4 py-10 space-y-6">
+        <Card className="game-card p-6 space-y-2 bg-card/70 backdrop-blur border-border/60">
+          <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+            <Swords className="h-5 w-5 text-primary" />
+            Army Command
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Your $BANDA army power grows passively, even while you are away.
+          </p>
+        </Card>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
+            <p className="text-xs text-muted-foreground">Current Rate</p>
+            <p className="text-xl font-bold text-primary">{ratePerSecond} $BANDA / sec</p>
+            <p className="text-[11px] text-muted-foreground">{currentTier.label}</p>
+          </Card>
+          <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
+            <p className="text-xs text-muted-foreground">Army Power</p>
+            <p className="text-xl font-bold text-foreground">{claimable.toLocaleString()} $BANDA</p>
+            <p className="text-[11px] text-muted-foreground">Accumulates while offline.</p>
+          </Card>
+          <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
+            <p className="text-xs text-muted-foreground">Currently mineable</p>
+            <p className="text-xl font-bold text-foreground">{treasuryBalanceDisplay} $BANDA</p>
+            <p className="text-[11px] text-muted-foreground">Treasury balance</p>
+          </Card>
+        </div>
+
+        <Card className="game-card p-6 space-y-4 bg-card/70 backdrop-blur border-border/60">
+          <div className="space-y-1 text-center">
+            <h3 className="text-lg font-semibold text-foreground">Claim Army Power</h3>
+            <p className="text-xs text-muted-foreground">Claim your accumulated $BANDA to your wallet.</p>
+          </div>
+          <Button
+            onClick={handleClaim}
+            disabled={!isAuthenticated || isActionLoading || isClaiming || claimable <= 0}
+            className="w-full h-11 text-base font-semibold"
+          >
+            {isClaiming ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Claiming...
+              </>
+            ) : (
+              `Claim ${claimable.toLocaleString()} $BANDA`
+            )}
+          </Button>
+        </Card>
+
+        <Card className="game-card p-6 space-y-4 bg-card/70 backdrop-blur border-border/60">
+          <div className="space-y-1 text-center">
+            <h3 className="text-lg font-semibold text-foreground">Army Boosters</h3>
+            <p className="text-xs text-muted-foreground">Unlock faster passive $BANDA gains.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {BANDA_TIERS.filter((entry) => entry.id !== "starter").map((entry) => {
+              const owned = ownedTokenIds.includes(entry.tokenId)
+              return (
+                <div key={entry.id} className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    {entry.image && (
+                      <img src={entry.image} alt={entry.label} className="h-16 w-16 rounded-md object-contain" />
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{entry.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {entry.costUsdc} USDC • {entry.ratePerSecond} / sec
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => handleUpgrade(entry.id)}
+                    disabled={owned || isUpgrading || isActionLoading || !isAuthenticated || !bandaConfigured}
+                    className="w-full"
+                    variant={owned ? "secondary" : "default"}
+                  >
+                    {owned ? "Owned" : `Buy for ${entry.costUsdc} USDC`}
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+
+        <ConnectionDebug />
+      </div>
+    </div>
+  )
+}

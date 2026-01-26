@@ -306,7 +306,7 @@ function TownScene({ navPanels, sceneRef: externalSceneRef }: TownSceneProps) {
 }
 
 type TownScreenProps = {
-  onNavigate?: (tab: "home" | "temple" | "market") => void
+  onNavigate?: (tab: "home" | "army" | "market") => void
 }
 
 export function TownScreen({ onNavigate }: TownScreenProps) {
@@ -320,7 +320,7 @@ export function TownScreen({ onNavigate }: TownScreenProps) {
 
   const activeLayout = isDev ? layout : DEFAULT_TOWN_LAYOUT
   const navItems = [
-    { key: "templePanel", label: "Temple", tab: "temple", disabled: false },
+    { key: "templePanel", label: "Army", tab: "army", disabled: false },
     { key: "marketPanel", label: "Marketplace", tab: "market", disabled: false },
     { key: "homePanel", label: "Home", tab: "home", disabled: false },
   ] as const

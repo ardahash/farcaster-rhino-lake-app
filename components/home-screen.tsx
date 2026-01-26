@@ -75,13 +75,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     address,
   )
 
-  const zenBalance = useErc20Balance({
-    token: CONTRACTS.ZEN,
-    address,
-    chainId: BASE_MAINNET_CHAIN_ID,
-    enabled: Boolean(address),
-  })
-
   const barBalance = useErc20Balance({
     token: CONTRACTS.BAR,
     address,
@@ -90,7 +83,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   })
 
   const rhinoBalance = useErc20Balance({
-    token: CONTRACTS.RHINO,
+    token: CONTRACTS.BANDA,
     address,
     chainId: BASE_MAINNET_CHAIN_ID,
     enabled: Boolean(address),
@@ -111,7 +104,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const [lastSpinAt, setLastSpinAt] = useState<number | null>(null)
 
   const refetchAll = useCallback(() => {
-    zenBalance.refetch()
     barBalance.refetch()
     rhinoBalance.refetch()
     ethBalance.refetch()
@@ -123,7 +115,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     refetchCityId,
     refetchCityState,
     rhinoBalance.refetch,
-    zenBalance.refetch,
   ])
 
   useEffect(() => {
@@ -384,22 +375,22 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
 
       const amountValue = Number.parseFloat(rhinoLockAmount)
       if (!amountValue || amountValue <= 0) {
-        throw new Error("Enter a RHINO amount to lock.")
+        throw new Error("Enter a $BANDA amount to lock.")
       }
 
       const decimals = rhinoBalance.decimals ?? 18
       const amountRaw = parseUnits(rhinoLockAmount, decimals)
 
       if (rhinoBalance.isLoading) {
-        throw new Error("RHINO balance is still loading.")
+        throw new Error("$BANDA balance is still loading.")
       }
 
       if (rhinoBalance.raw < amountRaw) {
-        throw new Error("Insufficient RHINO balance.")
+        throw new Error("Insufficient $BANDA balance.")
       }
 
       await ensureBaseNetwork()
-      await ensureAllowance(CONTRACTS.RHINO, CONTRACTS.GAME, amountRaw)
+      await ensureAllowance(CONTRACTS.BANDA, CONTRACTS.GAME, amountRaw)
 
       const txHash = await sendTransactionAsync({
         chainId: BASE_MAINNET_CHAIN_ID,
@@ -415,8 +406,8 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         await publicClient.waitForTransactionReceipt({ hash: txHash })
       }
       toast({
-        title: "RHINO Locked",
-        description: "Your city's war power has increased.",
+        title: "$BANDA Locked",
+        description: "Your city's army power has increased.",
       })
       setRhinoLockAmount("")
       refetchAll()
@@ -465,7 +456,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const powerDisplay = formatTokenValue(cityState.barLocked, barDecimals)
   const warPowerDisplay = formatTokenValue(cityState.rhinoLocked, rhinoBalance.decimals ?? 18)
 
-  const zenBalanceDisplay = formatTokenValue(zenBalance.raw, zenBalance.decimals ?? 18)
   const barBalanceDisplay = formatTokenValue(barBalance.raw, barBalance.decimals ?? 18)
   const rhinoBalanceDisplay = formatTokenValue(rhinoBalance.raw, rhinoBalance.decimals ?? 18)
   const ethBalanceDisplay = formatTokenValue(ethBalance.raw, 18)
@@ -479,7 +469,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     <div className="flex-1 flex flex-col items-center justify-center p-4 space-y-6">
       <GuideCard
         title="Monarch's Orders"
-        description="Mint your city, lock BAR to grow power, and lock RHINO to boost war strength. Check balances and keep your empire alive."
+        description="Mint your city, lock BAR to grow power, and lock $BANDA to boost army strength. Check balances and keep your empire alive."
         modelSrc="/3d/Monarch.glb"
       />
 
@@ -536,7 +526,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             <p className="text-xl font-bold text-foreground">{powerDisplay}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">War Power (RHINO)</p>
+            <p className="text-xs text-muted-foreground mb-1">Army Power ($BANDA)</p>
             <p className="text-xl font-bold text-foreground">{warPowerDisplay}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
@@ -553,15 +543,11 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">ZEN Balance</p>
-            <p className="text-xl font-bold text-foreground">{zenBalanceDisplay}</p>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">BAR Balance</p>
             <p className="text-xl font-bold text-foreground">{barBalanceDisplay}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">RHINO Balance</p>
+            <p className="text-xs text-muted-foreground mb-1">$BANDA Balance</p>
             <p className="text-xl font-bold text-foreground">{rhinoBalanceDisplay}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
@@ -673,13 +659,13 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Swords className="h-4 w-4 text-primary" />
-                War Power (Lock RHINO)
+                Army Power (Lock $BANDA)
               </div>
               <Input
                 type="number"
                 value={rhinoLockAmount}
                 onChange={(event) => setRhinoLockAmount(event.target.value)}
-                placeholder="RHINO amount"
+                placeholder="$BANDA amount"
                 className="h-11"
                 min="0"
                 step="1"
@@ -693,10 +679,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                 {activeAction === "lock-rhino" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Locking RHINO...
+                    Locking $BANDA...
                   </>
                 ) : (
-                  "Lock RHINO"
+                  "Lock $BANDA"
                 )}
               </Button>
             </div>
@@ -789,12 +775,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
       </div>
 
       <div id="swap-panel" className="w-full max-w-md">
-        <SwapPanel
-          highlightSwap={highlightSwap}
-          onSwapSuccess={refetchAll}
-          showZenSwaps={false}
-          showBarSwaps
-        />
+        <SwapPanel highlightSwap={highlightSwap} onSwapSuccess={refetchAll} />
       </div>
     </div>
   )

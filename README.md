@@ -1,12 +1,12 @@
 # Rhino Lake
 
 ## Description (DappRadar)
-Rhino Lake is an onchain strategy game on Base where you mint a City NFT, lock BAR to grow city power, and burn ZEN to mint RHINO for war strength. Cities level up through BAR thresholds, compete in battles, and share in ETH rewards based on their total locked weight (BAR + RHINO). The app includes a Town hub, Temple for burns, Marketplace swaps for BAR, and a Profile view to claim rewards and manage your PFP.
+Rhino Lake is an onchain strategy game on Base where you mint a City NFT, lock BAR to grow city power, and lock $BANDA to build Army Power for battles. Cities level up through BAR thresholds, compete in battles, and share in ETH rewards based on their total locked weight (BAR + $BANDA). The app includes a Town hub, Army accrual, Marketplace swaps for BAR, and a Profile view to claim rewards and manage your PFP.
 
 ## How power works now
 - Power is onchain and wallet-specific. It equals the amount of BAR locked in the Game contract for your city.
 - City level is derived from BAR locked thresholds (1M, 10M, 20M, 40M, 80M, 120M, 200M, 400M, 700M, 1B, 10B BAR).
-- Burn ZEN in the Temple to mint RHINO. Lock RHINO to increase war power and enable attacks.
+- Lock $BANDA to increase Army Power and enable attacks.
 
 ## How to test two wallets
 1. Connect Wallet A, mint a city, and lock some BAR. Note the power/level.

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { BookOpen, Coins, Castle, Crown, Map, Users } from "lucide-react"
+import { BookOpen, Coins, Castle, Crown, Map, Users, Swords } from "lucide-react"
 
 type InfoScreenProps = {
   onNavigate?: (tab: "docs") => void
@@ -27,7 +27,7 @@ export function InfoScreen({ onNavigate }: InfoScreenProps) {
           <ol className="list-decimal pl-5 space-y-2 text-muted-foreground leading-relaxed">
             <li>Mint your free City NFT to claim your starting land.</li>
             <li>Swap ETH to $BAR and upgrade your city or use the daily free $BAR spin to get some $BAR.</li>
-            <li>Burn ZEN in the Temple to get RHINO (war power), then attack other cities.</li>
+            <li>Grow your $BANDA Army Power in the Army tab, then lock it to strengthen your city.</li>
           </ol>
         </Card>
 
@@ -37,11 +37,11 @@ export function InfoScreen({ onNavigate }: InfoScreenProps) {
           <div className="space-y-3 text-muted-foreground leading-relaxed">
             <p>
               Long ago, in a realm between the digital and divine, a mystical lake appeared at the foot of an ancient
-              mountain. The waters shimmered with an otherworldly energy called ZEN.
+              mountain. The waters shimmered with an otherworldly energy that awakened the $BANDA armies.
             </p>
             <p>
-              Warriors and builders from across the lands discovered that burning ZEN at the lake could forge legendary
-              RHINO, and that locking BAR into their cities awakened true power.
+              Warriors and builders from across the lands discovered that locking BAR and growing $BANDA Army Power
+              awakened true power.
             </p>
             <p>
               Those who mastered growth, war, and rewards became legendary rulers, their names echoing through eternity.
@@ -54,16 +54,16 @@ export function InfoScreen({ onNavigate }: InfoScreenProps) {
           <h3 className="font-semibold text-lg text-foreground">How to Play</h3>
 
           <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="burn">
+            <AccordionItem value="army">
               <AccordionTrigger className="text-foreground">
                 <div className="flex items-center gap-2">
-                  <Coins className="w-5 h-5 text-primary" />
-                  <span>Burn ZEN</span>
+                  <Swords className="w-5 h-5 text-primary" />
+                  <span>Army Power ($BANDA)</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Burn ZEN in the Temple to mint RHINO directly to your wallet. RHINO fuels war and city defense, and all
-                burns happen on Base mainnet.
+                Your Army power grows passively in the Army tab, even while you are offline. Claim $BANDA to your wallet
+                and lock it to boost city defense and strength.
               </AccordionContent>
             </AccordionItem>
 
@@ -89,7 +89,7 @@ export function InfoScreen({ onNavigate }: InfoScreenProps) {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Visit the Town map to jump between the Temple, Home, and Marketplace. Use the on-map panels to navigate
+                Visit the Town map to jump between the Army, Home, and Marketplace. Use the on-map panels to navigate
                 quickly to the actions you need.
               </AccordionContent>
             </AccordionItem>
@@ -128,7 +128,7 @@ export function InfoScreen({ onNavigate }: InfoScreenProps) {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Balance between burning ZEN for RHINO, locking BAR for growth, and using RHINO for war. Strong cities
+                Balance between growing $BANDA Army Power and locking BAR for growth. Strong cities
                 accumulate ETH rewards based on their total locked weight, which you can claim from the Profile tab.
               </AccordionContent>
             </AccordionItem>

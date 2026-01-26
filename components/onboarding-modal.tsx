@@ -25,16 +25,16 @@ export function OnboardingModal() {
           <h1 className="text-3xl font-bold gold-glow text-primary">Welcome to Rhino Lake</h1>
 
           <div className="space-y-3 text-muted-foreground leading-relaxed">
-            <p className="text-lg font-semibold text-foreground">Burn ZEN, lock BAR, and rule</p>
+            <p className="text-lg font-semibold text-foreground">Grow $BANDA, lock BAR, and rule</p>
 
             <p>
-              In ancient times, a mystical lake appeared where warriors burned ZEN to forge RHINO and locked BAR to
-              build legendary city-states.
+              In ancient times, a mystical lake appeared where warriors forged $BANDA armies and locked BAR to build
+              legendary city-states.
             </p>
 
             <p>
-              Connect your Base account to onboard instantly, then swap on Base mainnet to acquire ZEN and BAR. As ruler,
-              burn ZEN for RHINO and lock BAR to grow your empire.
+              Connect your Base account to onboard instantly, then swap on Base mainnet to acquire BAR. As ruler, grow
+              $BANDA Army Power and lock BAR to grow your empire.
             </p>
           </div>
         </div>

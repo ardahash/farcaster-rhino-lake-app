@@ -53,7 +53,11 @@ const formatTokenValue = (raw: bigint, decimals: number, fallback = "--") => {
   }
 }
 
-export function ProfileScreen() {
+type ProfileScreenProps = {
+  onNavigate?: (tab: string) => void
+}
+
+export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const { address, chainId, isAuthenticated, isConnecting, signIn, signOut, error: authError } = useBaseAuth()
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
@@ -93,7 +97,7 @@ export function ProfileScreen() {
   })
 
   const rhinoBalance = useErc20Balance({
-    token: CONTRACTS.RHINO,
+    token: CONTRACTS.BANDA,
     address,
     chainId: DEFAULT_CHAIN_ID,
     enabled: Boolean(isAuthenticated && address),
@@ -105,7 +109,7 @@ export function ProfileScreen() {
   const achievements = [
     { id: 1, name: "First City", icon: Sparkles, unlocked: cityId > 0n },
     { id: 2, name: "Power Builder", icon: TrendingUp, unlocked: cityState.barLocked > 0n },
-    { id: 3, name: "Temple Master", icon: Crown, unlocked: level >= 3 },
+    { id: 3, name: "Army Commander", icon: Crown, unlocked: level >= 3 },
     { id: 4, name: "Legendary Ruler", icon: Trophy, unlocked: level >= 10 },
   ]
 
@@ -383,7 +387,7 @@ export function ProfileScreen() {
   const displayName = isAuthenticated ? (baseHandle ? `@${baseHandle}` : shortAddress) : "Rhino Lake Ruler"
   const username = isAuthenticated ? (baseName?.startsWith("@") ? baseName.slice(1) : baseName ?? shortAddress) : "rhino-lake"
   const avatarFallback = displayName[0] ?? "?"
-  const profileBio = "Builder of empires, master of BAR and RHINO"
+  const profileBio = "Builder of empires, master of BAR and $BANDA"
   const profileTag = baseName ?? (isAuthenticated ? shortAddress : "Base Mini App")
   const walletLabel = baseName ?? shortAddress
   const currentNetwork = getChainLabel(chainId)
@@ -465,7 +469,7 @@ export function ProfileScreen() {
               <p className="text-3xl font-bold text-foreground">{powerDisplay}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">War Power</p>
+              <p className="text-sm text-muted-foreground mb-1">Army Power</p>
               <p className="text-3xl font-bold text-foreground">{rhinoLockedDisplay}</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
@@ -489,7 +493,7 @@ export function ProfileScreen() {
           <div className="space-y-2 text-center">
             <h3 className="font-semibold text-lg text-foreground">ETH Rewards</h3>
             <p className="text-sm text-muted-foreground">
-              Claim ETH rewards based on your city&apos;s BAR + RHINO weight.
+              Claim ETH rewards based on your city&apos;s BAR + $BANDA weight.
             </p>
           </div>
           {!isOnBase && isAuthenticated && (
@@ -586,6 +590,16 @@ export function ProfileScreen() {
             )}
           </Button>
           {authError && !isAuthenticated && <p className="text-xs text-muted-foreground text-center">{authError}</p>}
+        </Card>
+
+        <Card className="game-card p-6 space-y-3 mt-6">
+          <div className="space-y-1 text-center">
+            <h3 className="font-semibold text-lg text-foreground">Social Arena</h3>
+            <p className="text-sm text-muted-foreground">View the latest reactions and compete on the leaderboard.</p>
+          </div>
+          <Button onClick={() => onNavigate?.("social")} className="w-full h-11 text-base font-semibold">
+            Open Social
+          </Button>
         </Card>
 
         <Card className="game-card p-6 space-y-4 mt-6">
