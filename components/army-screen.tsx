@@ -31,6 +31,16 @@ type BandaClaimResponse = {
   error?: string
 }
 
+type ConfettiPiece = {
+  id: number
+  left: number
+  size: number
+  delay: number
+  duration: number
+  rotate: number
+  color: string
+}
+
 const USDC_DECIMALS = 6
 
 export function ArmyScreen() {
@@ -49,8 +59,11 @@ export function ArmyScreen() {
   const [maxSeconds, setMaxSeconds] = useState<number | null>(null)
   const [lastClaimAt, setLastClaimAt] = useState<number | null>(null)
   const [now, setNow] = useState(Date.now())
+  const [claimNotice, setClaimNotice] = useState<string | null>(null)
+  const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
 
   const tickerRef = useRef<NodeJS.Timeout | null>(null)
+  const noticeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
   const storageKey = address ? `rhino-lake:banda-claim:${address.toLowerCase()}` : null
 
@@ -284,10 +297,16 @@ export function ArmyScreen() {
         setTreasuryBalance(data.treasuryBalance)
       }
 
-      toast({
-        title: "Army claim complete",
-        description: `Claimed ${data.amount ?? 0} $BANDA.`,
-      })
+      if (noticeTimeoutRef.current) {
+        clearTimeout(noticeTimeoutRef.current)
+      }
+      const claimedAmount = data.amount ?? 0
+      setClaimNotice(`You claimed ${claimedAmount} $BANDA.`)
+      setConfettiPieces(createConfettiPieces())
+      noticeTimeoutRef.current = setTimeout(() => {
+        setClaimNotice(null)
+        setConfettiPieces([])
+      }, 3200)
     } catch (error) {
       toast({
         title: "Claim failed",
@@ -297,6 +316,27 @@ export function ArmyScreen() {
     } finally {
       setIsClaiming(false)
     }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (noticeTimeoutRef.current) {
+        clearTimeout(noticeTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const createConfettiPieces = () => {
+    const colors = ["#fbbf24", "#f97316", "#34d399", "#60a5fa", "#f472b6", "#a78bfa"]
+    return Array.from({ length: 28 }, (_, index) => ({
+      id: index,
+      left: Math.random() * 100,
+      size: 6 + Math.random() * 8,
+      delay: Math.random() * 0.2,
+      duration: 1.6 + Math.random() * 0.8,
+      rotate: Math.random() * 360,
+      color: colors[index % colors.length],
+    }))
   }
 
   const isActionLoading = isConnecting || isSwitching || isTxPending
@@ -313,6 +353,51 @@ export function ArmyScreen() {
 
   return (
     <div className="flex-1 relative overflow-hidden">
+      {claimNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-none rounded-xl border border-primary/30 bg-background/95 px-6 py-4 text-center text-sm font-semibold text-foreground shadow-xl">
+            {claimNotice}
+          </div>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {confettiPieces.map((piece) => (
+              <span
+                key={piece.id}
+                className="absolute top-1/2"
+                style={
+                  {
+                    left: `${piece.left}%`,
+                    width: `${piece.size}px`,
+                    height: `${piece.size * 0.45}px`,
+                    backgroundColor: piece.color,
+                    animationDelay: `${piece.delay}s`,
+                    animationDuration: `${piece.duration}s`,
+                    transform: `translateY(-20px) rotate(${piece.rotate}deg)`,
+                    borderRadius: "2px",
+                    "--confetti-rot": `${piece.rotate}deg`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+          <style jsx>{`
+            span {
+              animation-name: confetti-fall;
+              animation-timing-function: ease-out;
+              animation-fill-mode: forwards;
+            }
+            @keyframes confetti-fall {
+              0% {
+                opacity: 1;
+                transform: translateY(-20px) rotate(var(--confetti-rot));
+              }
+              100% {
+                opacity: 0;
+                transform: translateY(60vh) rotate(calc(var(--confetti-rot) + 120deg));
+              }
+            }
+          `}</style>
+        </div>
+      )}
       <div
         className="absolute inset-0 bg-center bg-cover"
         style={{ backgroundImage: "url(/ZenTemple.png)" }}
