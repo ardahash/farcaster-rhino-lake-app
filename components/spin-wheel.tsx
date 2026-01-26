@@ -68,6 +68,14 @@ export function SpinWheel({ rewards, result, isSpinning = false, size = 240, cla
     setRotation(nextRotation)
   }, [segmentAngle, winningIndex])
 
+  useEffect(() => {
+    if (!isSpinning || winningIndex >= 0) return
+    const current = rotationRef.current
+    const nextRotation = current + 6 * 360 + Math.random() * 360
+    rotationRef.current = nextRotation
+    setRotation(nextRotation)
+  }, [isSpinning, winningIndex])
+
   const labelRadius = Math.round(size * 0.32)
   const centerLabel = result ? `${result} BAR` : isSpinning ? "Spinning..." : "Spin"
 
@@ -82,7 +90,9 @@ export function SpinWheel({ rewards, result, isSpinning = false, size = 240, cla
           style={{
             background: gradient,
             transform: `rotate(${rotation}deg)`,
-            transition: "transform 3.8s cubic-bezier(0.2, 0.8, 0.2, 1)",
+            transition: isSpinning
+              ? "transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1)"
+              : "transform 3.8s cubic-bezier(0.2, 0.8, 0.2, 1)",
           }}
         >
           {segments.map((segment) => (

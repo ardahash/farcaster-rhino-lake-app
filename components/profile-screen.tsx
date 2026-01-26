@@ -671,7 +671,7 @@ export function ProfileScreen() {
               )}
               <p className="text-xs text-muted-foreground text-center">Confirm to lock BAR on Base mainnet.</p>
             </div>
-            <DialogFooter className="gap-2">
+            <DialogFooter className="flex-col gap-2 sm:flex-col sm:items-stretch sm:justify-start">
               <Button
                 onClick={handleLockBarReward}
                 disabled={isLockingBar || !lockBarAmount || !isOnBase}

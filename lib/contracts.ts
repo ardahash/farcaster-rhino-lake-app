@@ -248,3 +248,23 @@ export const PROFILE_PIC_NFT_ABI = [
     outputs: [{ name: "", type: "uint256" }],
   },
 ] as const
+
+export const PICKAXE_NFT_ABI = [
+  {
+    type: "function",
+    name: "buy",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "id", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const

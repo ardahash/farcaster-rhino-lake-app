@@ -11,6 +11,7 @@ import { TownScreen } from "@/components/town-screen"
 import { MarketScreen } from "@/components/market-screen"
 import { SocialScreen } from "@/components/social-screen"
 import { ProfileScreen } from "@/components/profile-screen"
+import { MiningScreen } from "@/components/mining-screen"
 import { InfoScreen } from "@/components/info-screen"
 import { DocsScreen } from "@/components/docs-screen"
 import { BottomNav } from "@/components/bottom-nav"
@@ -39,10 +40,11 @@ function RhinoLakeShell() {
 
       {/* Main Content Area */}
       <main className="flex-1 pb-20 overflow-y-auto">
-        {activeTab === "home" && <HomeScreen />}
+        {activeTab === "home" && <HomeScreen onNavigate={setActiveTab} />}
         {activeTab === "town" && hasCity && <TownScreen onNavigate={setActiveTab} />}
         {activeTab === "temple" && <TempleScreen />}
         {activeTab === "market" && <MarketScreen />}
+        {activeTab === "mining" && <MiningScreen />}
         {activeTab === "social" && <SocialScreen />}
         {activeTab === "profile" && <ProfileScreen />}
         {activeTab === "docs" && <DocsScreen />}

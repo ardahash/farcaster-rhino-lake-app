@@ -57,7 +57,11 @@ const formatTokenValue = (raw: bigint, decimals: number, fallback = "--") => {
   }
 }
 
-export function HomeScreen() {
+type HomeScreenProps = {
+  onNavigate?: (tab: string) => void
+}
+
+export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const { address, chainId, isAuthenticated, isConnecting, signIn, error: authError } = useBaseAuth()
   const { toast } = useToast()
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
@@ -565,6 +569,16 @@ export function HomeScreen() {
             <p className="text-xl font-bold text-foreground">{ethBalanceDisplay}</p>
           </div>
         </div>
+      </Card>
+
+      <Card className="game-card w-full max-w-md p-4 space-y-3">
+        <div className="space-y-1 text-center">
+          <h3 className="text-sm font-semibold text-foreground">Go Mining</h3>
+          <p className="text-xs text-muted-foreground">Click to mine BAR in the Rhino Lake pits.</p>
+        </div>
+        <Button onClick={() => onNavigate?.("mining")} className="w-full">
+          Go Mining
+        </Button>
       </Card>
 
       <div className="w-full max-w-md space-y-4">

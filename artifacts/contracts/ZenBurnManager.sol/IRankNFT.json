@@ -1,0 +1,32 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "IRankNFT",
+  "sourceName": "contracts/ZenBurnManager.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newTotalBurned",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateRank",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/ZenBurnManager.sol",
+  "buildInfoId": "solc-0_8_20-4a5570dc04bd821b96dc2643599b8e9ce13ce49d"
+}
