@@ -69,6 +69,12 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const [lastSpinAt, setLastSpinAt] = useState<number | null>(null)
   const [lockBarAmount, setLockBarAmount] = useState("")
   const [isLockingBar, setIsLockingBar] = useState(false)
+  const [farcasterProfile, setFarcasterProfile] = useState<{
+    username?: string | null
+    displayName?: string | null
+    pfpUrl?: string | null
+  } | null>(null)
+  const [isFarcasterLoading, setIsFarcasterLoading] = useState(false)
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const publicClient = usePublicClient({ chainId: DEFAULT_CHAIN_ID })
   const { sendTransactionAsync } = useSendTransaction()
@@ -88,6 +94,52 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
     setSpinResult(null)
     setLockBarAmount("")
   }, [address])
+
+  useEffect(() => {
+    let isActive = true
+    if (!address || !isAuthenticated) {
+      setFarcasterProfile(null)
+      return
+    }
+    setIsFarcasterLoading(true)
+    fetch("/api/farcaster-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    })
+      .then(async (response) => {
+        const data = (await response.json()) as {
+          username?: string | null
+          displayName?: string | null
+          pfpUrl?: string | null
+          error?: string
+        }
+        if (!response.ok) {
+          throw new Error(data?.error ?? "Unable to load Farcaster profile.")
+        }
+        if (isActive) {
+          setFarcasterProfile({
+            username: data.username ?? null,
+            displayName: data.displayName ?? null,
+            pfpUrl: data.pfpUrl ?? null,
+          })
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setFarcasterProfile(null)
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsFarcasterLoading(false)
+        }
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [address, isAuthenticated])
 
   const barBalance = useErc20Balance({
     token: CONTRACTS.BAR,
@@ -389,6 +441,8 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const avatarFallback = displayName[0] ?? "?"
   const profileBio = "Builder of empires, master of BAR and $BANDA"
   const profileTag = baseName ?? (isAuthenticated ? shortAddress : "Base Mini App")
+  const farcasterLabel =
+    farcasterProfile?.username ? `@${farcasterProfile.username}` : farcasterProfile?.displayName ?? null
   const walletLabel = baseName ?? shortAddress
   const currentNetwork = getChainLabel(chainId)
   const isActionLoading = isAuthLoading || isConnecting || isSwitching
@@ -438,6 +492,11 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               {isAuthenticated && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Base Name: {isNameLoading ? "Loading..." : baseName ?? "Not set"}
+                </p>
+              )}
+              {isAuthenticated && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Farcaster: {isFarcasterLoading ? "Loading..." : farcasterLabel ?? "Not linked"}
                 </p>
               )}
               {isAuthenticated && (

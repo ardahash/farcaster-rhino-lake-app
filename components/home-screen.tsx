@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input"
 import { ConnectionDebug } from "@/components/connection-debug"
 import { PfpAvatar } from "@/components/pfp-avatar"
 import { SpinWheel } from "@/components/spin-wheel"
-import { SwapPanel } from "@/components/swap-panel"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { formatSpinCooldown, getSpinStorageKey, SPIN_REWARDS, SPIN_WINDOW_MS } from "@/lib/bar-spin"
@@ -460,7 +459,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const rhinoBalanceDisplay = formatTokenValue(rhinoBalance.raw, rhinoBalance.decimals ?? 18)
   const ethBalanceDisplay = formatTokenValue(ethBalance.raw, 18)
 
-  const highlightSwap = isAuthenticated && !barBalance.isLoading && barBalance.raw === 0n
   const progressValue = nextThresholdRaw
     ? Math.min(Number((cityState.barLocked * 10000n) / nextThresholdRaw) / 100, 100)
     : 100
@@ -774,9 +772,6 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         </Dialog>
       </div>
 
-      <div id="swap-panel" className="w-full max-w-md">
-        <SwapPanel highlightSwap={highlightSwap} onSwapSuccess={refetchAll} />
-      </div>
     </div>
   )
 }

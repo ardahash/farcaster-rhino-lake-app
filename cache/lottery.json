@@ -1,0 +1,33 @@
+{
+  "current": {
+    "id": "lottery-2925",
+    "startAt": 1769553803346,
+    "endAt": 1770158603346,
+    "ticketPriceBandaRaw": "1740552916629546402609899",
+    "ticketPriceBanda": "1740552.916629546402609899",
+    "ticketUsdcRaw": "1100000",
+    "totalTickets": 2,
+    "potUsdcInitialRaw": "15000000",
+    "potUsdcFromTicketsRaw": "2184752",
+    "potUsdcTotalRaw": "17184752",
+    "tickets": [
+      {
+        "address": "0xAe5ac3c49A5d5C88ae551608CaE0d57B636c125D",
+        "count": 1,
+        "txHash": "0x6c4ea781c9e37c36f8be85e447067401c09929aa1a59224ba4f0817acc332d0d",
+        "purchasedAt": 1769553824499
+      },
+      {
+        "address": "0xAe5ac3c49A5d5C88ae551608CaE0d57B636c125D",
+        "count": 1,
+        "txHash": "0xf8e6c69bff417f4178cf83bb0935ab85e2f45f11d950f3262b37a12959b585ca",
+        "purchasedAt": 1769558612124,
+        "usdcValueRaw": "1084752",
+        "paymentToken": "usdc"
+      }
+    ],
+    "winners": [],
+    "status": "open"
+  },
+  "history": []
+}
