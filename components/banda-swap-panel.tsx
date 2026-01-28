@@ -11,8 +11,8 @@ import { useErc20Balance } from "@/lib/use-erc20-balance"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI } from "@/lib/contracts"
 import { ArrowLeftRight, Loader2, RefreshCcw } from "lucide-react"
-import { encodeFunctionData, parseUnits, type Address, type Hex } from "viem"
-import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
+import { concat, encodeFunctionData, numberToHex, parseUnits, size, type Address, type Hex } from "viem"
+import { usePublicClient, useSendTransaction, useSignTypedData, useSwitchChain } from "wagmi"
 
 const DEFAULT_BANDA_AMOUNT = "10"
 const DEFAULT_USDC_AMOUNT = "1"
@@ -98,6 +98,7 @@ export function BandaSwapPanel({
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
+  const { signTypedDataAsync, isPending: isSigning } = useSignTypedData()
 
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as Address | undefined
   const bandaAddress = CONTRACTS.BANDA as Address
@@ -136,7 +137,7 @@ export function BandaSwapPanel({
     return parsed.toFixed(4)
   })()
 
-  const isSwapLoading = isTxPending || isSwitching || isConnecting
+  const isSwapLoading = isTxPending || isSwitching || isConnecting || isSigning
   const isOnBase = !chainId || chainId === BASE_MAINNET_CHAIN_ID
 
   const ensureBaseNetwork = async () => {
@@ -334,12 +335,19 @@ export function BandaSwapPanel({
         if (refreshedQuote.liquidityAvailable && refreshedQuote.transaction) {
           quote = refreshedQuote
         }
-        if (quote.permit2?.eip712) {
-          console.warn("[swap] permit2 present, proceeding with approval-based swap")
-        }
       }
 
-      const txData = quote.transaction.data as Hex
+      let txData = quote.transaction.data as Hex
+      if (quote.permit2?.eip712) {
+        const signature = (await signTypedDataAsync({
+          domain: quote.permit2.eip712.domain as Record<string, unknown>,
+          types: quote.permit2.eip712.types as Record<string, unknown>,
+          primaryType: quote.permit2.eip712.primaryType as string,
+          message: quote.permit2.eip712.message as Record<string, unknown>,
+        })) as Hex
+        const signatureLength = numberToHex(size(signature), { signed: false, size: 32 })
+        txData = concat([txData, signatureLength, signature])
+      }
 
       const txRequest = {
         chainId: BASE_MAINNET_CHAIN_ID,
