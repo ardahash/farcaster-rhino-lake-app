@@ -334,6 +334,8 @@ export function LotteryScreen() {
   const timeRemaining = Math.max(endAt - now, 0)
   const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60))
   const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24))
+  const hoursRemainder = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
 
   const isActionLoading = isConnecting || isSwitching || isTxPending
   const canBuy =
@@ -395,6 +397,11 @@ export function LotteryScreen() {
       <div className="absolute inset-0 bg-black/50" />
 
       <div className="relative z-10 mx-auto w-full max-w-3xl px-4 py-10 space-y-6">
+        <Card className="game-card p-3 bg-card/80 backdrop-blur border-border/60 text-center">
+          <p className="text-xs text-muted-foreground">
+            Round live · ends in {daysRemaining}d {hoursRemainder}h
+          </p>
+        </Card>
         <Card className="game-card p-6 space-y-3 bg-card/80 backdrop-blur border-border/60">
           <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <Ticket className="h-5 w-5 text-primary" />
