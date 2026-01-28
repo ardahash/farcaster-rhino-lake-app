@@ -1,5 +1,6 @@
 export const MAX_MINING_CLICKS = 10000
 export const MAX_CLICKS_PER_SECOND = 12
+export const MAX_CLICKS_PER_REQUEST = 25
 export const MIN_CLAIM_INTERVAL_MS = 15000
 
 const miningCounts = new Map<string, number>()
@@ -11,6 +12,14 @@ export const getMiningCount = (address: string) => miningCounts.get(address) ?? 
 export const incrementMiningCount = (address: string) => {
   const current = miningCounts.get(address) ?? 0
   const next = Math.min(current + 1, MAX_MINING_CLICKS)
+  miningCounts.set(address, next)
+  return next
+}
+
+export const incrementMiningCountBy = (address: string, count: number) => {
+  const current = miningCounts.get(address) ?? 0
+  const safeCount = Math.max(0, count)
+  const next = Math.min(current + safeCount, MAX_MINING_CLICKS)
   miningCounts.set(address, next)
   return next
 }
@@ -37,6 +46,22 @@ export const canIncrementMining = (address: string, now = Date.now()) => {
   window.count += 1
   miningClickWindows.set(address, window)
   return true
+}
+
+export const consumeMiningClicks = (address: string, requested: number, now = Date.now()) => {
+  const safeRequested = Math.max(0, Math.min(requested, MAX_CLICKS_PER_REQUEST))
+  let accepted = 0
+  for (let i = 0; i < safeRequested; i += 1) {
+    if (!canIncrementMining(address, now)) {
+      break
+    }
+    incrementMiningCount(address)
+    accepted += 1
+  }
+  return {
+    accepted,
+    count: getMiningCount(address),
+  }
 }
 
 export const canClaimMining = (address: string, now = Date.now()) => {

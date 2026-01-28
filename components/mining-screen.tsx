@@ -51,7 +51,8 @@ export function MiningScreen() {
   const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
-  const [clicks, setClicks] = useState(0)
+  const [serverClicks, setServerClicks] = useState(0)
+  const [pendingClicks, setPendingClicks] = useState(0)
   const [isMining, setIsMining] = useState(false)
   const [isClaiming, setIsClaiming] = useState(false)
   const [isUpgrading, setIsUpgrading] = useState(false)
@@ -64,12 +65,17 @@ export function MiningScreen() {
   const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
   const noticeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const miningTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isFlushingRef = useRef(false)
+  const pendingClicksRef = useRef(0)
 
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
 
   useEffect(() => {
     if (!address || !isAuthenticated) {
-      setClicks(0)
+      setServerClicks(0)
+      setPendingClicks(0)
+      pendingClicksRef.current = 0
       setMaxClicks(null)
       setRewardPerClick(1)
       setTier("starter")
@@ -89,14 +95,18 @@ export function MiningScreen() {
         if (!response.ok) {
           throw new Error(data?.error ?? "Unable to load mining count.")
         }
-        setClicks(data.count ?? 0)
+        setServerClicks(data.count ?? 0)
+        setPendingClicks(0)
+        pendingClicksRef.current = 0
         setMaxClicks(typeof data.maxClicks === "number" ? data.maxClicks : null)
         setRewardPerClick(data.rewardPerClick ?? 1)
         setTier(data.tier ?? "starter")
         setTreasuryBalance(data.treasuryBalance ?? "0")
         setOwnedTokenIds(data.ownedTokenIds ?? [])
       } catch (error) {
-        setClicks(0)
+        setServerClicks(0)
+        setPendingClicks(0)
+        pendingClicksRef.current = 0
         toast({
           title: "Mining sync failed",
           description: error instanceof Error ? error.message : "Please try again.",
@@ -110,10 +120,14 @@ export function MiningScreen() {
 
   useEffect(() => {
     if (!address || maxClicks === null) return
-    if (clicks > maxClicks) {
-      setClicks(maxClicks)
+    const display = serverClicks + pendingClicks
+    if (display > maxClicks) {
+      const overflow = display - maxClicks
+      const nextPending = Math.max(pendingClicks - overflow, 0)
+      setPendingClicks(nextPending)
+      pendingClicksRef.current = nextPending
     }
-  }, [address, clicks, maxClicks])
+  }, [address, maxClicks, pendingClicks, serverClicks])
 
   const handleConnect = async () => {
     try {
@@ -123,13 +137,79 @@ export function MiningScreen() {
     }
   }
 
+  const flushPendingClicks = async (force = false) => {
+    if (!address || !isAuthenticated) return
+    if (isFlushingRef.current) return
+    if (pendingClicksRef.current <= 0) return
+    isFlushingRef.current = true
+    try {
+      while (pendingClicksRef.current > 0) {
+        const batch = Math.min(pendingClicksRef.current, 12)
+        pendingClicksRef.current -= batch
+        setPendingClicks(pendingClicksRef.current)
+        const response = await fetch("/api/mining-click", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, count: batch }),
+        })
+        const data = (await response.json()) as {
+          count?: number
+          maxClicks?: number
+          rewardPerClick?: number
+          tier?: PickaxeTier
+          accepted?: number
+          error?: string
+        }
+        if (!response.ok) {
+          pendingClicksRef.current += batch
+          setPendingClicks(pendingClicksRef.current)
+          throw new Error(data?.error ?? "Mining failed.")
+        }
+        if (typeof data.count === "number") {
+          setServerClicks(data.count)
+        }
+        if (typeof data.maxClicks === "number") {
+          setMaxClicks(data.maxClicks)
+        }
+        if (typeof data.rewardPerClick === "number") {
+          setRewardPerClick(data.rewardPerClick)
+        }
+        if (data.tier) {
+          setTier(data.tier)
+        }
+        if (!force) {
+          break
+        }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Mining request failed."
+      if (!force && message.toLowerCase().includes("too fast")) {
+        if (flushTimeoutRef.current) {
+          clearTimeout(flushTimeoutRef.current)
+        }
+        flushTimeoutRef.current = setTimeout(() => {
+          flushPendingClicks().catch(() => null)
+        }, 700)
+        return
+      }
+      toast({
+        title: "Mining paused",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      isFlushingRef.current = false
+    }
+  }
+
   const handleMineClick = async () => {
     if (!isAuthenticated || !address) {
       await handleConnect()
       return
     }
 
-    if (maxClicks !== null && clicks >= maxClicks) {
+    const displayClicks = serverClicks + pendingClicks
+    if (maxClicks !== null && displayClicks >= maxClicks) {
       toast({
         title: "Mining paused",
         description: "Treasury is empty right now. Try again later.",
@@ -138,8 +218,9 @@ export function MiningScreen() {
       return
     }
 
-    const optimistic = clicks + 1
-    setClicks(optimistic)
+    const nextPending = pendingClicksRef.current + 1
+    pendingClicksRef.current = nextPending
+    setPendingClicks(nextPending)
     setIsMining(true)
     if (miningTimeoutRef.current) {
       clearTimeout(miningTimeoutRef.current)
@@ -148,42 +229,12 @@ export function MiningScreen() {
       setIsMining(false)
     }, 180)
 
-    try {
-      const response = await fetch("/api/mining-click", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-      })
-      const data = (await response.json()) as {
-        count?: number
-        maxClicks?: number
-        rewardPerClick?: number
-        tier?: PickaxeTier
-        error?: string
-      }
-      if (!response.ok) {
-        throw new Error(data?.error ?? "Mining failed.")
-      }
-      if (typeof data.count === "number") {
-        setClicks(data.count)
-      }
-      if (typeof data.maxClicks === "number") {
-        setMaxClicks(data.maxClicks)
-      }
-      if (typeof data.rewardPerClick === "number") {
-        setRewardPerClick(data.rewardPerClick)
-      }
-      if (data.tier) {
-        setTier(data.tier)
-      }
-    } catch (error) {
-      setClicks((prev) => Math.max(prev - 1, 0))
-      toast({
-        title: "Mining paused",
-        description: error instanceof Error ? error.message : "Mining request failed.",
-        variant: "destructive",
-      })
+    if (flushTimeoutRef.current) {
+      clearTimeout(flushTimeoutRef.current)
     }
+    flushTimeoutRef.current = setTimeout(() => {
+      flushPendingClicks().catch(() => null)
+    }, 250)
   }
 
   const handleClaim = async () => {
@@ -192,7 +243,8 @@ export function MiningScreen() {
       return
     }
 
-    if (clicks <= 0) {
+    const displayClicks = serverClicks + pendingClicks
+    if (displayClicks <= 0) {
       toast({
         title: "Nothing to claim",
         description: "Mine some clicks first.",
@@ -202,6 +254,10 @@ export function MiningScreen() {
 
     setIsClaiming(true)
     try {
+      if (flushTimeoutRef.current) {
+        clearTimeout(flushTimeoutRef.current)
+      }
+      await flushPendingClicks(true)
       const response = await fetch("/api/mining-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -212,7 +268,9 @@ export function MiningScreen() {
         throw new Error(data?.error ?? "Claim failed.")
       }
 
-      setClicks(0)
+      setServerClicks(0)
+      setPendingClicks(0)
+      pendingClicksRef.current = 0
       if (data.rewardPerClick) {
         setRewardPerClick(data.rewardPerClick)
       }
@@ -373,6 +431,9 @@ export function MiningScreen() {
       if (miningTimeoutRef.current) {
         clearTimeout(miningTimeoutRef.current)
       }
+      if (flushTimeoutRef.current) {
+        clearTimeout(flushTimeoutRef.current)
+      }
     }
   }, [])
 
@@ -396,7 +457,8 @@ export function MiningScreen() {
   const treasuryBalanceDisplay = Number.isFinite(treasuryBalanceNumber)
     ? treasuryBalanceNumber.toLocaleString(undefined, { maximumFractionDigits: 4 })
     : treasuryBalance
-  const minedBar = clicks * rewardPerClick
+  const displayClicks = Math.max(serverClicks + pendingClicks, 0)
+  const minedBar = displayClicks * rewardPerClick
 
   return (
     <div className="flex-1 p-4 space-y-6 max-w-3xl mx-auto">
@@ -459,7 +521,9 @@ export function MiningScreen() {
         <button
           type="button"
           onClick={handleMineClick}
-          disabled={isConnecting || isClaiming || isActionLoading || (maxClicks !== null && clicks >= maxClicks)}
+          disabled={
+            isConnecting || isClaiming || isActionLoading || (maxClicks !== null && displayClicks >= maxClicks)
+          }
           className="group block w-full cursor-pointer text-left disabled:cursor-not-allowed"
         >
           <img
@@ -474,7 +538,7 @@ export function MiningScreen() {
             Mined: {minedBar.toLocaleString()} BAR
           </div>
           <div className="pointer-events-auto rounded-md border border-white/60 bg-white/90 px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-md">
-            Clicks: {clicks.toLocaleString()}
+            Clicks: {displayClicks.toLocaleString()}
           </div>
           <div className="pointer-events-auto rounded-md border border-white/60 bg-white/90 px-3 py-2 text-xs font-semibold text-slate-900 shadow-md">
             Currently mineable: {treasuryBalanceDisplay} BAR
@@ -495,7 +559,7 @@ export function MiningScreen() {
               event.stopPropagation()
               handleClaim()
             }}
-            disabled={!isAuthenticated || clicks <= 0 || isClaiming || isActionLoading}
+            disabled={!isAuthenticated || displayClicks <= 0 || isClaiming || isActionLoading}
             className="h-9 rounded-md bg-white/95 px-3 text-xs font-semibold text-slate-900 shadow-md hover:bg-white"
             variant="ghost"
           >

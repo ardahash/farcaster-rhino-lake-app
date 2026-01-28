@@ -3,7 +3,7 @@ import { createPublicClient, http, parseUnits } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
-import { canIncrementMining, getMiningCount, incrementMiningCount } from "@/lib/mining-store"
+import { MAX_CLICKS_PER_REQUEST, consumeMiningClicks, getMiningCount } from "@/lib/mining-store"
 import { PICKAXE_TIERS, getPickaxeTier, getTierIndex } from "@/lib/mining-tiers"
 
 export const runtime = "nodejs"
@@ -59,7 +59,7 @@ const getRewardWalletAddress = () => {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { address?: string }
+    const body = (await request.json()) as { address?: string; count?: number }
     if (!body?.address || !isHexAddress(body.address)) {
       return NextResponse.json({ error: "Invalid address." }, { status: 400 })
     }
@@ -125,12 +125,32 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!canIncrementMining(normalized)) {
+    const requested = typeof body.count === "number" ? Math.floor(body.count) : 1
+    if (!Number.isFinite(requested) || requested <= 0) {
+      return NextResponse.json({ error: "Invalid click count." }, { status: 400 })
+    }
+
+    const remaining = Math.max(maxClicks - current, 0)
+    if (remaining <= 0) {
+      return NextResponse.json(
+        { error: "Mining paused. Treasury is empty.", count: current, maxClicks },
+        { status: 400 },
+      )
+    }
+
+    const allowedRequest = Math.min(requested, remaining, MAX_CLICKS_PER_REQUEST)
+    const result = consumeMiningClicks(normalized, allowedRequest)
+    if (result.accepted <= 0) {
       return NextResponse.json({ error: "Mining too fast. Slow down." }, { status: 429 })
     }
 
-    const count = incrementMiningCount(normalized)
-    return NextResponse.json({ count, maxClicks, rewardPerClick, tier: highestTier.id })
+    return NextResponse.json({
+      count: result.count,
+      accepted: result.accepted,
+      maxClicks,
+      rewardPerClick,
+      tier: highestTier.id,
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Mining failed."
     return NextResponse.json({ error: message }, { status: 500 })
