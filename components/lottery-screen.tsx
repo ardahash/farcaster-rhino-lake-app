@@ -85,7 +85,59 @@ export function LotteryScreen() {
       if (!response.ok) {
         throw new Error(data?.error ?? "Unable to load lottery.")
       }
-      setStatus(data)
+      let nextStatus = data
+      const onchainAddress = (data.lotteryAddress ?? defaultLotteryAddress) as `0x${string}` | undefined
+      if (publicClient && onchainAddress && data.current) {
+        try {
+          const roundId = (await publicClient.readContract({
+            address: onchainAddress,
+            abi: LOTTERY_ABI,
+            functionName: "currentRoundId",
+          })) as bigint
+          if (roundId > 0n) {
+            const round = (await publicClient.readContract({
+              address: onchainAddress,
+              abi: LOTTERY_ABI,
+              functionName: "getRound",
+              args: [roundId],
+            })) as { totalTickets: bigint } | readonly unknown[]
+            const totalTickets =
+              typeof (round as { totalTickets?: bigint }).totalTickets === "bigint"
+                ? Number((round as { totalTickets: bigint }).totalTickets)
+                : Number(((round as readonly unknown[])[7] as bigint) ?? 0n)
+
+            const userTickets =
+              address && data.user
+                ? ((await publicClient.readContract({
+                    address: onchainAddress,
+                    abi: LOTTERY_ABI,
+                    functionName: "getTickets",
+                    args: [roundId, address as `0x${string}`],
+                  })) as bigint)
+                : 0n
+            const maxTickets = data.user?.maxTickets ?? 0
+            const remainingTickets = Math.max(maxTickets - Number(userTickets), 0)
+
+            nextStatus = {
+              ...data,
+              current: {
+                ...data.current,
+                totalTickets,
+              },
+              user: data.user
+                ? {
+                    ...data.user,
+                    tickets: Number(userTickets),
+                    remainingTickets,
+                  }
+                : data.user,
+            }
+          }
+        } catch {
+          // Keep server-provided state if on-chain hydration fails.
+        }
+      }
+      setStatus(nextStatus)
     } catch (error) {
       toast({
         title: "Lottery sync failed",
