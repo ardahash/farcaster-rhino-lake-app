@@ -3,7 +3,7 @@ import { createPublicClient, http, parseUnits } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
-import { getMiningCount, incrementMiningCount } from "@/lib/mining-store"
+import { canIncrementMining, getMiningCount, incrementMiningCount } from "@/lib/mining-store"
 import { PICKAXE_TIERS, getPickaxeTier, getTierIndex } from "@/lib/mining-tiers"
 
 export const runtime = "nodejs"
@@ -123,6 +123,10 @@ export async function POST(request: Request) {
         { error: "Mining paused. Treasury is empty.", count: current, maxClicks },
         { status: 400 },
       )
+    }
+
+    if (!canIncrementMining(normalized)) {
+      return NextResponse.json({ error: "Mining too fast. Slow down." }, { status: 429 })
     }
 
     const count = incrementMiningCount(normalized)

@@ -298,3 +298,86 @@ export const PICKAXE_NFT_ABI = [
     outputs: [{ name: "", type: "uint256" }],
   },
 ] as const
+
+export const LOTTERY_ABI = [
+  {
+    type: "function",
+    name: "currentRoundId",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "getRound",
+    stateMutability: "view",
+    inputs: [{ name: "roundId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "startAt", type: "uint256" },
+          { name: "endAt", type: "uint256" },
+          { name: "ticketPriceBanda", type: "uint256" },
+          { name: "ticketPriceUsdc", type: "uint256" },
+          { name: "potUsdcInitial", type: "uint256" },
+          { name: "potUsdcFromTickets", type: "uint256" },
+          { name: "potUsdcTotal", type: "uint256" },
+          { name: "totalTickets", type: "uint256" },
+          { name: "winner", type: "address" },
+          { name: "requestId", type: "uint256" },
+          { name: "settled", type: "bool" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "function",
+    name: "getTickets",
+    stateMutability: "view",
+    inputs: [
+      { name: "roundId", type: "uint256" },
+      { name: "user", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "isClaimed",
+    stateMutability: "view",
+    inputs: [
+      { name: "roundId", type: "uint256" },
+      { name: "user", type: "address" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "buyWithBanda",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "count", type: "uint256" },
+      { name: "pricePerTicketBanda", type: "uint256" },
+      { name: "usdcValuePerTicket", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "buyWithUsdc",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "count", type: "uint256" },
+      { name: "pricePerTicketUsdc", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "claimWinnings",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "roundId", type: "uint256" }],
+    outputs: [],
+  },
+] as const

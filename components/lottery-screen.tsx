@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
-import { CONTRACTS, ERC20_ABI } from "@/lib/contracts"
+import { CONTRACTS, ERC20_ABI, LOTTERY_ABI } from "@/lib/contracts"
 import { BandaSwapPanel } from "@/components/banda-swap-panel"
 import { Loader2, Ticket, Trophy } from "lucide-react"
 import { encodeFunctionData, formatUnits } from "viem"
@@ -20,6 +20,7 @@ type LotteryStatusResponse = {
     endAt: number
     ticketPriceBandaRaw: string
     ticketPriceBanda: string
+    ticketUsdcBaseRaw?: string
     ticketUsdcRaw: string
     ticketUsdcApprox: string
     totalTickets: number
@@ -34,6 +35,7 @@ type LotteryStatusResponse = {
     maxTickets: number
     unclaimedWinnings: string
     hasUnclaimedWinnings: boolean
+    unclaimedRoundId?: number | null
   }
   treasuryAddress?: string
   history?: Array<{
@@ -55,6 +57,7 @@ export function LotteryScreen() {
   const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
+  const lotteryAddress = CONTRACTS.LOTTERY as `0x${string}` | undefined
 
   const [status, setStatus] = useState<LotteryStatusResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -115,6 +118,34 @@ export function LotteryScreen() {
     return BASE_MAINNET_CHAIN_ID
   }
 
+  const ensureAllowance = async (token: `0x${string}`, spender: `0x${string}`, amount: bigint) => {
+    if (!publicClient || !address) {
+      throw new Error("RPC not ready.")
+    }
+    const allowance = (await publicClient.readContract({
+      address: token,
+      abi: ERC20_ABI,
+      functionName: "allowance",
+      args: [address, spender],
+    })) as bigint
+
+    if (allowance >= amount) {
+      return
+    }
+
+    const approvalTx = await sendTransactionAsync({
+      chainId: BASE_MAINNET_CHAIN_ID,
+      account: address,
+      to: token,
+      data: encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [spender, amount],
+      }),
+    })
+    await publicClient.waitForTransactionReceipt({ hash: approvalTx })
+  }
+
   const handleBuyTickets = async () => {
     if (!isAuthenticated || !address) {
       await handleConnect()
@@ -170,29 +201,61 @@ export function LotteryScreen() {
     try {
       await ensureBaseNetwork()
 
-      const txHash = await sendTransactionAsync({
-        chainId: BASE_MAINNET_CHAIN_ID,
-        account: address,
-        to: paymentMethod === "usdc" ? usdcAddress : CONTRACTS.BANDA,
-        data: encodeFunctionData({
-          abi: ERC20_ABI,
-          functionName: "transfer",
-          args: [status.treasuryAddress as `0x${string}`, totalCostRaw],
-        }),
-      })
+      if (lotteryAddress) {
+        const isUsdc = paymentMethod === "usdc"
+        const token = isUsdc ? usdcAddress : CONTRACTS.BANDA
+        if (!token) {
+          throw new Error("Payment token not configured.")
+        }
+        if (!isUsdc && (!status.current.ticketUsdcBaseRaw || status.current.ticketUsdcBaseRaw === "0")) {
+          throw new Error("USDC base price unavailable.")
+        }
+        await ensureAllowance(token, lotteryAddress, totalCostRaw)
+        const data = encodeFunctionData({
+          abi: LOTTERY_ABI,
+          functionName: isUsdc ? "buyWithUsdc" : "buyWithBanda",
+          args: isUsdc
+            ? [BigInt(ticketCount), BigInt(status.current.ticketUsdcRaw || "0")]
+            : [
+                BigInt(ticketCount),
+                BigInt(status.current.ticketPriceBandaRaw || "0"),
+                BigInt(status.current.ticketUsdcBaseRaw || "0"),
+              ],
+        })
+        const txHash = await sendTransactionAsync({
+          chainId: BASE_MAINNET_CHAIN_ID,
+          account: address,
+          to: lotteryAddress,
+          data,
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash: txHash })
+        }
+      } else {
+        const txHash = await sendTransactionAsync({
+          chainId: BASE_MAINNET_CHAIN_ID,
+          account: address,
+          to: paymentMethod === "usdc" ? usdcAddress : CONTRACTS.BANDA,
+          data: encodeFunctionData({
+            abi: ERC20_ABI,
+            functionName: "transfer",
+            args: [status.treasuryAddress as `0x${string}`, totalCostRaw],
+          }),
+        })
 
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash: txHash })
-      }
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash: txHash })
+        }
 
-      const response = await fetch("/api/lottery-buy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, count: ticketCount, txHash, paymentToken: paymentMethod }),
-      })
-      const data = (await response.json()) as { error?: string }
-      if (!response.ok) {
-        throw new Error(data?.error ?? "Ticket purchase failed.")
+        const response = await fetch("/api/lottery-buy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, count: ticketCount, txHash, paymentToken: paymentMethod }),
+        })
+        const data = (await response.json()) as { error?: string }
+        if (!response.ok) {
+          throw new Error(data?.error ?? "Ticket purchase failed.")
+        }
       }
 
       toast({
@@ -220,20 +283,42 @@ export function LotteryScreen() {
 
     setIsClaiming(true)
     try {
-      const response = await fetch("/api/lottery-claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
-      })
-      const data = (await response.json()) as { amount?: string; error?: string }
-      if (!response.ok) {
-        throw new Error(data?.error ?? "Claim failed.")
+      if (lotteryAddress && status?.user?.unclaimedRoundId) {
+        await ensureBaseNetwork()
+        const txHash = await sendTransactionAsync({
+          chainId: BASE_MAINNET_CHAIN_ID,
+          account: address,
+          to: lotteryAddress,
+          data: encodeFunctionData({
+            abi: LOTTERY_ABI,
+            functionName: "claimWinnings",
+            args: [BigInt(status.user.unclaimedRoundId)],
+          }),
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash: txHash })
+        }
+        toast({
+          title: "Winnings claimed",
+          description: `Claimed ${status.user.unclaimedWinnings ?? "0"} USDC.`,
+        })
+        await refreshStatus()
+      } else {
+        const response = await fetch("/api/lottery-claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address }),
+        })
+        const data = (await response.json()) as { amount?: string; error?: string }
+        if (!response.ok) {
+          throw new Error(data?.error ?? "Claim failed.")
+        }
+        toast({
+          title: "Winnings claimed",
+          description: `Claimed ${data.amount ?? "0"} USDC.`,
+        })
+        await refreshStatus()
       }
-      toast({
-        title: "Winnings claimed",
-        description: `Claimed ${data.amount ?? "0"} USDC.`,
-      })
-      await refreshStatus()
     } catch (error) {
       toast({
         title: "Claim failed",

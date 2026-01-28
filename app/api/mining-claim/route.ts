@@ -4,7 +4,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
 import { formatUnits } from "viem"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
-import { getMiningCount, resetMiningCount, setMiningCount } from "@/lib/mining-store"
+import { canClaimMining, getMiningCount, resetMiningCount, setMiningCount } from "@/lib/mining-store"
 import { PICKAXE_TIERS, getPickaxeTier, getTierIndex } from "@/lib/mining-tiers"
 
 export const runtime = "nodejs"
@@ -79,10 +79,11 @@ export async function POST(request: Request) {
     }
 
     const normalized = body.address.toLowerCase()
-    let clickCount = getMiningCount(normalized)
-    if (clickCount <= 0 && typeof body.clicks === "number") {
-      clickCount = setMiningCount(normalized, body.clicks)
+    if (!canClaimMining(normalized)) {
+      return NextResponse.json({ error: "Claim cooldown active. Try again in a moment." }, { status: 429 })
     }
+
+    let clickCount = getMiningCount(normalized)
     if (clickCount <= 0) {
       return NextResponse.json({ error: "No mining clicks available." }, { status: 400 })
     }

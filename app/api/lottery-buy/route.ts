@@ -76,10 +76,6 @@ export async function POST(request: Request) {
     if (!tokenAddress) {
       return NextResponse.json({ error: "USDC address not configured." }, { status: 500 })
     }
-    if (receipt.to?.toLowerCase() !== tokenAddress.toLowerCase()) {
-      return NextResponse.json({ error: `Ticket purchase must transfer ${paymentToken.toUpperCase()}.` }, { status: 400 })
-    }
-
     const requiredRaw = paymentToken === "usdc" ? requiredUsdcRaw : requiredBandaRaw
     const matchingLog = receipt.logs.find((log) => {
       if (log.address.toLowerCase() !== tokenAddress.toLowerCase()) return false
