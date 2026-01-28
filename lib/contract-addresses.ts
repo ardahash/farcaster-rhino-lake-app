@@ -16,7 +16,9 @@ const CITY_NFT_ADDRESS =
 const GAME_ADDRESS =
   (process.env.NEXT_PUBLIC_GAME_ADDRESS as Address | undefined) ??
   ("0x0c9f0bc1eE767a1bA5a7d30458Ae8e7cc82F3352" as Address)
-const LOTTERY_ADDRESS = process.env.NEXT_PUBLIC_LOTTERY_ADDRESS as Address | undefined
+const LOTTERY_ADDRESS =
+  (process.env.NEXT_PUBLIC_LOTTERY_ADDRESS as Address | undefined) ??
+  ("0x6Fea09d4a01bC824Df347C8D1836450bF283B26F" as Address)
 
 export const CONTRACT_ADDRESSES = {
   BAR: BAR_TOKEN_ADDRESS,
