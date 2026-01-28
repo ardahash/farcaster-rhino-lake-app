@@ -20,6 +20,7 @@ type LotteryStatusResponse = {
     endAt: number
     ticketPriceBandaRaw: string
     ticketPriceBanda: string
+    bandaPerUsdc?: string
     ticketUsdcBaseRaw?: string
     ticketUsdcRaw: string
     ticketUsdcApprox: string
@@ -38,6 +39,7 @@ type LotteryStatusResponse = {
     unclaimedRoundId?: number | null
   }
   treasuryAddress?: string
+  lotteryAddress?: string
   history?: Array<{
     id: string
     startAt: number
@@ -57,7 +59,7 @@ export function LotteryScreen() {
   const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
-  const lotteryAddress = CONTRACTS.LOTTERY as `0x${string}` | undefined
+  const defaultLotteryAddress = CONTRACTS.LOTTERY as `0x${string}` | undefined
 
   const [status, setStatus] = useState<LotteryStatusResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -67,6 +69,9 @@ export function LotteryScreen() {
   const [showHistory, setShowHistory] = useState(false)
   const [now, setNow] = useState(Date.now())
   const [paymentMethod, setPaymentMethod] = useState<"banda" | "usdc">("banda")
+  const activeLotteryAddress = (status?.lotteryAddress ?? defaultLotteryAddress) as
+    | `0x${string}`
+    | undefined
 
   const refreshStatus = async () => {
     setIsLoading(true)
@@ -201,7 +206,7 @@ export function LotteryScreen() {
     try {
       await ensureBaseNetwork()
 
-      if (lotteryAddress) {
+      if (activeLotteryAddress) {
         const isUsdc = paymentMethod === "usdc"
         const token = isUsdc ? usdcAddress : CONTRACTS.BANDA
         if (!token) {
@@ -210,7 +215,7 @@ export function LotteryScreen() {
         if (!isUsdc && (!status.current.ticketUsdcBaseRaw || status.current.ticketUsdcBaseRaw === "0")) {
           throw new Error("USDC base price unavailable.")
         }
-        await ensureAllowance(token, lotteryAddress, totalCostRaw)
+        await ensureAllowance(token, activeLotteryAddress, totalCostRaw)
         const data = encodeFunctionData({
           abi: LOTTERY_ABI,
           functionName: isUsdc ? "buyWithUsdc" : "buyWithBanda",
@@ -225,7 +230,7 @@ export function LotteryScreen() {
         const txHash = await sendTransactionAsync({
           chainId: BASE_MAINNET_CHAIN_ID,
           account: address,
-          to: lotteryAddress,
+          to: activeLotteryAddress,
           data,
         })
         if (publicClient) {
@@ -283,12 +288,12 @@ export function LotteryScreen() {
 
     setIsClaiming(true)
     try {
-      if (lotteryAddress && status?.user?.unclaimedRoundId) {
+      if (activeLotteryAddress && status?.user?.unclaimedRoundId) {
         await ensureBaseNetwork()
         const txHash = await sendTransactionAsync({
           chainId: BASE_MAINNET_CHAIN_ID,
           account: address,
-          to: lotteryAddress,
+          to: activeLotteryAddress,
           data: encodeFunctionData({
             abi: LOTTERY_ABI,
             functionName: "claimWinnings",
@@ -499,7 +504,11 @@ export function LotteryScreen() {
           </Button>
         </Card>
 
-        <BandaSwapPanel title="Need $BANDA?" subtitle="Swap USDC into $BANDA before buying tickets." />
+        <BandaSwapPanel
+          title="Need $BANDA?"
+          subtitle="Swap USDC into $BANDA before buying tickets."
+          rateLabel={status?.current?.bandaPerUsdc}
+        />
 
         <Card className="game-card p-6 space-y-4 bg-card/80 backdrop-blur border-border/60">
           <div className="space-y-1 text-center">

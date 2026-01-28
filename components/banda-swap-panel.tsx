@@ -83,6 +83,7 @@ type BandaSwapPanelProps = {
   onSwapSuccess?: () => void
   title?: string
   subtitle?: string
+  rateLabel?: string
 }
 
 export function BandaSwapPanel({
@@ -90,6 +91,7 @@ export function BandaSwapPanel({
   onSwapSuccess,
   title = "Swap $BANDA / USDC",
   subtitle = "Swap USDC and $BANDA on Base mainnet.",
+  rateLabel,
 }: BandaSwapPanelProps) {
   const { address, chainId, isAuthenticated, isConnecting, signIn } = useBaseAuth()
   const { toast } = useToast()
@@ -127,6 +129,12 @@ export function BandaSwapPanel({
 
   const usdcBalanceDisplay = formatBalance(usdcBalance.formatted, usdcBalance.isLoading)
   const bandaBalanceDisplay = formatBalance(bandaBalance.formatted, bandaBalance.isLoading)
+  const rateDisplay = (() => {
+    if (!rateLabel) return null
+    const parsed = Number(rateLabel)
+    if (!Number.isFinite(parsed)) return rateLabel
+    return parsed.toFixed(4)
+  })()
 
   const isSwapLoading = isTxPending || isSwitching || isConnecting
   const isOnBase = !chainId || chainId === BASE_MAINNET_CHAIN_ID
@@ -388,6 +396,9 @@ export function BandaSwapPanel({
           <p className="text-xs text-muted-foreground">{subtitle}</p>
           <p className="text-xs text-muted-foreground">USDC Balance: {usdcBalanceDisplay}</p>
           <p className="text-xs text-muted-foreground">$BANDA Balance: {bandaBalanceDisplay}</p>
+          {rateDisplay && (
+            <p className="text-[11px] text-muted-foreground">1 USDC = {rateDisplay} $BANDA</p>
+          )}
         </div>
         <RefreshCcw className="w-4 h-4 text-muted-foreground" />
       </div>

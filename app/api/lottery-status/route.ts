@@ -170,6 +170,8 @@ export async function POST(request: Request) {
         }
       }
 
+      const bandaPerUsdcRaw = quotes.usdcBaseRaw > 0n ? (quotes.bandaBaseRaw * 1_000_000n) / quotes.usdcBaseRaw : 0n
+
       return NextResponse.json({
         current: {
           id: `lottery-${currentRoundId.toString()}`,
@@ -177,6 +179,7 @@ export async function POST(request: Request) {
           endAt: Number(round.endAt),
           ticketPriceBandaRaw: quotes.bandaBaseRaw.toString(),
           ticketPriceBanda: quotes.bandaDisplay,
+          bandaPerUsdc: formatUsdc(bandaPerUsdcRaw),
           ticketUsdcBaseRaw: quotes.usdcBaseRaw.toString(),
           ticketUsdcRaw: quotes.usdcTotalRaw.toString(),
           ticketUsdcApprox: quotes.usdcDisplay,
@@ -194,6 +197,7 @@ export async function POST(request: Request) {
           hasUnclaimedWinnings: unclaimedWinningsRaw > 0n,
           unclaimedRoundId,
         },
+        lotteryAddress,
         treasuryAddress,
         history: historyRounds,
         bandaDecimals: BANDA_DECIMALS,
@@ -215,6 +219,8 @@ export async function POST(request: Request) {
     const remainingTickets = Math.max(MAX_TICKETS_PER_USER - userTickets, 0)
     const unclaimedWinningsRaw = address ? getUserUnclaimedWinnings(state, address) : 0n
 
+    const bandaPerUsdcRaw = quotes.usdcBaseRaw > 0n ? (quotes.bandaBaseRaw * 1_000_000n) / quotes.usdcBaseRaw : 0n
+
     return NextResponse.json({
       current: {
         id: current.id,
@@ -222,6 +228,7 @@ export async function POST(request: Request) {
         endAt: current.endAt,
         ticketPriceBandaRaw: quotes.bandaBaseRaw.toString(),
         ticketPriceBanda: quotes.bandaDisplay,
+        bandaPerUsdc: formatUsdc(bandaPerUsdcRaw),
         ticketUsdcBaseRaw: quotes.usdcBaseRaw.toString(),
         ticketUsdcRaw: quotes.usdcTotalRaw.toString(),
         ticketUsdcApprox: quotes.usdcDisplay,
@@ -238,6 +245,7 @@ export async function POST(request: Request) {
         unclaimedWinnings: formatUsdc(unclaimedWinningsRaw),
         hasUnclaimedWinnings: unclaimedWinningsRaw > 0n,
       },
+      lotteryAddress,
       treasuryAddress,
       history: state.history.slice(0, 10).map((round) => ({
         id: round.id,
