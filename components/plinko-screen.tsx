@@ -337,6 +337,7 @@ export function PlinkoScreen() {
   const [targetSlot, setTargetSlot] = useState<number | null>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [isBallAnimating, setIsBallAnimating] = useState(false)
+  const riskSectionRef = useRef<HTMLDivElement | null>(null)
 
   const refreshPending = useCallback(
     async (animate = false) => {
@@ -672,6 +673,21 @@ export function PlinkoScreen() {
             </div>
 
             <div className="space-y-4">
+              <Button
+                onClick={handlePlay}
+                disabled={!plinkoAddress || isActionLoading || isBallAnimating}
+                className="w-full h-11 text-base font-semibold"
+              >
+                {isPlaying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Dropping Ball...
+                  </>
+                ) : (
+                  `Drop Ball (${stake} USDC)`
+                )}
+              </Button>
+
               <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground">Stake (USDC)</p>
                 <div className="flex flex-wrap gap-2">
@@ -689,7 +705,7 @@ export function PlinkoScreen() {
                 <p className="text-[11px] text-muted-foreground">Wallet balance: {usdcBalanceDisplay} USDC</p>
               </div>
 
-              <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
+              <div ref={riskSectionRef} className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground">Risk Level</p>
                 <div className="flex flex-wrap gap-2">
                   {PLINKO_RISKS.map((entry) => (
@@ -716,21 +732,6 @@ export function PlinkoScreen() {
                   {soundEnabled ? "Sound On" : "Sound Off"}
                 </Button>
               </div>
-
-              <Button
-                onClick={handlePlay}
-                disabled={!plinkoAddress || isActionLoading || isBallAnimating}
-                className="w-full h-11 text-base font-semibold"
-              >
-                {isPlaying ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Dropping Ball...
-                  </>
-                ) : (
-                  `Drop Ball (${stake} USDC)`
-                )}
-              </Button>
 
               {pendingPlay?.active && (
                 <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
