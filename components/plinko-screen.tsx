@@ -625,16 +625,6 @@ export function PlinkoScreen() {
         }}
       />
       <div className="relative z-10 mx-auto w-full max-w-3xl px-4 py-10 space-y-6">
-        <Card className="game-card p-6 space-y-3 bg-card/80 backdrop-blur border-border/60">
-          <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
-            <CircleDot className="h-5 w-5 text-primary" />
-            Plinko
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Drop one ball per transaction. Claim your winnings or discard the result when you are ready.
-          </p>
-        </Card>
-
         <Card className="game-card p-6 bg-card/80 backdrop-blur border-border/60 space-y-4">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
             <div className="space-y-3">
