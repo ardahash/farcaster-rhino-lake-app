@@ -8,6 +8,7 @@ import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
 import { CONTRACTS, ERC20_ABI, BANDA_NFT_ABI } from "@/lib/contracts"
 import { BANDA_TIERS, getBandaTier, type BandaTier } from "@/lib/army-tiers"
+import { useErc20Balance } from "@/lib/use-erc20-balance"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
 import { encodeFunctionData, parseUnits } from "viem"
 import { ConnectionDebug } from "@/components/connection-debug"
@@ -49,6 +50,12 @@ export function ArmyScreen() {
   const { sendTransactionAsync, isPending: isTxPending } = useSendTransaction()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const publicClient = usePublicClient({ chainId: BASE_MAINNET_CHAIN_ID })
+  const bandaBalance = useErc20Balance({
+    token: CONTRACTS.BANDA,
+    address,
+    chainId: BASE_MAINNET_CHAIN_ID,
+    enabled: Boolean(address),
+  })
 
   const [isClaiming, setIsClaiming] = useState(false)
   const [isUpgrading, setIsUpgrading] = useState(false)
@@ -346,6 +353,10 @@ export function ArmyScreen() {
   const treasuryBalanceDisplay = Number.isFinite(treasuryBalanceNumber)
     ? treasuryBalanceNumber.toLocaleString(undefined, { maximumFractionDigits: 4 })
     : treasuryBalance
+  const bandaBalanceNumber = Number(bandaBalance.formatted)
+  const bandaBalanceDisplay = Number.isFinite(bandaBalanceNumber)
+    ? bandaBalanceNumber.toLocaleString(undefined, { maximumFractionDigits: 4 })
+    : bandaBalance.formatted
   const elapsedSeconds = lastClaimAt ? Math.max(Math.floor((now - lastClaimAt) / 1000), 0) : 0
   const cappedSeconds = maxSeconds !== null ? Math.min(elapsedSeconds, maxSeconds) : elapsedSeconds
   const accrued = cappedSeconds * ratePerSecond
@@ -419,10 +430,13 @@ export function ArmyScreen() {
           <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
             <p className="text-xs text-muted-foreground">Current Rate</p>
             <p className="text-xl font-bold text-primary">{ratePerSecond} $BANDA / sec</p>
+            <p className="text-[11px] text-muted-foreground">
+              Non-locked Army Power: {bandaBalanceDisplay} $BANDA
+            </p>
             <p className="text-[11px] text-muted-foreground">{currentTier.label}</p>
           </Card>
           <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
-            <p className="text-xs text-muted-foreground">Army Power</p>
+            <p className="text-xs text-muted-foreground">Claimable Army Power</p>
             <p className="text-xl font-bold text-foreground">{claimable.toLocaleString()} $BANDA</p>
             <p className="text-[11px] text-muted-foreground">Accumulates while offline.</p>
           </Card>

@@ -381,3 +381,53 @@ export const LOTTERY_ABI = [
     outputs: [],
   },
 ] as const
+
+export const PLINKO_ABI = [
+  {
+    type: "function",
+    name: "play",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "risk", type: "uint8" },
+      { name: "stake", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "claim",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "discard",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "pendingOf",
+    stateMutability: "view",
+    inputs: [{ name: "player", type: "address" }],
+    outputs: [
+      { name: "active", type: "bool" },
+      { name: "risk", type: "uint8" },
+      { name: "slot", type: "uint8" },
+      { name: "multiplierBps", type: "uint32" },
+      { name: "stake", type: "uint256" },
+      { name: "payout", type: "uint256" },
+      { name: "playedAt", type: "uint256" },
+      { name: "nonce", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getMultipliers",
+    stateMutability: "view",
+    inputs: [{ name: "risk", type: "uint8" }],
+    outputs: [{ name: "", type: "uint32[9]" }],
+  },
+] as const
