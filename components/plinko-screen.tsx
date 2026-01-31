@@ -223,10 +223,17 @@ function PlinkoBoard({ playId, targetSlot, onSettled, soundEnabled }: PlinkoBoar
         if (!ball) return
         const target = targetSlotRef.current
         if (target !== null && slotCentersRef.current[target]) {
-          if (ball.position.y > BOARD_HEIGHT * 0.6) {
-            const targetX = slotCentersRef.current[target]
-            const deltaX = targetX - ball.position.x
-            Matter.Body.applyForce(ball, ball.position, { x: deltaX * 0.000002, y: 0 })
+          const targetX = slotCentersRef.current[target]
+          const deltaX = targetX - ball.position.x
+          if (ball.position.y > BOARD_HEIGHT - 60) {
+            Matter.Body.setPosition(ball, { x: targetX, y: ball.position.y })
+            Matter.Body.setVelocity(ball, { x: 0, y: ball.velocity.y })
+          } else if (ball.position.y > BOARD_HEIGHT * 0.55) {
+            const nextX = ball.position.x + deltaX * 0.18
+            Matter.Body.setPosition(ball, { x: nextX, y: ball.position.y })
+            Matter.Body.setVelocity(ball, { x: deltaX * 0.015, y: ball.velocity.y })
+          } else if (ball.position.y > BOARD_HEIGHT * 0.35) {
+            Matter.Body.applyForce(ball, ball.position, { x: deltaX * 0.00001, y: 0 })
           }
         }
 
