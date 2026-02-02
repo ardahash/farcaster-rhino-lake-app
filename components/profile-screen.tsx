@@ -62,8 +62,10 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
   const { toast } = useToast()
   const [isAuthLoading, setIsAuthLoading] = useState(false)
   const [isClaiming, setIsClaiming] = useState(false)
+  const [isRefreshingRewards, setIsRefreshingRewards] = useState(false)
   const [spinOpen, setSpinOpen] = useState(false)
   const [lockOpen, setLockOpen] = useState(false)
+  const [refreshOpen, setRefreshOpen] = useState(false)
   const [spinResult, setSpinResult] = useState<string | null>(null)
   const [isSpinning, setIsSpinning] = useState(false)
   const [lastSpinAt, setLastSpinAt] = useState<number | null>(null)
@@ -302,6 +304,65 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
       })
     } finally {
       setIsClaiming(false)
+    }
+  }
+
+  const handleRefreshRewards = async () => {
+    setIsRefreshingRewards(true)
+    try {
+      if (!isAuthenticated || !address) {
+        await handleConnect("coinbase")
+        return
+      }
+
+      if (cityId <= 0n) {
+        throw new Error("Mint a city to refresh rewards.")
+      }
+
+      if (barBalance.isLoading) {
+        throw new Error("BAR balance is still loading.")
+      }
+
+      const decimals = barBalance.decimals ?? 18
+      const amountRaw = parseUnits("1", decimals)
+
+      if (barBalance.raw < amountRaw) {
+        throw new Error("You need at least 1 BAR to refresh rewards.")
+      }
+
+      await ensureBaseNetwork()
+      await ensureBarAllowance(amountRaw)
+
+      const txHash = await sendTransactionAsync({
+        chainId: DEFAULT_CHAIN_ID,
+        account: address,
+        to: CONTRACTS.GAME,
+        data: encodeFunctionData({
+          abi: GAME_ABI,
+          functionName: "lockBAR",
+          args: [cityId, amountRaw],
+        }),
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: txHash })
+      }
+
+      toast({
+        title: "Rewards refreshed",
+        description: "Locked 1 BAR to sync ETH rewards.",
+      })
+      setRefreshOpen(false)
+      refetchCityState()
+      barBalance.refetch()
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Unable to refresh rewards."
+      toast({
+        title: "Refresh failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsRefreshingRewards(false)
     }
   }
 
@@ -573,6 +634,14 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               `Claim ${ethClaimableDisplay} ETH`
             )}
           </Button>
+          <Button
+            onClick={() => setRefreshOpen(true)}
+            disabled={!isAuthenticated || isRefreshingRewards || !isOnBase}
+            className="w-full h-11 text-sm font-semibold"
+            variant="outline"
+          >
+            {isRefreshingRewards ? "Refreshing..." : "Refresh rewards (locks 1 BAR)"}
+          </Button>
         </Card>
 
         <Card className="game-card p-6 space-y-4 mt-6">
@@ -762,6 +831,42 @@ export function ProfileScreen({ onNavigate }: ProfileScreenProps) {
               <DialogClose asChild>
                 <Button type="button" variant="secondary" className="w-full">
                   Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={refreshOpen} onOpenChange={setRefreshOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Refresh ETH rewards</DialogTitle>
+              <DialogDescription>
+                This locks exactly 1 BAR in the Game contract to sync ETH rewards for your city. Locking is
+                irreversible.
+              </DialogDescription>
+            </DialogHeader>
+            {!isOnBase && (
+              <p className="text-xs text-amber-500 text-center">Switch to Base mainnet to refresh rewards.</p>
+            )}
+            <DialogFooter className="flex-col gap-2 sm:flex-col sm:items-stretch sm:justify-start">
+              <Button
+                onClick={handleRefreshRewards}
+                disabled={isRefreshingRewards || !isOnBase}
+                className="w-full"
+              >
+                {isRefreshingRewards ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  "Lock 1 BAR and refresh"
+                )}
+              </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary" className="w-full">
+                  Cancel
                 </Button>
               </DialogClose>
             </DialogFooter>
