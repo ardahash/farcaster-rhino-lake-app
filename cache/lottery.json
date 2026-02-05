@@ -1,33 +1,57 @@
 {
   "current": {
-    "id": "lottery-2925",
-    "startAt": 1769553803346,
-    "endAt": 1770158603346,
-    "ticketPriceBandaRaw": "1740552916629546402609899",
-    "ticketPriceBanda": "1740552.916629546402609899",
-    "ticketUsdcRaw": "1100000",
-    "totalTickets": 2,
-    "potUsdcInitialRaw": "15000000",
-    "potUsdcFromTicketsRaw": "2184752",
-    "potUsdcTotalRaw": "17184752",
-    "tickets": [
-      {
-        "address": "0xAe5ac3c49A5d5C88ae551608CaE0d57B636c125D",
-        "count": 1,
-        "txHash": "0x6c4ea781c9e37c36f8be85e447067401c09929aa1a59224ba4f0817acc332d0d",
-        "purchasedAt": 1769553824499
-      },
-      {
-        "address": "0xAe5ac3c49A5d5C88ae551608CaE0d57B636c125D",
-        "count": 1,
-        "txHash": "0xf8e6c69bff417f4178cf83bb0935ab85e2f45f11d950f3262b37a12959b585ca",
-        "purchasedAt": 1769558612124,
-        "usdcValueRaw": "1084752",
-        "paymentToken": "usdc"
-      }
-    ],
+    "id": "lottery-2927",
+    "startAt": 1770263974300,
+    "endAt": 1770868774300,
+    "ticketPriceBandaRaw": "1737569848856449659868030",
+    "ticketPriceBanda": "1737569.84885644965986803",
+    "ticketUsdcRaw": "826478",
+    "totalTickets": 0,
+    "potUsdcInitialRaw": "1061482",
+    "potUsdcFromTicketsRaw": "0",
+    "potUsdcTotalRaw": "1061482",
+    "tickets": [],
     "winners": [],
     "status": "open"
   },
-  "history": []
+  "history": [
+    {
+      "id": "lottery-2925",
+      "startAt": 1769553803346,
+      "endAt": 1770158603346,
+      "ticketPriceBandaRaw": "1740552916629546402609899",
+      "ticketPriceBanda": "1740552.916629546402609899",
+      "ticketUsdcRaw": "1100000",
+      "totalTickets": 2,
+      "potUsdcInitialRaw": "15000000",
+      "potUsdcFromTicketsRaw": "2184752",
+      "potUsdcTotalRaw": "2122964",
+      "tickets": [
+        {
+          "address": "0xAe5ac3c49A5d5C88ae551608CaE0d57B636c125D",
+          "count": 1,
+          "txHash": "0x6c4ea781c9e37c36f8be85e447067401c09929aa1a59224ba4f0817acc332d0d",
+          "purchasedAt": 1769553824499
+        },
+        {
+          "address": "0xAe5ac3c49A5d5C88ae551608CaE0d57B636c125D",
+          "count": 1,
+          "txHash": "0xf8e6c69bff417f4178cf83bb0935ab85e2f45f11d950f3262b37a12959b585ca",
+          "purchasedAt": 1769558612124,
+          "usdcValueRaw": "1084752",
+          "paymentToken": "usdc"
+        }
+      ],
+      "winners": [
+        {
+          "address": "0xAe5ac3c49A5d5C88ae551608CaE0d57B636c125D",
+          "amountUsdcRaw": "2122964",
+          "claimed": false,
+          "pickedAt": 1770263974300,
+          "ticketIndex": 1
+        }
+      ],
+      "status": "closed"
+    }
+  ]
 }

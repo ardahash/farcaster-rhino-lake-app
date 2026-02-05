@@ -73,6 +73,7 @@ export function MiningScreen() {
   const miningTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isFlushingRef = useRef(false)
+  const flushPromiseRef = useRef<Promise<void> | null>(null)
   const pendingClicksRef = useRef(0)
 
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
@@ -145,14 +146,17 @@ export function MiningScreen() {
 
   const flushPendingClicks = async (force = false) => {
     if (!address || !isAuthenticated) return
-    if (isFlushingRef.current) return
     if (pendingClicksRef.current <= 0) return
+    if (isFlushingRef.current) {
+      if (flushPromiseRef.current) {
+        await flushPromiseRef.current
+      }
+      return
+    }
     isFlushingRef.current = true
-    try {
+    const run = (async () => {
       while (pendingClicksRef.current > 0) {
         const batch = Math.min(pendingClicksRef.current, 12)
-        pendingClicksRef.current -= batch
-        setPendingClicks(pendingClicksRef.current)
         const response = await fetch("/api/mining-click", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -167,10 +171,12 @@ export function MiningScreen() {
           error?: string
         }
         if (!response.ok) {
-          pendingClicksRef.current += batch
-          setPendingClicks(pendingClicksRef.current)
           throw new Error(data?.error ?? "Mining failed.")
         }
+        const accepted = typeof data.accepted === "number" ? data.accepted : batch
+        const nextPending = Math.max(pendingClicksRef.current - accepted, 0)
+        pendingClicksRef.current = nextPending
+        setPendingClicks(nextPending)
         if (typeof data.count === "number") {
           setServerClicks(data.count)
         }
@@ -183,10 +189,23 @@ export function MiningScreen() {
         if (data.tier) {
           setTier(data.tier)
         }
-        if (!force) {
+        if (accepted < batch && pendingClicksRef.current > 0) {
+          if (flushTimeoutRef.current) {
+            clearTimeout(flushTimeoutRef.current)
+          }
+          flushTimeoutRef.current = setTimeout(() => {
+            flushPendingClicks().catch(() => null)
+          }, 700)
+        }
+
+        if (!force || accepted < batch) {
           break
         }
       }
+    })()
+    flushPromiseRef.current = run
+    try {
+      await run
     } catch (error) {
       const message = error instanceof Error ? error.message : "Mining request failed."
       if (!force && message.toLowerCase().includes("too fast")) {
@@ -204,6 +223,7 @@ export function MiningScreen() {
         variant: "destructive",
       })
     } finally {
+      flushPromiseRef.current = null
       isFlushingRef.current = false
     }
   }
@@ -262,6 +282,9 @@ export function MiningScreen() {
     try {
       if (flushTimeoutRef.current) {
         clearTimeout(flushTimeoutRef.current)
+      }
+      if (isFlushingRef.current && flushPromiseRef.current) {
+        await flushPromiseRef.current
       }
       await flushPendingClicks(true)
       const response = await fetch("/api/mining-claim", {
