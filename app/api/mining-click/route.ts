@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createPublicClient, http, parseUnits } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
 import { MAX_CLICKS_PER_REQUEST, consumeMiningClicks, getMiningCount } from "@/lib/mining-store"
@@ -48,13 +47,12 @@ const getRpcUrl = () => {
   return rpcUrl
 }
 
-const getRewardWalletAddress = () => {
-  const rawKey = process.env.BAR_REWARD_PRIVATE_KEY
-  if (!rawKey) {
-    throw new Error("Reward wallet is not configured.")
+const getRewardContractAddress = () => {
+  const rewardContract = process.env.NEXT_PUBLIC_BAR_MINING_REWARD_ADDRESS
+  if (!rewardContract) {
+    throw new Error("BAR mining reward contract is not configured.")
   }
-  const privateKey = rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`
-  return privateKeyToAccount(privateKey as `0x${string}`).address
+  return rewardContract as `0x${string}`
 }
 
 export async function POST(request: Request) {
@@ -82,7 +80,7 @@ export async function POST(request: Request) {
       address: CONTRACT_ADDRESSES.BAR,
       abi: ERC20_READ_ABI,
       functionName: "balanceOf",
-      args: [getRewardWalletAddress()],
+      args: [getRewardContractAddress()],
     })) as bigint
 
     const pickaxeAddress = CONTRACT_ADDRESSES.PICKAXE_NFT

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createPublicClient, createWalletClient, formatUnits, http, parseUnits } from "viem"
+import { createPublicClient, formatUnits, http, parseUnits } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
@@ -37,16 +37,13 @@ const ERC1155_READ_ABI = [
   },
 ] as const
 
-const ERC20_TRANSFER_ABI = [
+const REWARD_NONCE_ABI = [
   {
     type: "function",
-    name: "transfer",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [{ name: "", type: "bool" }],
+    name: "nonces",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
   },
 ] as const
 
@@ -68,6 +65,28 @@ const getRewardWallet = () => {
   const privateKey = rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`
   return privateKeyToAccount(privateKey as `0x${string}`)
 }
+
+const getRewardContractAddress = () => {
+  const rewardContract = process.env.NEXT_PUBLIC_BANDA_MINING_REWARD_ADDRESS
+  if (!rewardContract) {
+    throw new Error("BANDA mining reward contract is not configured.")
+  }
+  return rewardContract as `0x${string}`
+}
+
+const CLAIM_DOMAIN = {
+  name: "RhinoLakeMiningRewards",
+  version: "1",
+} as const
+
+const CLAIM_TYPES = {
+  Claim: [
+    { name: "account", type: "address" },
+    { name: "amount", type: "uint256" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+} as const
 
 export async function POST(request: Request) {
   try {
@@ -126,12 +145,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
     }
 
-    const account = getRewardWallet()
+    const signer = getRewardWallet()
+    const rewardContract = getRewardContractAddress()
     const treasuryBalanceRaw = (await publicClient.readContract({
       address: CONTRACT_ADDRESSES.BANDA,
       abi: ERC20_READ_ABI,
       functionName: "balanceOf",
-      args: [account.address],
+      args: [rewardContract],
     })) as bigint
 
     if (treasuryBalanceRaw <= 0n) {
@@ -140,34 +160,38 @@ export async function POST(request: Request) {
 
     const amountRaw = treasuryBalanceRaw < totalRaw ? treasuryBalanceRaw : totalRaw
 
-    const walletClient = createWalletClient({
-      chain: base,
-      transport: http(rpcUrl),
-      account,
-    })
-
-    const hash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESSES.BANDA,
-      abi: ERC20_TRANSFER_ABI,
-      functionName: "transfer",
-      args: [body.address as `0x${string}`, amountRaw],
-    })
-
-    await publicClient.waitForTransactionReceipt({ hash })
-
-    const refreshedBalanceRaw = (await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.BANDA,
-      abi: ERC20_READ_ABI,
-      functionName: "balanceOf",
-      args: [account.address],
+    const nonce = (await publicClient.readContract({
+      address: rewardContract,
+      abi: REWARD_NONCE_ABI,
+      functionName: "nonces",
+      args: [body.address as `0x${string}`],
     })) as bigint
+
+    const deadline = Math.floor(Date.now() / 1000) + 10 * 60
+    const signature = await signer.signTypedData({
+      domain: { ...CLAIM_DOMAIN, chainId: base.id, verifyingContract: rewardContract },
+      types: CLAIM_TYPES,
+      primaryType: "Claim",
+      message: {
+        account: body.address as `0x${string}`,
+        amount: amountRaw,
+        nonce,
+        deadline,
+      },
+    })
 
     return NextResponse.json({
       amount: formatUnits(amountRaw, decimals),
-      txHash: hash,
+      amountRaw: amountRaw.toString(),
       tier: highestTier.id,
       ratePerSecond,
-      treasuryBalance: formatUnits(refreshedBalanceRaw, decimals),
+      treasuryBalance: formatUnits(treasuryBalanceRaw, decimals),
+      claim: {
+        contract: rewardContract,
+        nonce: nonce.toString(),
+        deadline,
+        signature,
+      },
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Claim failed."

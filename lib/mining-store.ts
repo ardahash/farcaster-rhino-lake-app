@@ -6,6 +6,17 @@ export const MIN_CLAIM_INTERVAL_MS = 15000
 const miningCounts = new Map<string, number>()
 const miningClickWindows = new Map<string, { start: number; count: number }>()
 const miningLastClaim = new Map<string, number>()
+const pendingMiningClaims = new Map<
+  string,
+  {
+    clicks: number
+    amountRaw: bigint
+    amount: string
+    nonce: bigint
+    deadline: number
+    signature: `0x${string}`
+  }
+>()
 
 export const getMiningCount = (address: string) => miningCounts.get(address) ?? 0
 
@@ -71,4 +82,25 @@ export const canClaimMining = (address: string, now = Date.now()) => {
   }
   miningLastClaim.set(address, now)
   return true
+}
+
+export const getPendingMiningClaim = (address: string) => pendingMiningClaims.get(address)
+
+export const setPendingMiningClaim = (
+  address: string,
+  claim: {
+    clicks: number
+    amountRaw: bigint
+    amount: string
+    nonce: bigint
+    deadline: number
+    signature: `0x${string}`
+  },
+) => {
+  pendingMiningClaims.set(address, claim)
+  return claim
+}
+
+export const clearPendingMiningClaim = (address: string) => {
+  pendingMiningClaims.delete(address)
 }

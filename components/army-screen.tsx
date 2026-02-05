@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
-import { CONTRACTS, ERC20_ABI, BANDA_NFT_ABI } from "@/lib/contracts"
+import { CONTRACTS, ERC20_ABI, BANDA_NFT_ABI, MINING_REWARD_ABI } from "@/lib/contracts"
 import { BANDA_TIERS, getBandaTier, type BandaTier } from "@/lib/army-tiers"
 import { useErc20Balance } from "@/lib/use-erc20-balance"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
@@ -25,10 +25,16 @@ type BandaStatusResponse = {
 
 type BandaClaimResponse = {
   amount?: string
-  txHash?: string
+  amountRaw?: string
   tier?: BandaTier
   ratePerSecond?: number
   treasuryBalance?: string
+  claim?: {
+    contract?: `0x${string}`
+    nonce?: string
+    deadline?: number
+    signature?: `0x${string}`
+  }
   error?: string
 }
 
@@ -288,6 +294,36 @@ export function ArmyScreen() {
         throw new Error(data?.error ?? "Claim failed.")
       }
 
+      const claim = data.claim
+      const claimContract = claim?.contract ?? (CONTRACTS.BANDA_MINING_REWARD as `0x${string}` | undefined)
+      if (!claimContract) {
+        throw new Error("Army rewards contract not configured.")
+      }
+      if (!claim?.signature || !claim?.nonce || !claim?.deadline || !data.amountRaw) {
+        throw new Error("Missing claim authorization.")
+      }
+
+      await ensureBaseNetwork()
+      const claimHash = await sendTransactionAsync({
+        chainId: BASE_MAINNET_CHAIN_ID,
+        account: address,
+        to: claimContract,
+        data: encodeFunctionData({
+          abi: MINING_REWARD_ABI,
+          functionName: "claim",
+          args: [
+            address,
+            BigInt(data.amountRaw),
+            BigInt(claim.nonce),
+            BigInt(claim.deadline),
+            claim.signature,
+          ],
+        }),
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: claimHash })
+      }
+
       const nextLast = Date.now()
       setLastClaimAt(nextLast)
       if (typeof window !== "undefined" && storageKey) {
@@ -349,6 +385,7 @@ export function ArmyScreen() {
   const isActionLoading = isConnecting || isSwitching || isTxPending
   const currentTier = useMemo(() => getBandaTier(tier), [tier])
   const bandaConfigured = Boolean(CONTRACTS.BANDA_NFT)
+  const rewardConfigured = Boolean(CONTRACTS.BANDA_MINING_REWARD)
   const treasuryBalanceNumber = Number(treasuryBalance)
   const treasuryBalanceDisplay = Number.isFinite(treasuryBalanceNumber)
     ? treasuryBalanceNumber.toLocaleString(undefined, { maximumFractionDigits: 4 })
@@ -454,7 +491,7 @@ export function ArmyScreen() {
           </div>
           <Button
             onClick={handleClaim}
-            disabled={!isAuthenticated || isActionLoading || isClaiming || claimable <= 0}
+            disabled={!isAuthenticated || !rewardConfigured || isActionLoading || isClaiming || claimable <= 0}
             className="w-full h-11 text-base font-semibold"
           >
             {isClaiming ? (

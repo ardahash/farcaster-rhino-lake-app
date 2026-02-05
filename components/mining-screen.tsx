@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { useBaseAuth } from "@/lib/base-auth"
 import { BASE_MAINNET_CHAIN_ID } from "@/lib/base-config"
-import { CONTRACTS, ERC20_ABI, PICKAXE_NFT_ABI } from "@/lib/contracts"
+import { CONTRACTS, ERC20_ABI, MINING_REWARD_ABI, PICKAXE_NFT_ABI } from "@/lib/contracts"
 import { PICKAXE_TIERS, getPickaxeTier, type PickaxeTier } from "@/lib/mining-tiers"
 import { Loader2, Pickaxe } from "lucide-react"
 import { usePublicClient, useSendTransaction, useSwitchChain } from "wagmi"
@@ -25,11 +25,17 @@ type MiningStatusResponse = {
 type MiningClaimResponse = {
   clicks?: number
   amount?: string
-  txHash?: string
+  amountRaw?: string
   tier?: PickaxeTier
   rewardPerClick?: number
   treasuryBalance?: string
   maxClicks?: number
+  claim?: {
+    contract?: `0x${string}`
+    nonce?: string
+    deadline?: number
+    signature?: `0x${string}`
+  }
   error?: string
 }
 
@@ -268,6 +274,36 @@ export function MiningScreen() {
         throw new Error(data?.error ?? "Claim failed.")
       }
 
+      const claim = data.claim
+      const claimContract = claim?.contract ?? (CONTRACTS.BAR_MINING_REWARD as `0x${string}` | undefined)
+      if (!claimContract) {
+        throw new Error("Mining rewards contract not configured.")
+      }
+      if (!claim?.signature || !claim?.nonce || !claim?.deadline || !data.amountRaw) {
+        throw new Error("Missing claim authorization.")
+      }
+
+      await ensureBaseNetwork()
+      const claimHash = await sendTransactionAsync({
+        chainId: BASE_MAINNET_CHAIN_ID,
+        account: address,
+        to: claimContract,
+        data: encodeFunctionData({
+          abi: MINING_REWARD_ABI,
+          functionName: "claim",
+          args: [
+            address,
+            BigInt(data.amountRaw),
+            BigInt(claim.nonce),
+            BigInt(claim.deadline),
+            claim.signature,
+          ],
+        }),
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: claimHash })
+      }
+
       setServerClicks(0)
       setPendingClicks(0)
       pendingClicksRef.current = 0
@@ -453,6 +489,7 @@ export function MiningScreen() {
   const isActionLoading = isConnecting || isSwitching || isTxPending
   const currentTier = useMemo(() => getPickaxeTier(tier), [tier])
   const pickaxeConfigured = Boolean(CONTRACTS.PICKAXE_NFT)
+  const rewardConfigured = Boolean(CONTRACTS.BAR_MINING_REWARD)
   const treasuryBalanceNumber = Number(treasuryBalance)
   const treasuryBalanceDisplay = Number.isFinite(treasuryBalanceNumber)
     ? treasuryBalanceNumber.toLocaleString(undefined, { maximumFractionDigits: 4 })
@@ -559,7 +596,7 @@ export function MiningScreen() {
               event.stopPropagation()
               handleClaim()
             }}
-            disabled={!isAuthenticated || displayClicks <= 0 || isClaiming || isActionLoading}
+            disabled={!isAuthenticated || !rewardConfigured || displayClicks <= 0 || isClaiming || isActionLoading}
             className="h-9 rounded-md bg-white/95 px-3 text-xs font-semibold text-slate-900 shadow-md hover:bg-white"
             variant="ghost"
           >

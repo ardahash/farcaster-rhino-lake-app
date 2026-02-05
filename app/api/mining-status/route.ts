@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import { createPublicClient, formatUnits, http, parseUnits } from "viem"
-import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
-import { getMiningCount, setMiningCount } from "@/lib/mining-store"
+import { clearPendingMiningClaim, getMiningCount, getPendingMiningClaim, setMiningCount } from "@/lib/mining-store"
 import { PICKAXE_TIERS, getPickaxeTier, getTierIndex } from "@/lib/mining-tiers"
 
 export const runtime = "nodejs"
@@ -38,6 +37,16 @@ const ERC1155_READ_ABI = [
   },
 ] as const
 
+const REWARD_NONCE_ABI = [
+  {
+    type: "function",
+    name: "nonces",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const
+
 const isHexAddress = (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value)
 
 const getRpcUrl = () => {
@@ -48,13 +57,12 @@ const getRpcUrl = () => {
   return rpcUrl
 }
 
-const getRewardWalletAddress = () => {
-  const rawKey = process.env.BAR_REWARD_PRIVATE_KEY
-  if (!rawKey) {
-    throw new Error("Reward wallet is not configured.")
+const getRewardContractAddress = () => {
+  const rewardContract = process.env.NEXT_PUBLIC_BAR_MINING_REWARD_ADDRESS
+  if (!rewardContract) {
+    throw new Error("BAR mining reward contract is not configured.")
   }
-  const privateKey = rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`
-  return privateKeyToAccount(privateKey as `0x${string}`).address
+  return rewardContract as `0x${string}`
 }
 
 export async function POST(request: Request) {
@@ -65,7 +73,7 @@ export async function POST(request: Request) {
     }
 
     const normalized = body.address.toLowerCase()
-    const rawCount = getMiningCount(normalized)
+    let rawCount = getMiningCount(normalized)
 
     const rpcUrl = getRpcUrl()
     const publicClient = createPublicClient({
@@ -79,11 +87,12 @@ export async function POST(request: Request) {
       functionName: "decimals",
     })) as number
 
+    const rewardContract = getRewardContractAddress()
     const treasuryBalanceRaw = (await publicClient.readContract({
       address: CONTRACT_ADDRESSES.BAR,
       abi: ERC20_READ_ABI,
       functionName: "balanceOf",
-      args: [getRewardWalletAddress()],
+      args: [rewardContract],
     })) as bigint
 
     const pickaxeAddress = CONTRACT_ADDRESSES.PICKAXE_NFT
@@ -116,6 +125,21 @@ export async function POST(request: Request) {
         }
       }
     })
+
+    const pending = getPendingMiningClaim(normalized)
+    if (pending) {
+      const chainNonce = (await publicClient.readContract({
+        address: rewardContract,
+        abi: REWARD_NONCE_ABI,
+        functionName: "nonces",
+        args: [body.address as `0x${string}`],
+      })) as bigint
+      if (chainNonce > pending.nonce) {
+        clearPendingMiningClaim(normalized)
+      } else {
+        rawCount = pending.clicks
+      }
+    }
 
     const rewardPerClick = highestTier.rewardPerClick
     const perClickRaw = parseUnits(rewardPerClick.toString(), decimals)
