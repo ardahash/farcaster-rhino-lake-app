@@ -20,6 +20,7 @@ type BandaStatusResponse = {
   ownedTokenIds?: number[]
   treasuryBalance?: string
   maxSeconds?: number
+  lastClaimAt?: number
   error?: string
 }
 
@@ -115,6 +116,12 @@ export function ArmyScreen() {
         setOwnedTokenIds(data.ownedTokenIds ?? [])
         setTreasuryBalance(data.treasuryBalance ?? "0")
         setMaxSeconds(typeof data.maxSeconds === "number" ? data.maxSeconds : null)
+        if (typeof data.lastClaimAt === "number" && Number.isFinite(data.lastClaimAt)) {
+          setLastClaimAt(data.lastClaimAt)
+          if (typeof window !== "undefined" && storageKey) {
+            window.localStorage.setItem(storageKey, data.lastClaimAt.toString())
+          }
+        }
       } catch (error) {
         toast({
           title: "Army sync failed",
@@ -287,7 +294,7 @@ export function ArmyScreen() {
       const response = await fetch("/api/banda-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, seconds: elapsedSeconds }),
+        body: JSON.stringify({ address }),
       })
       const data = (await response.json()) as BandaClaimResponse
       if (!response.ok) {

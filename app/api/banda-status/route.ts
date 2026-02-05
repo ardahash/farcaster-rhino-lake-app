@@ -3,6 +3,7 @@ import { createPublicClient, formatUnits, http, parseUnits } from "viem"
 import { base } from "viem/chains"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
 import { BANDA_TIERS, getBandaTier, getBandaTierIndex } from "@/lib/army-tiers"
+import { ensureBandaLastClaim, getBandaLastClaim } from "@/lib/banda-store"
 
 export const runtime = "nodejs"
 
@@ -60,6 +61,10 @@ export async function POST(request: Request) {
     if (!body?.address || !isHexAddress(body.address)) {
       return NextResponse.json({ error: "Invalid address." }, { status: 400 })
     }
+
+    const normalized = body.address.toLowerCase()
+    const now = Date.now()
+    ensureBandaLastClaim(normalized, now)
 
     const rpcUrl = getRpcUrl()
     const publicClient = createPublicClient({
@@ -121,6 +126,7 @@ export async function POST(request: Request) {
       ownedTokenIds,
       treasuryBalance: formatUnits(treasuryBalanceRaw, decimals),
       maxSeconds,
+      lastClaimAt: getBandaLastClaim(normalized),
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load BANDA data."

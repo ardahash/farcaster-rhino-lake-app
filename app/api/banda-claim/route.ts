@@ -4,6 +4,14 @@ import { privateKeyToAccount } from "viem/accounts"
 import { base } from "viem/chains"
 import { CONTRACT_ADDRESSES } from "@/lib/contract-addresses"
 import { BANDA_TIERS, getBandaTier, getBandaTierIndex } from "@/lib/army-tiers"
+import {
+  clearPendingBandaClaim,
+  ensureBandaLastClaim,
+  getBandaLastClaim,
+  getPendingBandaClaim,
+  setBandaLastClaim,
+  setPendingBandaClaim,
+} from "@/lib/banda-store"
 
 export const runtime = "nodejs"
 
@@ -94,7 +102,10 @@ export async function POST(request: Request) {
     if (!body?.address || !isHexAddress(body.address)) {
       return NextResponse.json({ error: "Invalid address." }, { status: 400 })
     }
-    if (!body?.seconds || body.seconds <= 0) {
+    const normalized = body.address.toLowerCase()
+    const now = Date.now()
+    const { initialized } = ensureBandaLastClaim(normalized, now)
+    if (initialized) {
       return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
     }
 
@@ -140,10 +151,7 @@ export async function POST(request: Request) {
     })
 
     const ratePerSecond = highestTier.ratePerSecond
-    const totalRaw = parseUnits((ratePerSecond * body.seconds).toString(), decimals)
-    if (totalRaw <= 0n) {
-      return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
-    }
+    const perSecondRaw = parseUnits(ratePerSecond.toString(), decimals)
 
     const signer = getRewardWallet()
     const rewardContract = getRewardContractAddress()
@@ -158,14 +166,72 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Treasury is empty." }, { status: 400 })
     }
 
-    const amountRaw = treasuryBalanceRaw < totalRaw ? treasuryBalanceRaw : totalRaw
-
     const nonce = (await publicClient.readContract({
       address: rewardContract,
       abi: REWARD_NONCE_ABI,
       functionName: "nonces",
       args: [body.address as `0x${string}`],
     })) as bigint
+
+    let pending = getPendingBandaClaim(normalized)
+    if (pending && nonce > pending.nonce) {
+      clearPendingBandaClaim(normalized)
+      pending = undefined
+      setBandaLastClaim(normalized, now)
+    }
+
+    if (pending && nonce === pending.nonce) {
+      const nowSeconds = Math.floor(now / 1000)
+      let deadline = pending.deadline
+      let signature = pending.signature
+      if (deadline <= nowSeconds + 30) {
+        deadline = nowSeconds + 10 * 60
+        signature = await signer.signTypedData({
+          domain: { ...CLAIM_DOMAIN, chainId: base.id, verifyingContract: rewardContract },
+          types: CLAIM_TYPES,
+          primaryType: "Claim",
+          message: {
+            account: body.address as `0x${string}`,
+            amount: pending.amountRaw,
+            nonce: pending.nonce,
+            deadline,
+          },
+        })
+        pending = setPendingBandaClaim(normalized, {
+          ...pending,
+          deadline,
+          signature,
+        })
+      }
+
+      return NextResponse.json({
+        amount: pending.amount,
+        amountRaw: pending.amountRaw.toString(),
+        tier: highestTier.id,
+        ratePerSecond,
+        treasuryBalance: formatUnits(treasuryBalanceRaw, decimals),
+        claim: {
+          contract: rewardContract,
+          nonce: pending.nonce.toString(),
+          deadline,
+          signature,
+        },
+      })
+    }
+
+    const lastClaimAt = getBandaLastClaim(normalized) ?? now
+    const elapsedSeconds = Math.max(Math.floor((now - lastClaimAt) / 1000), 0)
+    const maxSeconds = perSecondRaw > 0n ? Number(treasuryBalanceRaw / perSecondRaw) : 0
+    const cappedSeconds = Math.min(elapsedSeconds, maxSeconds)
+    if (cappedSeconds <= 0) {
+      return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
+    }
+
+    const amountRaw = perSecondRaw * BigInt(cappedSeconds)
+
+    if (amountRaw <= 0n) {
+      return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
+    }
 
     const deadline = Math.floor(Date.now() / 1000) + 10 * 60
     const signature = await signer.signTypedData({
@@ -179,6 +245,16 @@ export async function POST(request: Request) {
         deadline,
       },
     })
+
+    setPendingBandaClaim(normalized, {
+      seconds: cappedSeconds,
+      amountRaw,
+      amount: formatUnits(amountRaw, decimals),
+      nonce,
+      deadline,
+      signature,
+    })
+    setBandaLastClaim(normalized, now)
 
     return NextResponse.json({
       amount: formatUnits(amountRaw, decimals),
