@@ -482,7 +482,7 @@ export function ArmyScreen() {
           <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
             <p className="text-xs text-muted-foreground">Claimable Army Power</p>
             <p className="text-xl font-bold text-foreground">{claimable.toLocaleString()} $BANDA</p>
-            <p className="text-[11px] text-muted-foreground">Accumulates while offline.</p>
+            <p className="text-[11px] text-muted-foreground">Only accumilated while on this page</p>
           </Card>
           <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
             <p className="text-xs text-muted-foreground">Currently mineable</p>

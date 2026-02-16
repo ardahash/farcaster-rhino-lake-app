@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     const normalized = body.address.toLowerCase()
     const now = Date.now()
-    ensureBandaLastClaim(normalized, now)
+    await ensureBandaLastClaim(normalized, now)
 
     const rpcUrl = getRpcUrl()
     const publicClient = createPublicClient({
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       ownedTokenIds,
       treasuryBalance: formatUnits(treasuryBalanceRaw, decimals),
       maxSeconds,
-      lastClaimAt: getBandaLastClaim(normalized),
+      lastClaimAt: await getBandaLastClaim(normalized),
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load BANDA data."
