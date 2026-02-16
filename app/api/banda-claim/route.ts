@@ -219,10 +219,13 @@ export async function POST(request: Request) {
       })
     }
 
+    const requestedSeconds =
+      typeof body.seconds === "number" && Number.isFinite(body.seconds) ? Math.max(Math.floor(body.seconds), 0) : null
     const lastClaimAt = (await getBandaLastClaim(normalized)) ?? now
     const elapsedSeconds = Math.max(Math.floor((now - lastClaimAt) / 1000), 0)
+    const sessionSeconds = requestedSeconds === null ? elapsedSeconds : Math.min(elapsedSeconds, requestedSeconds)
     const maxSeconds = perSecondRaw > 0n ? Number(treasuryBalanceRaw / perSecondRaw) : 0
-    const cappedSeconds = Math.min(elapsedSeconds, maxSeconds)
+    const cappedSeconds = Math.min(sessionSeconds, maxSeconds)
     if (cappedSeconds <= 0) {
       return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
     }
