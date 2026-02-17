@@ -12,7 +12,6 @@ import { MarketScreen } from "@/components/market-screen"
 import { SocialScreen } from "@/components/social-screen"
 import { ProfileScreen } from "@/components/profile-screen"
 import { MiningScreen } from "@/components/mining-screen"
-import { LotteryScreen } from "@/components/lottery-screen"
 import { PlinkoScreen } from "@/components/plinko-screen"
 import { InfoScreen } from "@/components/info-screen"
 import { DocsScreen } from "@/components/docs-screen"
@@ -46,7 +45,6 @@ function RhinoLakeShell() {
         {activeTab === "town" && hasCity && <TownScreen onNavigate={setActiveTab} />}
         {activeTab === "army" && <ArmyScreen />}
         {activeTab === "market" && <MarketScreen />}
-        {activeTab === "lottery" && <LotteryScreen />}
         {activeTab === "plinko" && <PlinkoScreen />}
         {activeTab === "mining" && <MiningScreen />}
         {activeTab === "social" && <SocialScreen />}

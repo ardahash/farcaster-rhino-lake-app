@@ -20,7 +20,6 @@ type BandaStatusResponse = {
   ownedTokenIds?: number[]
   treasuryBalance?: string
   maxSeconds?: number
-  lastClaimAt?: number
   error?: string
 }
 
@@ -71,34 +70,25 @@ export function ArmyScreen() {
   const [ratePerSecond, setRatePerSecond] = useState(1)
   const [treasuryBalance, setTreasuryBalance] = useState("0")
   const [maxSeconds, setMaxSeconds] = useState<number | null>(null)
-  const [lastClaimAt, setLastClaimAt] = useState<number | null>(null)
-  const [now, setNow] = useState(Date.now())
+  const [activeSeconds, setActiveSeconds] = useState(0)
   const [claimNotice, setClaimNotice] = useState<string | null>(null)
   const [confettiPieces, setConfettiPieces] = useState<ConfettiPiece[]>([])
 
   const tickerRef = useRef<NodeJS.Timeout | null>(null)
   const noticeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const usdcAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
-  const storageKey = address ? `rhino-lake:banda-claim:${address.toLowerCase()}` : null
 
   useEffect(() => {
     if (!address || !isAuthenticated) {
-      setLastClaimAt(null)
       setRatePerSecond(1)
       setTier("starter")
       setTreasuryBalance("0")
       setOwnedTokenIds([])
       setMaxSeconds(null)
+      setActiveSeconds(0)
       return
     }
-
-    const stored = typeof window !== "undefined" && storageKey ? window.localStorage.getItem(storageKey) : null
-    const parsed = stored ? Number.parseInt(stored, 10) : NaN
-    const nextLast = Number.isFinite(parsed) ? parsed : Date.now()
-    setLastClaimAt(nextLast)
-    if (typeof window !== "undefined" && storageKey && !stored) {
-      window.localStorage.setItem(storageKey, nextLast.toString())
-    }
+    setActiveSeconds(0)
 
     const loadStatus = async () => {
       try {
@@ -116,12 +106,6 @@ export function ArmyScreen() {
         setOwnedTokenIds(data.ownedTokenIds ?? [])
         setTreasuryBalance(data.treasuryBalance ?? "0")
         setMaxSeconds(typeof data.maxSeconds === "number" ? data.maxSeconds : null)
-        if (typeof data.lastClaimAt === "number" && Number.isFinite(data.lastClaimAt)) {
-          setLastClaimAt(data.lastClaimAt)
-          if (typeof window !== "undefined" && storageKey) {
-            window.localStorage.setItem(storageKey, data.lastClaimAt.toString())
-          }
-        }
       } catch (error) {
         toast({
           title: "Army sync failed",
@@ -132,14 +116,17 @@ export function ArmyScreen() {
     }
 
     loadStatus()
-  }, [address, isAuthenticated, storageKey, toast])
+  }, [address, isAuthenticated, toast])
 
   useEffect(() => {
     if (tickerRef.current) {
       clearInterval(tickerRef.current)
     }
     tickerRef.current = setInterval(() => {
-      setNow(Date.now())
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return
+      }
+      setActiveSeconds((seconds) => seconds + 1)
     }, 1000)
     return () => {
       if (tickerRef.current) {
@@ -277,10 +264,6 @@ export function ArmyScreen() {
       return
     }
 
-    if (!lastClaimAt) {
-      return
-    }
-
     if (claimable <= 0) {
       toast({
         title: "Nothing to claim",
@@ -294,7 +277,7 @@ export function ArmyScreen() {
       const response = await fetch("/api/banda-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
+        body: JSON.stringify({ address, seconds: cappedSeconds }),
       })
       const data = (await response.json()) as BandaClaimResponse
       if (!response.ok) {
@@ -331,11 +314,7 @@ export function ArmyScreen() {
         await publicClient.waitForTransactionReceipt({ hash: claimHash })
       }
 
-      const nextLast = Date.now()
-      setLastClaimAt(nextLast)
-      if (typeof window !== "undefined" && storageKey) {
-        window.localStorage.setItem(storageKey, nextLast.toString())
-      }
+      setActiveSeconds(0)
 
       if (data.tier) {
         setTier(data.tier)
@@ -401,8 +380,7 @@ export function ArmyScreen() {
   const bandaBalanceDisplay = Number.isFinite(bandaBalanceNumber)
     ? bandaBalanceNumber.toLocaleString(undefined, { maximumFractionDigits: 4 })
     : bandaBalance.formatted
-  const elapsedSeconds = lastClaimAt ? Math.max(Math.floor((now - lastClaimAt) / 1000), 0) : 0
-  const cappedSeconds = maxSeconds !== null ? Math.min(elapsedSeconds, maxSeconds) : elapsedSeconds
+  const cappedSeconds = maxSeconds !== null ? Math.min(activeSeconds, maxSeconds) : activeSeconds
   const accrued = cappedSeconds * ratePerSecond
   const claimable = Math.max(accrued, 0)
 
@@ -466,7 +444,7 @@ export function ArmyScreen() {
             Army Command
           </div>
           <p className="text-sm text-muted-foreground">
-            Your $BANDA army power grows passively, even while you are away.
+            Your $BANDA army power accumulates only while you are on this page.
           </p>
         </Card>
 
@@ -482,7 +460,7 @@ export function ArmyScreen() {
           <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
             <p className="text-xs text-muted-foreground">Claimable Army Power</p>
             <p className="text-xl font-bold text-foreground">{claimable.toLocaleString()} $BANDA</p>
-            <p className="text-[11px] text-muted-foreground">Accumulates while offline.</p>
+            <p className="text-[11px] text-muted-foreground">Only while you are on this page.</p>
           </Card>
           <Card className="game-card p-4 space-y-1 bg-card/70 backdrop-blur border-border/60">
             <p className="text-xs text-muted-foreground">Currently mineable</p>

@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     }
     const normalized = body.address.toLowerCase()
     const now = Date.now()
-    const { initialized } = ensureBandaLastClaim(normalized, now)
+    const { initialized } = await ensureBandaLastClaim(normalized, now)
     if (initialized) {
       return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
     }
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
     if (pending && nonce > pending.nonce) {
       clearPendingBandaClaim(normalized)
       pending = undefined
-      setBandaLastClaim(normalized, now)
+      await setBandaLastClaim(normalized, now)
     }
 
     if (pending && nonce === pending.nonce) {
@@ -219,10 +219,13 @@ export async function POST(request: Request) {
       })
     }
 
-    const lastClaimAt = getBandaLastClaim(normalized) ?? now
+    const requestedSeconds =
+      typeof body.seconds === "number" && Number.isFinite(body.seconds) ? Math.max(Math.floor(body.seconds), 0) : null
+    const lastClaimAt = (await getBandaLastClaim(normalized)) ?? now
     const elapsedSeconds = Math.max(Math.floor((now - lastClaimAt) / 1000), 0)
+    const sessionSeconds = requestedSeconds === null ? elapsedSeconds : Math.min(elapsedSeconds, requestedSeconds)
     const maxSeconds = perSecondRaw > 0n ? Number(treasuryBalanceRaw / perSecondRaw) : 0
-    const cappedSeconds = Math.min(elapsedSeconds, maxSeconds)
+    const cappedSeconds = Math.min(sessionSeconds, maxSeconds)
     if (cappedSeconds <= 0) {
       return NextResponse.json({ error: "No Army power to claim yet." }, { status: 400 })
     }
@@ -254,7 +257,7 @@ export async function POST(request: Request) {
       deadline,
       signature,
     })
-    setBandaLastClaim(normalized, now)
+    await setBandaLastClaim(normalized, now)
 
     return NextResponse.json({
       amount: formatUnits(amountRaw, decimals),

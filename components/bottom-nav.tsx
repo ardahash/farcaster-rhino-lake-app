@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Castle, Swords, Store, User, BookOpen, Pickaxe, Ticket, CircleDot } from "lucide-react"
+import { Home, Castle, Swords, Store, User, BookOpen, Pickaxe, CircleDot } from "lucide-react"
 
 interface BottomNavProps {
   activeTab: string
@@ -14,7 +14,6 @@ export function BottomNav({ activeTab, onTabChange, showTown = true }: BottomNav
     { id: "town", label: "Town", icon: Castle },
     { id: "army", label: "Army", icon: Swords },
     { id: "market", label: "Market", icon: Store },
-    { id: "lottery", label: "Lottery", icon: Ticket },
     { id: "plinko", label: "Plinko", icon: CircleDot },
     { id: "mining", label: "Mining", icon: Pickaxe },
     { id: "profile", label: "Profile", icon: User },
