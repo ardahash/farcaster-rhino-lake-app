@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import path from "node:path"
 
 export type PendingBandaClaim = {
@@ -14,7 +15,17 @@ type PersistedBandaStore = {
   lastClaim: Record<string, number>
 }
 
-const STORE_PATH = path.join(process.cwd(), "cache", "banda-store.json")
+const resolveStoreDir = () => {
+  if (process.env.BANDA_STORE_DIR) {
+    return process.env.BANDA_STORE_DIR
+  }
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT) {
+    return path.join(tmpdir(), "banda-cache")
+  }
+  return path.join(process.cwd(), "cache")
+}
+
+const STORE_PATH = process.env.BANDA_STORE_PATH ?? path.join(resolveStoreDir(), "banda-store.json")
 const DEFAULT_STORE: PersistedBandaStore = { lastClaim: {} }
 
 let persistedStore: PersistedBandaStore | null = null
